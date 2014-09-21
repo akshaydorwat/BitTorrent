@@ -1,22 +1,23 @@
-CC=gcc
+CC=g++
 CPFLAGS=-g -Wall
-LDFLAGS= -lcrypto
+LDFLAGS= -lcrypto -pthread
 
 
-SRC= bt_client.c bt_lib.c bt_setup.c 
-OBJ=$(SRC:.c=.o)
-BIN=bt_client
+VPATH = src
+OBJ = bt_client.o bt_lib.o bt_setup.o Server.o threadpool.o
+BIN = bt_client
 
 all: $(BIN)
 
-$(BIN): $(OBJ)
-	$(CC) $(CPFLAGS) $(LDFLAGS) -o $(BIN) $(OBJ) 
-
+$(BIN): $(OBJ)	
+	$(CC) $(CPFLAGS)  -o $(BIN) $(OBJ) $(LDFLAGS)
 
 %.o:%.c
 	$(CC) -c $(CPFLAGS) -o $@ $<  
 
-$(SRC):
+%.o:%.cpp
+	$(CC) -c $(CPFLAGS) -o $@ $<  
+
 
 clean:
 	rm -rf $(OBJ) $(BIN)
