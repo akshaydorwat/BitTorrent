@@ -27,30 +27,32 @@ int main (int argc, char * argv[]){
   ofstream log_file;
 
   parse_args(&bt_args, argc, argv);
+  
+  // Register logging file wih Logger 
+  Logger* l = Logger::getInstance();
+  log_file.open(bt_args.log_file, ios::out | ios::app);
+  l->addOutputStream(&log_file, INFO, string("%F %T"));  
 
   if(bt_args.verbose){
-    printf("Args:\n");
-    printf("verbose: %d\n",bt_args.verbose);
-    printf("save_file: %s\n",bt_args.save_file);
-    printf("log_file: %s\n",bt_args.log_file);
-    printf("torrent_file: %s\n", bt_args.torrent_file);
+    l->addOutputStream(&cout, INFO, string("%F %T"));
+  }
 
-    for(i=0;i<MAX_CONNECTIONS;i++){
+
+  l->LOG(INFO, "verbose:" + to_string(bt_args.verbose));
+  l->LOG(INFO, "save_file:" + string(bt_args.save_file));
+  l->LOG(INFO, "log_file: " + string(bt_args.log_file));
+  l->LOG(INFO, "torrent_file" + string(bt_args.torrent_file));
+  
+  /*  for(i=0;i<MAX_CONNECTIONS;i++){
       if(bt_args.peers[i] != NULL)
         print_peer(bt_args.peers[i]);
     }
-  }
+    }*/
 
-  // Register logging file wih Logger 
-  Logger* l = Logger::getInstance();
-  l->addOutputStream((ostream)ofstream(bt_args.save_file,std::ofstream::out | std::ofstream::app), INFO, string("%F %T"));  
 
-  Reactor* r = Reactor::getInstance();
-  
-  
-  
+  //Reactor* r = Reactor::getInstance();
 
-  l->LOG(INFO, "Log is working");
+
 
   //  while(1){
 

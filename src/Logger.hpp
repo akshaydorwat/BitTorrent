@@ -5,8 +5,9 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-using namespace std;
+#include <mutex>
 
+using namespace std;
 
 /*
  * This is a naive implementation of logger functionality. It has lot of impovement scope.
@@ -42,7 +43,8 @@ private:
       timeFormat = format;
     }
   };
-
+  
+  std::mutex m_lock;
   static Logger* logger;
   list<BaseLogger> streamLoggers;
 
@@ -52,11 +54,6 @@ private:
   void printErr(enum LOG_LEVEL level, string str);
 
 };
-
-
-
-
-
 
 #endif
 

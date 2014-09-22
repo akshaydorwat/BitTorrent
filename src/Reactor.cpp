@@ -16,10 +16,8 @@ Reactor* Reactor::getInstance(){
 
   if(reactor == NULL){
     reactor = new Reactor;
-    cout<<"Created new instance";
-  }else{
-    cout<<"Sending old instance";
   }
+
   return reactor;
 }
 

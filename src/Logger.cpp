@@ -1,4 +1,3 @@
-
 #include "Logger.hpp"
 #include <time.h>
 
@@ -13,7 +12,6 @@ Logger* Logger::logger = NULL;
 Logger* Logger::getInstance(){
   if(logger == NULL){
     logger = new Logger;
-    cout << "new instance created \n";
   }
   return logger;
 }
@@ -27,8 +25,9 @@ bool Logger::addOutputStream(ostream *s, enum LOG_LEVEL level, string time_forma
   if(s == NULL){
     return false;
   }
+  m_lock.lock();
   streamLoggers.push_back( Logger::BaseLogger(s, level, time_format));
-  cout << "Output stream resgitered sucessfully";
+  m_lock.unlock();
   return true;
 }
 
@@ -71,17 +70,17 @@ void Logger::LOG(LOG_LEVEL level, string str){
 
 void Logger::printLog(enum LOG_LEVEL level, string str){
  
-  string log;
+  string log, tag;
 
   switch(level){
     
-  case INFO : log = "[INFO] ";
+  case INFO : tag = "[INFO] ";
     break;
     
-  case WARNING : log = "[WARNING] ";
+  case WARNING : tag = "[WARNING] ";
     break;
 
-  case DEBUG : log = "[DEBUG] ";
+  case DEBUG : tag = "[DEBUG] ";
     break;
     
   case ERROR:
@@ -89,11 +88,14 @@ void Logger::printLog(enum LOG_LEVEL level, string str){
   }
   
   // Now print log to actual file
+  m_lock.lock();
   for (list<Logger::BaseLogger>::iterator it=streamLoggers.begin(); it != streamLoggers.end(); ++it){
     Logger::BaseLogger b = (Logger::BaseLogger) *it;
-    log = "[" + getTimeStamp(b.timeFormat.c_str()) + "]" + log + str + "\n";
+    log.clear();
+    log = "[" + getTimeStamp(b.timeFormat.c_str()) + "]" + tag + str + "\n";
     b.stream->write(log.c_str(), log.length());
   }
+  m_lock.unlock();
 }
 
 /**
@@ -108,9 +110,12 @@ void Logger::printErr(enum LOG_LEVEL level, string str){
   cerr << log;
 
   // Now print log to actual file
+  m_lock.lock();
   for (list<Logger::BaseLogger>::iterator it=streamLoggers.begin(); it != streamLoggers.end(); ++it){
     Logger::BaseLogger b = (Logger::BaseLogger) *it;
+    log.clear();
     log = "[" + getTimeStamp(b.timeFormat.c_str()) + "]" + "[ERROR] " + str + "\n";
     b.stream->write(log.c_str(), log.length());
   }
+  m_lock.unlock();
 }
