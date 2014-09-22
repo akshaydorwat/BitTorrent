@@ -16,12 +16,15 @@
 
 // CPP libraries
 #include "Reactor.hpp"
+#include "Logger.hpp"
 
+using namespace std;
 
 int main (int argc, char * argv[]){
 
   bt_args_t bt_args;
   int i;
+  ofstream log_file;
 
   parse_args(&bt_args, argc, argv);
 
@@ -36,20 +39,18 @@ int main (int argc, char * argv[]){
       if(bt_args.peers[i] != NULL)
         print_peer(bt_args.peers[i]);
     }
-
-    
   }
 
-  //read and parse the torrent file here
-
-  if(bt_args.verbose){
-    // print out the torrent file arguments here
-  }
-
-  //main client loop
-  printf("Starting Main Loop\n");
+  // Register logging file wih Logger 
+  Logger* l = Logger::getInstance();
+  l->addOutputStream((ostream)ofstream(bt_args.save_file,std::ofstream::out | std::ofstream::app), INFO, string("%F %T"));  
 
   Reactor* r = Reactor::getInstance();
+  
+  
+  
+
+  l->LOG(INFO, "Log is working");
 
   //  while(1){
 

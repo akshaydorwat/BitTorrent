@@ -4,7 +4,7 @@ LDFLAGS= -lcrypto -pthread
 
 
 VPATH = src
-OBJ = bt_client.o bt_lib.o bt_setup.o Reactor.o threadpool.o
+OBJ = bt_client.o bt_lib.o bt_setup.o Reactor.o threadpool.o Logger.o
 BIN = bt_client
 
 all: $(BIN)

@@ -58,7 +58,6 @@ void __parse_peer(peer_t * peer, char * peer_st){
       (word && i < 3); 
       word = strtok(NULL,sep), i++){
 
-    printf("%d:%s\n",i,word);
     switch(i){
     case 0://id
       ip = word;
