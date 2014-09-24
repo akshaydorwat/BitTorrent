@@ -1,3 +1,9 @@
+/*==============================
+   Author : Akshay Dorwat
+   Email ID: adorwat@indiana.edu
+   created on: 09/22/2014
+=================================*/
+
 #include "Reactor.hpp"
 #include "Logger.hpp"
 #include "Peer.hpp"

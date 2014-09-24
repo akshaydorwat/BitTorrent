@@ -1,3 +1,8 @@
+/*==============================
+   Author : Akshay Dorwat
+   Email ID: adorwat@indiana.edu
+   created on: 09/22/2014
+=================================*/
 #ifndef PEER_HPP
 #define PEER_HPP
 

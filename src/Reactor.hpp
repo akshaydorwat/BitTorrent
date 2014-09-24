@@ -1,8 +1,8 @@
-/**
+/*==============================
    Author : Akshay Dorwat
    Email ID: adorwat@indiana.edu
    created on: 09/22/2014
- **/
+=================================*/
 
 #ifndef REACTOR_H
 #define REACTOR_H
