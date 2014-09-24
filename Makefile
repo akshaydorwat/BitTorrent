@@ -4,7 +4,7 @@ LDFLAGS= -lcrypto -pthread
 
 
 VPATH = src
-OBJ = bt_client.o bt_lib.o bt_setup.o Reactor.o threadpool.o Logger.o
+OBJ = bt_client.o bt_lib.o bt_setup.o Reactor.o threadpool.o Logger.o Peer.o
 BIN = bt_client
 
 all: $(BIN)
@@ -19,6 +19,6 @@ $(BIN): $(OBJ)
 	$(CC) -c $(CPFLAGS) -o $@ $<  
 
 run:
-	./bt_client -v -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
+	./bt_client -v -b 10.0.0.4 -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
 clean:
 	rm -rf $(OBJ) $(BIN)

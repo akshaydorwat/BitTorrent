@@ -55,7 +55,7 @@ string Logger::getTimeStamp(const char *timeFormat ){
    LOG : Log the data, exposed to user
 **/
 
-void Logger::LOG(LOG_LEVEL level, string str){
+void Logger::log(LOG_LEVEL level, string str){
   if(level == ERROR){
     printErr(level, str);
   }else{

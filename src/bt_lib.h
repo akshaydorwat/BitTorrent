@@ -23,6 +23,7 @@ extern "C"{
 
 //#include "bt_lib.h"
 
+#define MAX_PACKET_SIZE 100000
 
 /*Maximum file name size, to make things easy*/
 #define FILE_NAME_MAX 1024
@@ -35,6 +36,9 @@ extern "C"{
 
 /*max port to try and open a listen socket on*/
 #define MAX_PORT 6699
+
+/*Poll time out in miliseconds*/
+#define POLL_TIMEOUT 500
 
 /*Different BitTorrent Message Types*/
 #define BT_CHOKE 0
@@ -75,18 +79,13 @@ typedef struct {
 typedef struct {
   int verbose; //verbose level
   char save_file[FILE_NAME_MAX];//the filename to save to
-  FILE * f_save;
   char log_file[FILE_NAME_MAX];//the log file
   char torrent_file[FILE_NAME_MAX];// *.torrent file
   peer_t * peers[MAX_CONNECTIONS]; // array of peer_t pointers
+  int n_peers; //Number of peers
   unsigned int id; //this bt_clients id
   int sockets[MAX_CONNECTIONS]; //Array of possible sockets
-  struct pollfd poll_sockets[MAX_CONNECTIONS]; //Array of pollfd for polling for input
-  
-  /* set once torrent is parsed */
-  bt_info_t * bt_info; //the parsed info for this torrent
-  
-
+  struct sockaddr_in sockaddr; //sockaddr for server
 } bt_args_t;
 
 
@@ -112,8 +111,6 @@ typedef struct{
   char piece[0]; //pointer to start of the data for a piece
 } bt_piece_t;
 
-
-
 typedef struct bt_msg{
   int length; //length of remaining message, 
               //0 length message is a keep-alive message
@@ -130,8 +127,6 @@ typedef struct bt_msg{
   }payload;
 
 } bt_msg_t;
-
-
 
 
 

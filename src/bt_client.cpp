@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
+
 #include "bt_lib.h"
 #include "bt_setup.h"
 
@@ -37,12 +38,35 @@ int main (int argc, char * argv[]){
     l->addOutputStream(&cout, INFO, string("%F %T"));
   }
 
+  LOG(INFO, "verbose:" + to_string(bt_args.verbose));
+  LOG(INFO, "save_file:" + string(bt_args.save_file));
+  LOG(INFO, "log_file: " + string(bt_args.log_file));
+  LOG(INFO, "torrent_file" + string(bt_args.torrent_file));
 
-  l->LOG(INFO, "verbose:" + to_string(bt_args.verbose));
-  l->LOG(INFO, "save_file:" + string(bt_args.save_file));
-  l->LOG(INFO, "log_file: " + string(bt_args.log_file));
-  l->LOG(INFO, "torrent_file" + string(bt_args.torrent_file));
+  // parse torrent file and create context.
+
+  // start reactor
+  Reactor* reactor = Reactor::getInstance();
+  reactor->setPortRange(INIT_PORT, MAX_PORT);
+  reactor->setMaxConnections(MAX_CONNECTIONS);
+  reactor->setPollTimeOut(POLL_TIMEOUT);
+  reactor->setScocketAddr(bt_args.sockaddr);
+  reactor->initReactor();
+  reactor->startReactor();
+  reactor->wait();
+
+  //TODO: Put loopforever on thread 
+
+  //start Peers
+
+  //
+  // create seession for torrent file we parsed
+  // register events with session
+  // create processing loop
+  // File handlers
+  // Peers
   
+
   /*  for(i=0;i<MAX_CONNECTIONS;i++){
       if(bt_args.peers[i] != NULL)
         print_peer(bt_args.peers[i]);

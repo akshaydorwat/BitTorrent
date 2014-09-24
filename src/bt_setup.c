@@ -107,6 +107,7 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
   int ch; //ch for each flag
   int n_peers = 0;
   int i;
+  struct hostent * hostinfo;
 
   /* set the default args */
   bt_args->verbose=0; //no verbosity
@@ -116,12 +117,6 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
   memset(bt_args->torrent_file,0x00,FILE_NAME_MAX);
   memset(bt_args->log_file,0x00,FILE_NAME_MAX);
   
-  //null out file pointers
-  bt_args->f_save = NULL;
-
-  //null bt_info pointer, should be set once torrent file is read
-  bt_args->bt_info = NULL;
-
   //default log file
   strncpy(bt_args->log_file,"bt-client.log",FILE_NAME_MAX);
   
@@ -131,7 +126,7 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
 
   bt_args->id = 0;
   
-  while ((ch = getopt(argc, argv, "hp:s:l:vI:")) != -1) {
+  while ((ch = getopt(argc, argv, "hp:s:l:vI:b:")) != -1) {
     switch (ch) {
     case 'h': //help
       usage(stdout);
@@ -163,6 +158,27 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
     case 'I':
       bt_args->id = atoi(optarg);
       break;
+    case 'b':
+      //get the host by name
+      if((hostinfo = gethostbyname(optarg)) ==  NULL){
+	perror("gethostbyname failure, no such host?");
+	herror("gethostbyname");
+	exit(1);
+      }
+      
+      //zero out the sock address
+      bzero(&(bt_args->sockaddr), sizeof(bt_args->sockaddr));
+      
+      //set the family to AF_INET, i.e., Iternet Addressing
+      bt_args->sockaddr.sin_family = AF_INET;
+      
+      //copy the address to the right place
+      bcopy((char *) (hostinfo->h_addr), 
+	    (char *) &(bt_args->sockaddr.sin_addr.s_addr),
+	    hostinfo->h_length);
+  
+      break;
+
     default:
       fprintf(stderr,"ERROR: Unknown option '-%c'\n",ch);
       usage(stdout);
@@ -172,6 +188,9 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
 
   argc -= optind;
   argv += optind;
+  
+  // Store total number of peers
+  bt_args->n_peers = n_peers;
 
   if(argc == 0){
     fprintf(stderr,"ERROR: Require torrent file\n");

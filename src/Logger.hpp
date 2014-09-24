@@ -9,6 +9,10 @@
 
 using namespace std;
 
+
+#define LOG(INFO , MESSAGE) \
+  Logger::getInstance()->log(INFO, MESSAGE)
+
 /*
  * This is a naive implementation of logger functionality. It has lot of impovement scope.
  *
@@ -26,7 +30,7 @@ class Logger{
 public:
   
   bool addOutputStream(ostream *s, enum LOG_LEVEL level, string time_format);
-  void LOG(enum LOG_LEVEL level, string str);
+  void log(enum LOG_LEVEL level, string str);
   static Logger* getInstance();
 
 private:
@@ -43,11 +47,10 @@ private:
       timeFormat = format;
     }
   };
-  
-  std::mutex m_lock;
+
+  mutex m_lock;
   static Logger* logger;
   list<BaseLogger> streamLoggers;
-
 
   string getTimeStamp(const char *timeFormat );
   void printLog(enum LOG_LEVEL level, string str);
