@@ -10,11 +10,13 @@
 #include "BencodeString_t.h"
 #include "BencodeInteger_t.h"
 #include "BencodeDecoder.h"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <stdlib.h>
+#include <cassert>
 
 using namespace std;
 
@@ -108,8 +110,8 @@ string BencodeList_t::encode()
 
 BencodeList_t BencodeList_t::decode(string bencodeList, size_t *startIdx)
 {
-	if (*startIdx >= 0 && *startIdx < bencodeList.size())
-	{
+	assert (*startIdx >= 0 && *startIdx < bencodeList.size());
+	
 		string operableBencodeList = bencodeList.substr(*startIdx);
 
 //		cout << "----------------------------------------------------" << endl;
@@ -123,8 +125,8 @@ BencodeList_t BencodeList_t::decode(string bencodeList, size_t *startIdx)
 		size_t lIdx = operableBencodeList.find('l', 0);
 		size_t eIdx = operableBencodeList.find('e', 0);
 
-		if (lIdx != string::npos && eIdx != string::npos && eIdx > lIdx + 3)
-		{
+		assert (lIdx != string::npos && eIdx != string::npos && eIdx > lIdx + 3);
+		
 			*startIdx += lIdx + 1;
 			BencodeList_t bencodeList_t;
 
@@ -145,8 +147,8 @@ BencodeList_t BencodeList_t::decode(string bencodeList, size_t *startIdx)
 //			cout << bencodeList << endl;
 //
 //			cout << "List : " << bencodeList_t << endl;
-			return bencodeList_t;
-		}
-	}
+			LOG (DEBUG, "List : " + bencodeList_t.display());
+
+			return bencodeList_t;	
 }
 

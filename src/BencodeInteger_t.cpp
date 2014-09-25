@@ -6,11 +6,13 @@
  */
 
 #include "BencodeInteger_t.h"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cassert>
 
 using namespace std;
 
@@ -59,8 +61,8 @@ string BencodeInteger_t::encode()
 BencodeInteger_t BencodeInteger_t::decode(string bencodeInteger,
 		size_t *startIdx)
 {
-	if (*startIdx >= 0 && *startIdx < bencodeInteger.size())
-	{
+	assert (*startIdx >= 0 && *startIdx < bencodeInteger.size());
+	
 		string operableBencodeInteger = bencodeInteger.substr(*startIdx);
 
 //		cout << "----------------------------------------------------" << endl;
@@ -73,8 +75,8 @@ BencodeInteger_t BencodeInteger_t::decode(string bencodeInteger,
 
 		size_t iIdx = operableBencodeInteger.find('i', 0);
 		size_t eIdx = operableBencodeInteger.find('e', 0);
-		if (iIdx != string::npos && eIdx != string::npos && eIdx > iIdx + 1)
-		{
+		assert (iIdx != string::npos && eIdx != string::npos && eIdx > iIdx + 1);
+		
 			int data = atoi(operableBencodeInteger.substr(iIdx + 1, eIdx - 1).c_str());
 			*startIdx += eIdx + 1;
 
@@ -88,8 +90,8 @@ BencodeInteger_t BencodeInteger_t::decode(string bencodeInteger,
 //			cout << bencodeInteger << endl;
 //
 //			cout << "Integer : " << bencodeInteger_t << endl;
+			LOG (DEBUG, "Integer : " + bencodeInteger_t.display());
 
 			return bencodeInteger_t;
-		}
-	}
+		
 }

@@ -18,6 +18,7 @@
 // CPP libraries
 #include "Reactor.hpp"
 #include "Logger.hpp"
+#include "Torrent_t.h"
 
 using namespace std;
 
@@ -44,6 +45,7 @@ int main (int argc, char * argv[]){
   LOG(INFO, "torrent_file" + string(bt_args.torrent_file));
 
   // parse torrent file and create context.
+  Torrent_t::decode(string(bt_args.torrent_file));
 
   // start reactor
   Reactor* reactor = Reactor::getInstance();

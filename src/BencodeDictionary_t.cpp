@@ -9,6 +9,7 @@
 #include "Bencode_t.h"
 #include "BencodeString_t.h"
 #include "BencodeDecoder.h"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <string>
@@ -93,8 +94,8 @@ string BencodeDictionary_t::encode()
 BencodeDictionary_t BencodeDictionary_t::decode(string bencodeDictionary,
 		size_t* startIdx)
 {
-	if (*startIdx >= 0 && *startIdx < bencodeDictionary.size())
-	{
+	assert (*startIdx >= 0 && *startIdx < bencodeDictionary.size());
+	
 		string operableBencodeDictionary = bencodeDictionary.substr(*startIdx);
 
 //		cout << "----------------------------------------------------" << endl;
@@ -108,8 +109,8 @@ BencodeDictionary_t BencodeDictionary_t::decode(string bencodeDictionary,
 		size_t dIdx = operableBencodeDictionary.find('d', 0);
 		size_t eIdx = operableBencodeDictionary.find('e', 0);
 
-		if (dIdx != string::npos && eIdx != string::npos && eIdx > dIdx + 3)
-		{
+		assert (dIdx != string::npos && eIdx != string::npos && eIdx > dIdx + 3);
+		
 			*startIdx += dIdx + 1;
 			BencodeDictionary_t bencodeDictionary_t;
 
@@ -131,7 +132,7 @@ BencodeDictionary_t BencodeDictionary_t::decode(string bencodeDictionary,
 //			cout << bencodeDictionary << endl;
 //
 //			cout << "Dictionary :" << bencodeDictionary_t << endl;
+			LOG (DEBUG, "Dictionary : \n" + bencodeDictionary_t.display());
+
 			return bencodeDictionary_t;
-		}
-	}
 }

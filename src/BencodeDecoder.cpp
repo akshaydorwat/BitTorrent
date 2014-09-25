@@ -11,6 +11,7 @@
 #include "BencodeInteger_t.h"
 #include "BencodeList_t.h"
 #include "BencodeDictionary_t.h"
+#include "Logger.hpp"
 
 #include <string>
 #include <vector>
@@ -31,7 +32,8 @@ vector<Bencode_t*> BencodeDecoder::decode(string bencode)
 			bencodes.resize(bencodes.size() + 1);
 			Bencode_t *temp = decode(bencode, &startIdx);
 			bencodes.push_back(temp);
-			cout << temp->display();
+			LOG(INFO, "Successfully parsed 1 bencoded entity.");
+			LOG(DEBUG, "\n" + temp->display());
 //			cout << "Start Index moved to " << startIdx << endl;
 		}
 	}
@@ -95,6 +97,7 @@ Bencode_t* BencodeDecoder::decode(string bencode, size_t *startIdx)
 		}
 		return bencode_t;
 	}
-	cout << "Insufficient Bencode length" << bencode.size() << ", " << *startIdx << endl;
+	LOG (ERROR, "Insufficient bencode length.");
+	//cout << "Insufficient Bencode length" << bencode.size() << ", " << *startIdx << endl;
 	throw invalid_argument("Insufficient Bencode length");
 }

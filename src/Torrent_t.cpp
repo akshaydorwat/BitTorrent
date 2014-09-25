@@ -13,6 +13,7 @@
 #include "BencodeList_t.h"
 #include "BencodeString_t.h"
 #include "BencodeInteger_t.h"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <string>
@@ -23,6 +24,9 @@
 #include <cassert>
 #include <stdlib.h>
 #include <fstream>
+
+#include <stdio.h>
+#include <stdlib.h>
 using namespace std;
 
 Torrent_t Torrent_t::decode(string torrentString)
@@ -61,21 +65,25 @@ Torrent_t Torrent_t::decode(string torrentString)
 	Bencode_t *bencode_t = BencodeDecoder::decode(torrentString, &startIdx);
 	assert(bencode_t);
 
-	cout << bencode_t->display() << endl;
+	//cout << bencode_t->display() << endl;
 
 	Torrent_t newTorrent;
+	char buffer[33];	
 	try
 	{
-		cout << "TORRENT PROPERTY\t:\t\tVALUE(S)" << endl << endl;
+		//cout << "TORRENT PROPERTY\t:\t\tVALUE(S)" << endl << endl;
+		LOG (INFO, "TORRENT PROPERTY\t:\t\tVALUE(S)");
 
 		newTorrent.setName(bencode_t);
-		cout << "Name\t\t\t:\t\t" << newTorrent.getName() << endl << endl;
+		//cout << "Name\t\t\t:\t\t" << newTorrent.getName() << endl << endl;
+		LOG (INFO, "Name\t\t:\t\t" + newTorrent.getName());
 
 		try
 		{
 			newTorrent.setCreator(bencode_t);
-			cout << "Creator\t\t\t:\t\t" << newTorrent.getCreator() << endl
-					<< endl;
+			//cout << "Creator\t\t\t:\t\t" << newTorrent.getCreator() << endl
+			//		<< endl;
+			LOG (INFO, "Creator\t\t\t:\t\t" + newTorrent.getCreator());
 		}
 		catch (const exception& e)
 		{
@@ -84,8 +92,9 @@ Torrent_t Torrent_t::decode(string torrentString)
 		try
 		{
 			newTorrent.setCreatedOn(bencode_t);
-			cout << "Creation Date\t\t:\t\t" << newTorrent.showCreatedOn()
-					<< endl;
+			//cout << "Creation Date\t\t:\t\t" << newTorrent.showCreatedOn()
+			//		<< endl;
+			LOG (INFO, "Creation Date\t:\t\t" + newTorrent.showCreatedOn());
 		}
 		catch (const exception& e)
 		{
@@ -94,8 +103,9 @@ Torrent_t Torrent_t::decode(string torrentString)
 		try
 		{
 			newTorrent.setAnnounce(bencode_t);
-			cout << "Announce\t\t:\t\t" << newTorrent.getAnnounce() << endl
-					<< endl;
+			//cout << "Announce\t\t:\t\t" << newTorrent.getAnnounce() << endl
+			//		<< endl;
+			LOG (INFO, "Announce\t\t:\t\t" + newTorrent.getAnnounce());
 		}
 		catch (const exception& e)
 		{
@@ -105,14 +115,17 @@ Torrent_t Torrent_t::decode(string torrentString)
 		{
 			newTorrent.setAnnounceList(bencode_t);
 			vector<string> announceList = newTorrent.getAnnounceList();
-			cout << "Announce List (" << announceList.size() << ")\t:\t\t";
+			//cout << "Announce List (" << announceList.size() << ")\t:\t\t";
+			LOG (INFO, "Announce List\t:\t\t");
 			for (size_t i = 0; i < announceList.size(); i++)
 			{
-				cout << announceList.at(i);
+				//cout << announceList.at(i);
+				LOG (INFO, announceList.at(i));
 				if (i < announceList.size() - 1)
-					cout << ",\n\t\t\t\t\t";
+					LOG (INFO, ",\n\t\t\t\t\t");
+					//cout << ",\n\t\t\t\t\t";
 			}
-			cout << endl << endl;
+			//cout << endl << endl;
 		}
 		catch (const exception& e)
 		{
@@ -121,8 +134,9 @@ Torrent_t Torrent_t::decode(string torrentString)
 		try
 		{
 			newTorrent.setComment(bencode_t);
-			cout << "Comment\t\t\t:\t\t" << newTorrent.getComment() << endl
-					<< endl;
+			//cout << "Comment\t\t\t:\t\t" << newTorrent.getComment() << endl
+			//		<< endl;
+			LOG (INFO, "Comment\t\t\t:\t\t" + newTorrent.getComment());
 		}
 		catch (const exception& e)
 		{
@@ -131,16 +145,19 @@ Torrent_t Torrent_t::decode(string torrentString)
 		try
 		{
 			newTorrent.setEncoding(bencode_t);
-			cout << "Encoding\t\t:\t\t" << newTorrent.getEncoding() << endl
-					<< endl;
+			//cout << "Encoding\t\t:\t\t" << newTorrent.getEncoding() << endl
+			//		<< endl;
+			LOG (INFO, "Encoding\t\t:\t\t" + newTorrent.getEncoding());
 		}
 		catch (const exception& e)
 		{
 		}
 
 		newTorrent.setPieceLength(bencode_t);
-		cout << "Piece Length\t\t:\t\t" << newTorrent.getPieceLength() << endl
-				<< endl;
+		//cout << "Piece Length\t\t:\t\t" << newTorrent.getPieceLength() << endl
+		//		<< endl;
+		sprintf(buffer, "%lu", newTorrent.getPieceLength());
+		LOG (INFO, "Piece Length\t:\t\t" + string(buffer));
 
 		BencodeDictionary_t* torrentDictionary =
 				dynamic_cast<BencodeDictionary_t*>(bencode_t);
@@ -163,31 +180,44 @@ Torrent_t Torrent_t::decode(string torrentString)
 			newTorrent.addFile(infoDictionary);
 		}
 		vector<TorrentFile_t> files = newTorrent.getFiles();
-		cout << "Files (" << files.size() << ")\t\t:\t\t";
+		//cout << "Files (" << files.size() << ")\t\t:\t\t";
+		LOG (INFO, "Files\t\t:\t\t");
 		for (size_t i = 0; i < files.size(); i++)
 		{
-			cout << files.at(i).pathAt(0) << "\t(" << files.at(i).getLength()
-					<< ")";
+			//cout << files.at(i).pathAt(0) << "\t(" << files.at(i).getLength() << ")";
+			sprintf(buffer, "%lu", files.at(i).getLength());
+			LOG (INFO, files.at(i).pathAt(0) + "\t(" + string(buffer) + ")");
 			if (i < files.size() - 1)
-				cout << ",\n\t\t\t\t\t";
+				LOG (INFO, ",\n\t\t\t\t\t");
+				//cout << ",\n\t\t\t\t\t";
 		}
-		cout << endl << endl;
+		//cout << endl << endl;
 
 		newTorrent.setPieceHashes(bencode_t);
 		vector<string> pieceHashes = newTorrent.getPieceHashes();
-		cout << "Piece Hashes (" << pieceHashes.size() << ")\t:\t\t";
+		//cout << "Piece Hashes (" << pieceHashes.size() << ")\t:\t\t";
+		sprintf(buffer, "%lu", pieceHashes.size());
+		string buf("Piece Hashes (");
+		buf += string(buffer);
+		buf += ")\t:\t\t";
+		//LOG (INFO, "Piece Hashes (" + string(buffer) + ")\t:\t\t");
 		for (size_t i = 0; i < pieceHashes.size(); i++)
 		{
-			cout << pieceHashes.at(i);
+			//cout << pieceHashes.at(i);
+			//LOG (INFO, pieceHashes.at(i));
+			buf += pieceHashes.at(i);
 			if (i < pieceHashes.size() - 1)
-				cout << ",\n\t\t\t\t\t";
+				buf += ",\n\t\t\t\t\t";
+				//LOG (INFO, ",\n\t\t\t\t\t");
+				//cout << ",\n\t\t\t\t\t";
 		}
-		cout << endl << endl;
+		LOG (INFO, buf);
+		//cout << endl << endl;
 	}
 	catch (const exception& e)
 	{
-		cout << "Failed to parse torrent !!! Invalid Format !!!\n" << e.what()
-				<< endl;
+		//cout << "Failed to parse torrent !!! Invalid Format !!!\n" << e.what() << endl;
+		LOG (ERROR, "Failed to parse torrent !!! Invalid Format !!!");
 	}
 
 	return newTorrent;

@@ -6,11 +6,13 @@
  */
 
 #include "BencodeString_t.h"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <string>
 //#include <cstring>
 #include <stdlib.h>
+#include <cassert>
 
 using namespace std;
 
@@ -58,8 +60,8 @@ string BencodeString_t::encode()
 
 BencodeString_t BencodeString_t::decode(string bencodeString, size_t *startIdx)
 {
-	if (*startIdx >= 0 && *startIdx < bencodeString.size())
-	{
+	assert (*startIdx >= 0 && *startIdx < bencodeString.size());
+	
 		string operableBencodeString = bencodeString.substr(*startIdx);
 
 //		cout << "----------------------------------------------------" << endl;
@@ -71,8 +73,8 @@ BencodeString_t BencodeString_t::decode(string bencodeString, size_t *startIdx)
 //		cout << bencodeString << endl;
 
 		size_t colonIdx = operableBencodeString.find(':', 0);
-		if (colonIdx != string::npos)
-		{
+		assert (colonIdx != string::npos);
+		
 			int dataLen = atoi(operableBencodeString.substr(0, colonIdx).c_str());
 			string data = operableBencodeString.substr(colonIdx + 1, dataLen);
 			*startIdx += colonIdx + 1 + dataLen;
@@ -87,8 +89,9 @@ BencodeString_t BencodeString_t::decode(string bencodeString, size_t *startIdx)
 //			cout << bencodeString << endl;
 //
 //			cout << "String : " << bencodeString_t << endl;
+			LOG (DEBUG, "String : " + bencodeString_t.display());
 
 			return bencodeString_t;
-		}
-	}
+		
+	
 }

@@ -2,9 +2,25 @@ CC=g++
 CPFLAGS=-g -Wall -std=c++0x
 LDFLAGS= -lcrypto -pthread
 
-
 VPATH = src
-OBJ = bt_client.o bt_lib.o bt_setup.o Reactor.o threadpool.o Logger.o Peer.o Bencode_t.o BencodeInteger_t.o BencodeString.o BencodeList_t.o BencodeDictionary.o BencodeDecoder.o TorrentFile_t.o Torrent_t.o
+
+OBJ = \
+bt_client.o \
+bt_lib.o \
+bt_setup.o \
+Reactor.o \
+threadpool.o \
+Logger.o \
+Peer.o \
+Bencode_t.o \
+BencodeInteger_t.o \
+BencodeString_t.o \
+BencodeList_t.o \
+BencodeDictionary_t.o \
+BencodeDecoder.o \
+TorrentFile_t.o \
+Torrent_t.o
+
 BIN = bt_client
 
 all: $(BIN)
@@ -20,5 +36,6 @@ $(BIN): $(OBJ)
 
 run:
 	./bt_client -v -b 10.0.0.4 -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
+
 clean:
 	rm -rf $(OBJ) $(BIN)
