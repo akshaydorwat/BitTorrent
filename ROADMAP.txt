@@ -1,0 +1,37 @@
+======================= PROJECT#2 : BITTORRENT =========================
+============================ MILESTONE#1 ===============================
+
+Akshay Dorwat							adorwat
+Rohit Khapare							rkhapare
+
+============================ FUTURE WORK ===============================
+
+Torrent-Context :
+The Peer-to-Peer protocol that we are developing revolves around the concept
+of Torrent. So, for every .torrent file we will create a Torrent-Context 
+containing a Torrent_t object and a list of Peer-Contexts. A Torrent-Context will
+be maintained and reinitialized to its previous state in every invocation of 
+the program. Threads running on a Torrent-Context will be responsible for
+the setup and teardown of each connection, and for communicating the 
+control messages between peers.
+
+Peer-Context :
+A peer (meaning either of seeder, leecher or peer) represents a connection
+and the associated transactions over that connection. These details will be maintained
+in a Peer-Context and each Torrent-Context will contain a list of such objects.
+The list of Peers will maintain the state of all the connections and
+piece-transactions.
+
+File-Manager :
+A Torrent_t object may contain multiple files listed as TorrentFile_t objects.
+Files will be downloaded in pieces of fixed size. A piece will be added
+to the file only after it has been received in it entirety and its
+hash matches the provided 20 byte hash corresponding to its piece number.
+These operations will be taken care of by a separate thread called the
+File-Manager.
+
+Progress-Indicator :
+Every download/upload will be monitored with by a separate progress indicator
+running at regular intervals.
+
+==========================================================================
