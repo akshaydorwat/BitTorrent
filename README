@@ -1,7 +1,9 @@
+================== PROJECT#2 : BITTORRENT ===========================
 
-This is skeleton development for your BitTorrent (BT) client. 
+Akshay Dorwat					adorwat
+Rohit Khapare					rkhapare
 
-Included Files and Purpose (feel free to change as necessary)
+======================== PROVIDED FILES =============================
 
 bt_client.c   :   Main file where the control loop lives
 bt_setup.c    :   Contains setup code, such as parsing arguments
@@ -10,10 +12,46 @@ bt_lib.c      :   Code for core functionality of bt
 bt_setup.h    :   Header file for setup
 bt_lib.h      :   Header file for bt_lib
 
-Suggested Additional Files [and headers]
+===================== FILES IN THIS SUBMISSION ======================
 
-bt_io.c[.h]   :   File for handing input output
-bt_sock.c[.h] :   File for handling socket and network issues
+bt_client.cpp, bt_client.hpp			:
+bt_lib.cpp, bt_lib.hpp				:
+bt_setup.cpp, bt_setup.hpp			:
+Reactor.cpp, Reactor.hpp			:
+threadpool.cpp, threadpool.hpp			:
+Logger.cpp, Logger.hpp				:
+Peer.cpp, Peer.hpp				:
+Bencode_t.cpp, Bencode_t.h			: Abstract base class (interface) 
+						  implemented by every bencode element
+BencodeInteger_t.cpp, BencodeInteger_t.h	: Bencode Integer type definition
+BencodeString_t.cpp, BencodeString_t.h		: Bencode String type definition
+BencodeList_t.cpp, BencodeList_t.h		: Bencode List type definition
+BencodeDictionary_t.cpp, BencodeDictionary_t.h	: Bencode Dictionary type definition
+BencodeDecoder.cpp, BencodeDecoder.h		: Bencode Decoder; provides static functions 
+						  for decoding single/multiple bencodings
+TorrentFile_t.cpp, TorrentFile_t.h		: Type definition for each file listed in a
+						  .torrent file
+Torrent_t.cpp, Torrent_t.h			: Type definition of a Torrent file
 
+====================== CURRENT FUNCTIONALITY =========================
 
+The bt_args object contains the arguments provided while invoking the program.
+We extract the torrent file's name (ending with .torrent) from this object and 
+decode the file to obtain the torrent's metadata as a Torrent_t object.
 
+This process takes place as follows.
+The Torrent_t::decode() function opens the .torrent file in binary mode and
+extracts its contents as a std::string. This string is then parsed using 
+BencodeDecoder::decode() function that reads the first character of the string 
+to decide what the outermost bencode element is to call its specific decode function
+i.e. BencodeInteger_t::decode(), BencodeString::decode(), BencodeList::decode() or
+BencodeDictionary::decode(). The last 2 decode() functions (that of List and Dictionary)
+make recursive calls to BencodeDecoder::decode() that returns the abstract base class
+object pointer i.e. Bencode_t*.
+
+A Torrent_t::decode() function expects 1 and only 1 torrent metadata in 
+a single .torrent file. A Torrent_t object may contain multiple TorrentFile_t object(s).
+The extracted torrent metadata is logger using the custom Logger included in
+this submission.
+
+======================================================================
