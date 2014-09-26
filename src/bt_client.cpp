@@ -33,6 +33,7 @@ int main (int argc, char * argv[]){
   // Register logging file wih Logger 
   Logger* l = Logger::getInstance();
   log_file.open(bt_args.log_file, ios::out | ios::app);
+  log_file << "test";
   l->addOutputStream(&log_file, INFO, string("%F %T"));  
 
   if(bt_args.verbose){

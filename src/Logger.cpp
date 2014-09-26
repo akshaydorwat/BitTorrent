@@ -100,9 +100,11 @@ void Logger::printLog(enum LOG_LEVEL level, string str){
     log.clear();
     log = "[" + getTimeStamp(b.timeFormat.c_str()) + "]" + tag + str + "\n";
     b.stream->write(log.c_str(), log.length());
+    b.stream->flush();
   }
   m_lock.unlock();
 }
+
 
 /**
    printErr : Print error in file as well as stderr
@@ -122,6 +124,7 @@ void Logger::printErr(enum LOG_LEVEL level, string str){
     log.clear();
     log = "[" + getTimeStamp(b.timeFormat.c_str()) + "]" + "[ERROR] " + str + "\n";
     b.stream->write(log.c_str(), log.length());
+    b.stream->flush();
   }
   m_lock.unlock();
 }
