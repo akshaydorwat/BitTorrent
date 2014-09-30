@@ -38,4 +38,8 @@ run:
 	./bt_client -v -b 10.0.0.4 -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
 
 clean:
-	rm -rf $(OBJ) $(BIN)
+	rm -rf $(OBJ) $(BIN) bt_client.tar
+
+tar:
+	tar -cvf bt_client.tar LOG.log  Makefile  README  ROADMAP.txt  sample  src
+

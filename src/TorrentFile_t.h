@@ -16,19 +16,19 @@ using namespace std;
 
 class TorrentFile_t
 {
-	private:
-		size_t length;
-		vector<string> paths;
+ private:
+  size_t length;
+  vector<string> paths;
 
-	public:
-		size_t getLength();
-		void setLength(unsigned int);
-		void setLength(BencodeDictionary_t *);
+ public:
+  size_t getLength();
+  void setLength(unsigned int);
+  void setLength(BencodeDictionary_t *);
 
-		vector<string> getPaths();
-		void setPaths(BencodeDictionary_t *);
-		void addPath(string);
-		string pathAt(unsigned int);
+  vector<string> getPaths();
+  void setPaths(BencodeDictionary_t *);
+  void addPath(string);
+  string pathAt(unsigned int);
 };
 
 #endif /* TORRENTFILE_T_H_ */

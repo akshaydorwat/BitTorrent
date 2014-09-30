@@ -64,9 +64,10 @@ private:
   bool is_initiated_by_me;
   bool is_active;
   string myId;
+  string ip;
+  string port;
   bool chocked;
-  bool interested;
-
+  bool interestesd;
 };
 #endif
 

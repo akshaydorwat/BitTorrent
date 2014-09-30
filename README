@@ -3,6 +3,14 @@
 Akshay Dorwat					adorwat
 Rohit Khapare					rkhapare
 
+================= FOLDER STRUCTURE =================================
+It is changed a bit.
+
+1) src - It contain all source code files
+2) sample - All sample input files
+
+* MAKEFILE IS MODIFIED TO INCORPORATE THESE CHANGES *
+
 ======================== PROVIDED FILES =============================
 
 bt_client.c   :   Main file where the control loop lives
@@ -14,27 +22,48 @@ bt_lib.h      :   Header file for bt_lib
 
 ===================== FILES IN THIS SUBMISSION ======================
 
-bt_client.cpp, bt_client.hpp			:
-bt_lib.cpp, bt_lib.hpp				:
-bt_setup.cpp, bt_setup.hpp			:
-Reactor.cpp, Reactor.hpp			:
-threadpool.cpp, threadpool.hpp			:
-Logger.cpp, Logger.hpp				:
-Peer.cpp, Peer.hpp				:
+Reactor.cpp, Reactor.hpp			: This class has network core functionality. It has 2 main functionality
+	     					  1) Accept connection on server socket
+						  2) Read data from the client sockets connected to server
+						  It uses poll method to do non - blocking accept and read
+
+threadpool.cpp, threadpool.hpp			: It is basic threadpool implmentation. It is copied from CREDIT(1)
+
+Logger.cpp, Logger.hpp				: This class implements a thread safe logger. 
+
+Peer.cpp, Peer.hpp				: This class will implement peer connection and operation on them.
+
 Bencode_t.cpp, Bencode_t.h			: Abstract base class (interface) 
 						  implemented by every bencode element
+
 BencodeInteger_t.cpp, BencodeInteger_t.h	: Bencode Integer type definition
+
 BencodeString_t.cpp, BencodeString_t.h		: Bencode String type definition
+
 BencodeList_t.cpp, BencodeList_t.h		: Bencode List type definition
+
 BencodeDictionary_t.cpp, BencodeDictionary_t.h	: Bencode Dictionary type definition
+
 BencodeDecoder.cpp, BencodeDecoder.h		: Bencode Decoder; provides static functions 
 						  for decoding single/multiple bencodings
+
 TorrentFile_t.cpp, TorrentFile_t.h		: Type definition for each file listed in a
 						  .torrent file
+
 Torrent_t.cpp, Torrent_t.h			: Type definition of a Torrent file
+
+
+======================== HOW TO COMPILE =============================
+use make utility. 
+
+
+======================== How TO RUN =================================
+./bt_client -v -b <local interface> -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
+
 
 ====================== CURRENT FUNCTIONALITY =========================
 
+ => 
 The bt_args object contains the arguments provided while invoking the program.
 We extract the torrent file's name (ending with .torrent) from this object and 
 decode the file to obtain the torrent's metadata as a Torrent_t object.
@@ -54,4 +83,19 @@ a single .torrent file. A Torrent_t object may contain multiple TorrentFile_t ob
 The extracted torrent metadata is logger using the custom Logger included in
 this submission.
 
+=>
+ Logger functionality is implementated to handle logging requirement of the project. 
+ You can resiter multiple stream with log format for logging. This implmentation is 
+ also thread safe.
+
+=> 
+ Non-blocking Server and client functionality is implemented using poll method. It also implemets a singleton and reactor design patten.
+
 ======================================================================
+
+
+============================= CREDIT ========================
+
+1) Linux Manual pages
+2) https://github.com/bilash/threadpool
+3) https://wiki.theory.org/BitTorrentSpecification

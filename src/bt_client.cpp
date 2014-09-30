@@ -25,8 +25,9 @@ using namespace std;
 int main (int argc, char * argv[]){
 
   bt_args_t bt_args;
-  int i;
   ofstream log_file;
+  char inp;
+  int i;
 
   parse_args(&bt_args, argc, argv);
   
@@ -56,50 +57,25 @@ int main (int argc, char * argv[]){
   reactor->setScocketAddr(bt_args.sockaddr);
   reactor->initReactor();
   reactor->startReactor();
-  reactor->wait();
 
-  //TODO: Put loopforever on thread 
+  std::cout << "Press Q or q to quit \n";
 
-  //start Peers
+  while( inp != 'Q'){
+    inp = getchar();
+  }
+  
+  reactor->closeReactor();
 
-  //
+  //TODO List
+  // start Peers
   // create seession for torrent file we parsed
   // register events with session
   // create processing loop
   // File handlers
-  // Peers
   
 
-  /*  for(i=0;i<MAX_CONNECTIONS;i++){
-      if(bt_args.peers[i] != NULL)
-        print_peer(bt_args.peers[i]);
-    }
-    }*/
-
-
-  //Reactor* r = Reactor::getInstance();
-
-
-
-  //  while(1){
-
-    //try to accept incoming connection from new peer
-       
-    
-    //poll current peers for incoming traffic
-    //   write pieces to files
-    //   udpdate peers choke or unchoke status
-    //   responses to have/havenots/interested etc.
-    
-    //for peers that are not choked
-    //   request pieaces from outcoming traffic
-
-    //check livelenss of peers and replace dead (or useless) peers
-    //with new potentially useful peers
-    
-    //update peers, 
-
-  //}
-
+  //Free manually allocated memory
+  for(i=0; i<bt_args.n_peers; i++)
+    free(bt_args.peers[i]);
   return 0;
 }

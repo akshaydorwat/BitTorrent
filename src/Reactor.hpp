@@ -75,6 +75,9 @@ public:
   //start reactor on thread
   bool startReactor();
 
+  // shut down reactor
+  int closeReactor();
+
   // wait till reactor exit
   void wait();
 
@@ -85,9 +88,6 @@ private:
 
   //  Handle events on socket connections
   void handleEvent();
-  
-  // shut down reactor
-  int closeReactor();
 
   // fill the pollfd vector with socket descriptor and events
   void fillPollFd();
@@ -111,6 +111,3 @@ private:
 };
 
 #endif
-
-
-

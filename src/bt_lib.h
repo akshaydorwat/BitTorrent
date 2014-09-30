@@ -129,7 +129,6 @@ typedef struct bt_msg{
 } bt_msg_t;
 
 
-
 int parse_bt_info(bt_info_t * bt_info);
 
 /*choose a random id for this node*/

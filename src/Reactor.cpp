@@ -233,6 +233,7 @@ void Reactor::unRegisterEvent(int fd){
 
 int Reactor::closeReactor(){
   is_started = false;
+  wait();
   LOG(INFO," Closing reactor");
   return 1;
 }
