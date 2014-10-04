@@ -5,6 +5,7 @@
 
 #include "Torrent_t.h"
 #include "TorrentFile_t.h"
+#include <openssl/sha.h>
 
 using namespace std;
 
