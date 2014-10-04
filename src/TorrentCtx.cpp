@@ -70,7 +70,7 @@ void TorrentCtx::init(bt_args_t *args){
   LOG(INFO, "File Length : "+ to_string(fileLength));
 
   // calculate the infohash
-  SHA1((unsigned char *)infoDict.c_str(), infoDict.length(), (unsigned char *)infoHash);
+ SHA1((unsigned char *)infoDict.c_str(), infoDict.length(), (unsigned char *)infoHash);
 
   
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 

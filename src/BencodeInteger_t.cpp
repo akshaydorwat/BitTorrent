@@ -53,7 +53,7 @@ string BencodeInteger_t::display()
 string BencodeInteger_t::encode()
 {
 	string temp = "i";
-	temp += data;
+	temp += display();
 	temp += "e";
 	return temp;
 }

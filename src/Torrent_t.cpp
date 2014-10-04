@@ -8,6 +8,7 @@
 
 #include "Torrent_t.h"
 #include "TorrentFile_t.h"
+#include "TorrentPiece_t.h"
 #include "BencodeDecoder.h"
 #include "Bencode_t.h"
 #include "BencodeDictionary_t.h"
@@ -162,10 +163,12 @@ Torrent_t Torrent_t::decode(string torrentString)
 
       BencodeDictionary_t* torrentDictionary =
 	dynamic_cast<BencodeDictionary_t*>(bencode_t);
-      BencodeDictionary_t *infoDictionary =
+      newTorrent.infoDictionary =
 	dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
+	LOG (INFO, "Info Dictionary \t:\t\t" + newTorrent.getInfoDictionary());
+
       BencodeList_t *filesList =
-	dynamic_cast<BencodeList_t*>(infoDictionary->at("files"));
+	dynamic_cast<BencodeList_t*>(newTorrent.infoDictionary->at("files"));
       if (filesList) // multiple files torrent
 	{
 	  /* NOTE:files is a list of dictionaries. eg. in bencoding: ld6:lengthi1024e4path:l8:filenameeee */
@@ -178,7 +181,7 @@ Torrent_t Torrent_t::decode(string torrentString)
 	}
       else // single file torrent
 	{
-	  newTorrent.addFile(infoDictionary);
+	  newTorrent.addFile(newTorrent.infoDictionary);
 	}
       vector<TorrentFile_t> files = newTorrent.getFiles();
       //cout << "Files (" << files.size() << ")\t\t:\t\t";
@@ -222,6 +225,21 @@ Torrent_t Torrent_t::decode(string torrentString)
     }
 
   return newTorrent;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+string Torrent_t::getInfoDictionary()
+{
+	string infoDictionaryStr = "";
+	if (infoDictionary)
+	{
+		infoDictionaryStr += infoDictionary->encode();
+	}
+	else
+    	{
+      		throw invalid_argument("Failed to find \"info\" dictionary !!!");
+    	}
+	return infoDictionaryStr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -469,9 +487,36 @@ void Torrent_t::setPieceLength(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+void Torrent_t::piece(string pieceHash)
+{
+	int pieceLen = 1 + (int) pieces.size();
+	pieceLen *= pieceLength;
+	/*if (length < pieceLen)	// if not last piece
+		pieceLen -= (int) pieces.size() * pieceLength;
+	else			// else, adjust for last piece
+		pieceLen = length - pieceLen;*/
+
+	TorrentPiece_t newPiece (pieceLen, pieceHash);
+	pieces.push_back(newPiece);
+
+	if (pieceHash.size() < sizeof(int) * pieces.size())
+		pieceHash.push_back(0);
+}
+
+TorrentPiece_t Torrent_t::piece(int idx)
+{
+	assert (idx < (int) pieces.size());
+	return pieces[idx];
+}
+
 vector<string> Torrent_t::getPieceHashes()
 {
-  return pieceHashes;
+	vector<string> pieceHashes;
+	for (size_t i=0; i < pieces.size(); i++)
+	{
+		pieceHashes.push_back(pieces[i].getHash());
+	}
+  	return pieceHashes;
 }
 
 void Torrent_t::setPieceHashes(Bencode_t *bencodeTorrent_t)
@@ -488,7 +533,8 @@ void Torrent_t::setPieceHashes(Bencode_t *bencodeTorrent_t)
       string temp = bencodeString_t->get();
       for (unsigned int i = 0; i < temp.size(); i += 20)
 	{
-	  pieceHashes.push_back(temp.substr(i, 20));
+	  //pieceHashes.push_back(temp.substr(i, 20));
+	  piece(temp.substr(i, 20));
 	}
     }
   else
