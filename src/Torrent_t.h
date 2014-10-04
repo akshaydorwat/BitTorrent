@@ -9,6 +9,7 @@
 #define TORRENT_T_H_
 
 #include "TorrentFile_t.h"
+#include "TorrentPiece_t.h"
 #include "Bencode_t.h"
 
 #include <string>
@@ -27,14 +28,17 @@ class Torrent_t
   string encoding;
   vector<TorrentFile_t> files;
   string name;
+
   size_t pieceLength;
   vector<string> pieceHashes;
+  vector<int> pieceAvailable;
+  vector<TorrentPiece_t> pieces;
+
   BencodeDictionary_t *infoDictionary;
 
  public:
   //		static string encode();
   static Torrent_t decode(string);
-  string getInfoDictionary();
 
   string getAnnounce();
   void setAnnounce(string);
@@ -78,7 +82,9 @@ class Torrent_t
   void setPieceHashes(Bencode_t *);
   void addPieceHash(string);
   string pieceHashAt(int);
-  //		bool isValidPiece(size_t, string);
+  void piece(string);
+  TorrentPiece_t piece(int);
+  bool isValidPiece(size_t);
 
   string getInfoDictionary();
 };
