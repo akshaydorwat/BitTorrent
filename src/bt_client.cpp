@@ -17,8 +17,9 @@
 
 // CPP libraries
 #include "Reactor.hpp"
+#include "TorrentCtx.hpp"
 #include "Logger.hpp"
-#include "Torrent_t.h"
+
 
 using namespace std;
 
@@ -46,33 +47,29 @@ int main (int argc, char * argv[]){
   LOG(INFO, "log_file: " + string(bt_args.log_file));
   LOG(INFO, "torrent_file" + string(bt_args.torrent_file));
 
-  // parse torrent file and create context.
-  Torrent_t::decode(string(bt_args.torrent_file));
-
-  // start reactor
+  // Initialise reactor reactor
   Reactor* reactor = Reactor::getInstance();
   reactor->setPortRange(INIT_PORT, MAX_PORT);
   reactor->setMaxConnections(MAX_CONNECTIONS);
   reactor->setPollTimeOut(POLL_TIMEOUT);
   reactor->setScocketAddr(bt_args.sockaddr);
   reactor->initReactor();
+
+  // Load Torrent Context
+  TorrentCtx t (reactor);
+
+  // Intialise the context
+  t.init(&bt_args);
+
   reactor->startReactor();
-
   std::cout << "Press Q or q to quit \n";
-
   while( inp != 'Q'){
     inp = getchar();
   }
   
   reactor->closeReactor();
 
-  //TODO List
-  // start Peers
-  // create seession for torrent file we parsed
-  // register events with session
-  // create processing loop
-  // File handlers
-  
+  //TODO: Take care of closing all the resorces
 
   //Free manually allocated memory
   for(i=0; i<bt_args.n_peers; i++)

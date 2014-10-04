@@ -3,13 +3,26 @@
 
 #include <map>
 #include <vector>
-#include <bitset>
+#include <string>
+
+#include "Peer.hpp"
+#include "bt_lib.h"
+#include "Reactor.hpp"
+#include <time.h>
 
 using namespace std;
 
 class TorrentCtx{
-public:
 
+public:
+  TorrentCtx(Reactor *r);
+
+  // initialise torrent context
+  void init(bt_args_t *args);
+  
+  // contact tracker and load the peers list
+  void contact_tracker(bt_args_t * bt_args);
+  
 private:
   //command line arguments
   string peerId;                      // peer id
@@ -22,19 +35,20 @@ private:
   string announce;                    // announce url
   string torrentName;                 // torrent 
   int64_t pieceLength;                // piece length
-  int64_t Filelength;                 // total file len
+  int64_t fileLength;                 // total file len
   size_t numPieces;                   // numer of pieces
-  map<string,*Peer> peers;            // Peers in torrent
-  vector<string> pieceHashes          // pieces hash
+  map<string,Peer*> peers;            // Peers in torrent
+  vector<string> pieceHashes;          // pieces hash
 
   // Book keeping
   time_t start_time;                 // start time
   bool isComplete;                   // donwload complete
-  bitset *piecesBitVector;           // piece bit vector
+  vector<bool> *piecesBitVector;     // piece bit vector
   
   // ref objects
-  FileManager *m_filemanager;
+  //FileManager *m_filemanager;
   Reactor *reactor;
   
+
 };
-#endif TORRENT_CTX_HPP
+#endif 

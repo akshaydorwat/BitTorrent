@@ -29,6 +29,7 @@ class Torrent_t
   string name;
   size_t pieceLength;
   vector<string> pieceHashes;
+  string infoDictionary;
 
  public:
   //		static string encode();
@@ -77,6 +78,8 @@ class Torrent_t
   void addPieceHash(string);
   string pieceHashAt(int);
   //		bool isValidPiece(size_t, string);
+
+  string getInfoDictionary();
 };
 
 #endif /* TORRENT_T_H_ */

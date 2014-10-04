@@ -116,6 +116,8 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
   memset(bt_args->save_file,0x00,FILE_NAME_MAX);
   memset(bt_args->torrent_file,0x00,FILE_NAME_MAX);
   memset(bt_args->log_file,0x00,FILE_NAME_MAX);
+  memset(bt_args->id,0x00,ID_SIZE);
+  
   
   //default log file
   strncpy(bt_args->log_file,"bt-client.log",FILE_NAME_MAX);
@@ -123,9 +125,7 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
   for(i=0;i<MAX_CONNECTIONS;i++){
     bt_args->peers[i] = NULL; //initially NULL
   }
-
-  bt_args->id = 0;
-  
+ 
   while ((ch = getopt(argc, argv, "hp:s:l:vI:b:")) != -1) {
     switch (ch) {
     case 'h': //help
@@ -151,12 +151,16 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       }
 
       bt_args->peers[n_peers] = (peer_t*)malloc(sizeof(peer_t));
-
+      
       //parse peers
       __parse_peer(bt_args->peers[n_peers], optarg);
       break;
     case 'I':
-      bt_args->id = atoi(optarg);
+      if(sizeof(optarg) <= ID_SIZE){
+	bcopy(optarg, bt_args->id, sizeof(optarg));
+      }else{
+	fprintf(stderr,"ERROR: can only support %d ID size ",ID_SIZE);
+      }
       break;
     case 'b':
       //get the host by name
@@ -176,7 +180,6 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       bcopy((char *) (hostinfo->h_addr), 
 	    (char *) &(bt_args->sockaddr.sin_addr.s_addr),
 	    hostinfo->h_length);
-  
       break;
 
     default:
@@ -191,7 +194,7 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
   
   // Store total number of peers
   bt_args->n_peers = n_peers;
-
+  
   if(argc == 0){
     fprintf(stderr,"ERROR: Require torrent file\n");
     usage(stderr);

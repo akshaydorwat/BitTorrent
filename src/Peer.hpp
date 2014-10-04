@@ -67,7 +67,7 @@ private:
   string ip;
   string port;
   bool chocked;
-  bool interestesd;
+  bool interested;
 };
 #endif
 

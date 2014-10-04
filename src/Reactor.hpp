@@ -52,6 +52,9 @@ public:
     addr = add;
   }
 
+  struct sockaddr_in getSocketAddr(){
+    return addr;
+  }
   // set poll timeout
   void setPollTimeOut(int timeout){
     poll_timeout = timeout;
@@ -80,6 +83,9 @@ public:
 
   // wait till reactor exit
   void wait();
+
+  // returns port it is bind to 
+  unsigned int getPort();
 
   // Singleton method to getinstance of reactor
   static Reactor* getInstance();

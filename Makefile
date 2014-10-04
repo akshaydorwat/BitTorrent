@@ -19,7 +19,8 @@ BencodeList_t.o \
 BencodeDictionary_t.o \
 BencodeDecoder.o \
 TorrentFile_t.o \
-Torrent_t.o
+Torrent_t.o\
+TorrentCtx.o
 
 BIN = bt_client
 

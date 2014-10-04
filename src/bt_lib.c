@@ -16,6 +16,21 @@
 #include "bt_setup.h"
 
 
+void calc_id_sockaddr(struct sockaddr_in *addr, char *id){
+  // If client id is not provided calculate the client ID                                                         
+  char *ip;
+  unsigned short port;
+  
+
+  if(addr != NULL){
+    ip = inet_ntoa(addr->sin_addr);
+    port = addr->sin_port ;
+    calc_id(ip, port, id);
+  }else{
+    fprintf(stderr, "[Error] Failed to calculate client Id\n");
+    exit(1);
+  }
+}
 
 void calc_id(char * ip, unsigned short port, char *id){
   char data[256];
