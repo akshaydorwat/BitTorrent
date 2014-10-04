@@ -29,11 +29,12 @@ class Torrent_t
   string name;
   size_t pieceLength;
   vector<string> pieceHashes;
-  string infoDictionary;
+  BencodeDictionary_t *infoDictionary;
 
  public:
   //		static string encode();
   static Torrent_t decode(string);
+  string getInfoDictionary();
 
   string getAnnounce();
   void setAnnounce(string);

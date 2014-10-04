@@ -162,10 +162,12 @@ Torrent_t Torrent_t::decode(string torrentString)
 
       BencodeDictionary_t* torrentDictionary =
 	dynamic_cast<BencodeDictionary_t*>(bencode_t);
-      BencodeDictionary_t *infoDictionary =
+      newTorrent.infoDictionary =
 	dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
+	LOG (INFO, "Info Dictionary \t:\t\t" + newTorrent.getInfoDictionary());
+
       BencodeList_t *filesList =
-	dynamic_cast<BencodeList_t*>(infoDictionary->at("files"));
+	dynamic_cast<BencodeList_t*>(newTorrent.infoDictionary->at("files"));
       if (filesList) // multiple files torrent
 	{
 	  /* NOTE:files is a list of dictionaries. eg. in bencoding: ld6:lengthi1024e4path:l8:filenameeee */
@@ -178,7 +180,7 @@ Torrent_t Torrent_t::decode(string torrentString)
 	}
       else // single file torrent
 	{
-	  newTorrent.addFile(infoDictionary);
+	  newTorrent.addFile(newTorrent.infoDictionary);
 	}
       vector<TorrentFile_t> files = newTorrent.getFiles();
       //cout << "Files (" << files.size() << ")\t\t:\t\t";
@@ -222,6 +224,21 @@ Torrent_t Torrent_t::decode(string torrentString)
     }
 
   return newTorrent;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+string Torrent_t::getInfoDictionary()
+{
+	string infoDictionaryStr = "";
+	if (infoDictionary)
+	{
+		infoDictionaryStr += infoDictionary->encode();
+	}
+	else
+    	{
+      		throw invalid_argument("Failed to find \"info\" dictionary !!!");
+    	}
+	return infoDictionaryStr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////

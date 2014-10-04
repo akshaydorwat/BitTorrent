@@ -83,7 +83,7 @@ string BencodeDictionary_t::encode()
 	{
 		BencodeString_t key(itr->first);
 		bencodedString += (key.encode());
-		bencodedString += ":";
+		//bencodedString += ":";
 		bencodedString += ((itr->second)->encode());
 	}
 

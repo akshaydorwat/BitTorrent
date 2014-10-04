@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 //#include <cstring>
+#include <stdio.h>
 #include <stdlib.h>
 #include <cassert>
 
@@ -55,7 +56,10 @@ string BencodeString_t::display()
 // implement the interface of Bencode_t
 string BencodeString_t::encode()
 {
-	return data.size() + ":" + data;
+	char buffer[33];
+	sprintf(buffer , "%lu", data.size());
+	string temp(buffer);	
+	return temp + ":" + data;
 }
 
 BencodeString_t BencodeString_t::decode(string bencodeString, size_t *startIdx)
