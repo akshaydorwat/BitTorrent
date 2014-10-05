@@ -9,7 +9,6 @@
 #define TORRENT_HPP_
 
 #include "TorrentFile.hpp"
-//#include "TorrentPiece_t.h"
 #include "Bencode_t.h"
 
 #include <string>
@@ -28,16 +27,13 @@ class Torrent
   string encoding;
   vector<TorrentFile> files;
   string name;
-
   size_t pieceLength;
   vector<string> pieceHashes;
-  //vector<int> pieceAvailable;
-  //vector<TorrentPiece_t> pieces;
-
   string infoDictionary;
 
  public:
-  //		static string encode();
+  //static string encode();
+
   static Torrent decode(string);
 
   string getAnnounce();

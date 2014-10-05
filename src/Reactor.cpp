@@ -1,13 +1,11 @@
 /*==============================
-   Author : Akshay Dorwat
-   Email ID: adorwat@indiana.edu
-   created on: 09/22/2014
-=================================*/
+  Author : Akshay Dorwat
+  Email ID: adorwat@indiana.edu
+  created on: 09/22/2014
+  =================================*/
 
 #include "Reactor.hpp"
 #include "Logger.hpp"
-#include "Peer.hpp"
-
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -19,10 +17,10 @@ using namespace std;
 Reactor* Reactor::reactor = NULL;
 
 // scan the regiter
-Peer* Reactor::scanEventRegister(int key){
-  Peer* p;
+ConnectionHandler* Reactor::scanEventRegister(int key){
+  ConnectionHandler* p;
 
-  map<int,Peer*>::iterator it =  eventRegister.find(key);
+  map<int,ConnectionHandler*>::iterator it =  eventRegister.find(key);
   if(it == eventRegister.end()){
     return NULL;
   }else{
@@ -32,9 +30,9 @@ Peer* Reactor::scanEventRegister(int key){
 }
 
 /*
- Function Name: getInstance
- paramer : None
- Output  : Reactor global instance
+  Function Name: getInstance
+  paramer : None
+  Output  : Reactor global instance
 */
 Reactor* Reactor::getInstance(){
 
@@ -95,7 +93,7 @@ void Reactor::handleEvent(){
   
   int tsfd; //tsfd = transfer-socket fd
   int numBytesRcvd;
-  Peer* peer;
+  ConnectionHandler* conn;
   char packet_rcvd[MAX_PACKET_SIZE];
   struct sockaddr_in srcaddr;
   socklen_t srcaddr_len = sizeof(srcaddr);
@@ -104,9 +102,10 @@ void Reactor::handleEvent(){
   for (vector<pollfd>::iterator it = poll_fd.begin() ; it != poll_fd.end(); ++it){
 
     pollfd p_fd = *it;
-    //    LOG(INFO,"checking on socket : "+ to_string(p_fd.fd));
+    
     // Server fd have different handling 
     if(p_fd.fd == server_sfd){
+      //LOG(INFO,"checking on socket : "+ to_string(p_fd.fd));
       // Check server for hang up or error
       if(p_fd.events & (POLLHUP|POLLERR)){
 	LOG(ERROR,"Server Failed, Tearing Down all connections");
@@ -125,7 +124,7 @@ void Reactor::handleEvent(){
 	    close(tsfd);
 	  }
 	  // create peer for this socket
-	  Peer* p = new Peer();
+	  ConnectionHandler* p = new ConnectionHandler(tsfd, srcaddr);
 	  // Resiter Event
 	  if(ioctl(tsfd, FIONBIO, (char *)&on) < 0){
 	    LOG(ERROR, "Failed to set server socket NON-BLOCKING");
@@ -151,20 +150,21 @@ void Reactor::handleEvent(){
 	    }								
             break;							
 	  }								
+	  // get the connection object
+	  if((conn = scanEventRegister(p_fd.fd)) == NULL){
+	    LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
+	    exit(EXIT_FAILURE); 
+	  }
 	  // Call handler if i have message 
 	  if(numBytesRcvd > 0){
 	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
-	    if((peer = scanEventRegister(p_fd.fd)) == NULL){
-	      LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
-	      exit(EXIT_FAILURE); 
-	    }
-	    peer->readMessage(string(packet_rcvd, numBytesRcvd));
+	    conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }
 	  // connection closed
 	  if(numBytesRcvd == 0){
-	    close(p_fd.fd);
 	    //TODO: report it to peer as well 
 	    unRegisterEvent(p_fd.fd);
+	    conn->closeConn();
 	    break;
 	  }
 	}while(true);
@@ -185,7 +185,6 @@ void Reactor::loopForever(){
   // starting reactor
   while(is_started){
 
-    //LOG(DEBUG,"Looping");
     // poll for events
     if((ret = poll( &poll_fd[0],(nfds_t) poll_fd.size(), poll_timeout)) == -1){
       LOG(ERROR, "Polling failed !!");
@@ -201,7 +200,7 @@ void Reactor::loopForever(){
 void Reactor::fillPollFd(){
 
   pollfd p_fd;
-  map<int,Peer*>::iterator it;
+  map<int,ConnectionHandler*>::iterator it;
 
   poll_fd.clear();
   //Insert server fd special case
@@ -217,9 +216,9 @@ void Reactor::fillPollFd(){
   }
 }
 
-void Reactor::registerEvent(int fd, Peer* peer){
+void Reactor::registerEvent(int fd, ConnectionHandler* conn){
   m_lock.lock();
-  eventRegister.insert( pair<int,Peer*>(fd, peer));
+  eventRegister.insert( pair<int,ConnectionHandler*>(fd, conn));
   m_lock.unlock();
   LOG(INFO, "Resigering new socket for POLLIN, socket ID : " + to_string(fd));
 }

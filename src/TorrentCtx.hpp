@@ -4,18 +4,18 @@
 #include <map>
 #include <vector>
 #include <string>
-
-#include "Peer.hpp"
-#include "bt_lib.h"
-#include "Reactor.hpp"
 #include <time.h>
+#include "bt_lib.h"
+//#include "Reactor.hpp"
+#include "Torrent.hpp"
+#include <fstream>
 
 using namespace std;
 
 class TorrentCtx{
 
 public:
-  TorrentCtx(Reactor *r);
+  //TorrentCtx(Reactor *r);
 
   // initialise torrent context
   void init(bt_args_t *args);
@@ -32,22 +32,18 @@ private:
   
   // Tracker info
   string infoHash;                    // info hash
-  string announce;                    // announce url
-  string torrentName;                 // torrent 
-  int64_t pieceLength;                // piece length
-  int64_t fileLength;                 // total file len
-  size_t numPieces;                   // numer of pieces
-  map<string,Peer*> peers;            // Peers in torrent
-  vector<string> pieceHashes;          // pieces hash
+  Torrent metaData;
 
   // Book keeping
-  time_t start_time;                 // start time
-  bool isComplete;                   // donwload complete
-  vector<bool> *piecesBitVector;     // piece bit vector
+  map<string,void*> peers;            // Peers in torrent
+  fstream saveFile_fd;                // File descriptor
+  time_t start_time;                  // start time
+  bool isComplete;                    // donwload complete
+  vector<bool> *piecesBitVector;      // piece bit vector
   
   // ref objects
   //FileManager *m_filemanager;
-  Reactor *reactor;
+  //Reactor *reactor;
   
 
 };

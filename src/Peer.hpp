@@ -8,18 +8,30 @@
 
 #include <time.h>
 #include <string>
+#include "TorrentCtx.hpp"
 
 using namespace std;
 
 class Peer{
   
 public:
-  Peer(){
+  Peer(TorrentCtx* p_ctx, string p_myId, string p_ip, unsigned short p_port){
+    ctx = p_ctx;
+    myId = p_myId;
+    ip = p_ip;
+    port = p_port;
     is_initiated_by_me = false;
     is_active = false;
     chocked = true;
     interested = false;
   }
+
+  /*  Peer(){
+    is_initiated_by_me = false;
+    is_active = false;
+    chocked = true;
+    interested = false;
+    }*/
 
   int sfd;
   time_t last_connect;
@@ -60,7 +72,8 @@ public:
 
 private:
 
-  //  TorrentCtx* ctx;
+  TorrentCtx* ctx;
+  void *connection;
   bool is_initiated_by_me;
   bool is_active;
   string myId;

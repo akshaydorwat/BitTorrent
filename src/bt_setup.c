@@ -142,7 +142,6 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       strncpy(bt_args->log_file,optarg,FILE_NAME_MAX);
       break;
     case 'p': //peer
-      n_peers++;
       //check if we are going to overflow
       if(n_peers > MAX_CONNECTIONS){
         fprintf(stderr,"ERROR: Can only support %d initial peers",MAX_CONNECTIONS);
@@ -151,9 +150,11 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       }
 
       bt_args->peers[n_peers] = (peer_t*)malloc(sizeof(peer_t));
+      fprintf(stdout,"NUmber of peers are : %d",n_peers);
       
       //parse peers
       __parse_peer(bt_args->peers[n_peers], optarg);
+      n_peers++;
       break;
     case 'I':
       if(sizeof(optarg) <= ID_SIZE){

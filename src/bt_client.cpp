@@ -56,7 +56,7 @@ int main (int argc, char * argv[]){
   reactor->initReactor();
 
   // Load Torrent Context
-  TorrentCtx t (reactor);
+  TorrentCtx t; //(reactor);
 
   // Intialise the context
   t.init(&bt_args);

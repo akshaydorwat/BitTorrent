@@ -6,7 +6,7 @@
 
 #include "Peer.hpp"
 #include "Logger.hpp"
-
+#include "ConnectionHandler.hpp"
 #include "string"
 
 using namespace std;
