@@ -7,14 +7,14 @@
 
 #include "TorrentPiece_t.h"
 
-#include <iostream>
+//#include <iostream>
 #include <string>
 #include <vector>
-#include <ctime>
-#include <exception>
-#include <stdexcept>
-#include <cassert>
-#include <stdlib.h>
+//#include <ctime>
+//#include <exception>
+//#include <stdexcept>
+//#include <cassert>
+//#include <stdlib.h>
 using namespace std;
 
 TorrentPiece_t::TorrentPiece_t(size_t length, string pieceHash)
@@ -35,7 +35,7 @@ void TorrentPiece_t::setLength(size_t len)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-string TorrentPiece_t::getData()
+/*string TorrentPiece_t::getData()
 {
 	return data;
 }
@@ -44,13 +44,13 @@ void TorrentPiece_t::setData(string str)
 {
 	data = str;
 }
-
+*/
 //////////////////////////////////////////////////////////////////////////////////////
-bool TorrentPiece_t::isComplete()
+/*bool TorrentPiece_t::isComplete()
 {
 	return length == data.size();
 }
-
+*/
 //////////////////////////////////////////////////////////////////////////////////////
 void TorrentPiece_t::setHash(string pieceHash)
 {
@@ -63,9 +63,9 @@ string TorrentPiece_t::getHash()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-bool TorrentPiece_t::isValid()
+/*bool TorrentPiece_t::isValid()
 {
 	return isComplete() && data.size() > hash.size(); // edit : hash comparison
 }
-
+*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////

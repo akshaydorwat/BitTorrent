@@ -16,8 +16,8 @@ class TorrentPiece_t
 {
  private:
   size_t length;
-  string data;
-  vector<int> blockAvailable;
+  //string data;
+  //vector<int> blockAvailable;
   //vector<TorrentPieceBlock_t> blocks;
   string hash;
 
@@ -25,15 +25,15 @@ class TorrentPiece_t
   TorrentPiece_t(size_t, string);
 
   size_t getLength();
-  void setLength(unsigned int);
+  void setLength(size_t);
 
-  void setData(string);
-  string getData();
-  bool isComplete();
+  //void setData(string);
+  //string getData();
+  //bool isComplete();
 
   void setHash(string);
   string getHash();
-  bool isValid();
+  //bool isValid();
 };
 
-#endif /* TORRENTFILE_T_H_ */
+#endif /* TORRENTPIECE_T_H_ */

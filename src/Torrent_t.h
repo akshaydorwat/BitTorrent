@@ -31,8 +31,8 @@ class Torrent_t
 
   size_t pieceLength;
   vector<string> pieceHashes;
-  vector<int> pieceAvailable;
-  vector<TorrentPiece_t> pieces;
+  //vector<int> pieceAvailable;
+  //vector<TorrentPiece_t> pieces;
 
   BencodeDictionary_t *infoDictionary;
 
@@ -82,9 +82,9 @@ class Torrent_t
   void setPieceHashes(Bencode_t *);
   void addPieceHash(string);
   string pieceHashAt(int);
-  void piece(string);
-  TorrentPiece_t piece(int);
-  bool isValidPiece(size_t);
+  //void piece(string);
+  //TorrentPiece_t piece(int);
+  //bool isValidPiece(size_t);
 
   string getInfoDictionary();
 };

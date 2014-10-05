@@ -22,6 +22,8 @@ TorrentFile_t.o \
 Torrent_t.o\
 TorrentCtx.o
 
+#TorrentPiece_t.o
+
 BIN = bt_client
 
 all: $(BIN)
