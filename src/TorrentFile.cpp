@@ -1,11 +1,11 @@
 /*
- * TorrentFile_t.cpp
+ * TorrentFile.cpp
  *
  *  Created on: Sep 22, 2014
  *      Author: rkhapare
  */
 
-#include "TorrentFile_t.h"
+#include "TorrentFile.hpp"
 
 #include "Bencode_t.h"
 #include "BencodeDictionary_t.h"
@@ -23,12 +23,12 @@
 #include <stdlib.h>
 using namespace std;
 
-size_t TorrentFile_t::getLength()
+size_t TorrentFile::getLength()
 {
 	return length;
 }
 
-void TorrentFile_t::setLength(unsigned int len)
+void TorrentFile::setLength(unsigned int len)
 {
 	length = len;
 }
@@ -37,7 +37,7 @@ void TorrentFile_t::setLength(unsigned int len)
 // d files l d length 19920192
 //             path
 //                   l  Total Video Converter HD v3.71 + Serials [ChattChitto RG].exe
-void TorrentFile_t::setLength(BencodeDictionary_t *infoOrFilesDictionary)
+void TorrentFile::setLength(BencodeDictionary_t *infoOrFilesDictionary)
 {
 //	BencodeDictionary_t* torrentDictionary =
 //			dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
@@ -63,12 +63,12 @@ void TorrentFile_t::setLength(BencodeDictionary_t *infoOrFilesDictionary)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-vector<string> TorrentFile_t::getPaths()
+vector<string> TorrentFile::getPaths()
 {
 	return paths;
 }
 
-void TorrentFile_t::setPaths(BencodeDictionary_t *infoOrFilesDictionary)
+void TorrentFile::setPaths(BencodeDictionary_t *infoOrFilesDictionary)
 {
 //	BencodeDictionary_t* torrentDictionary =
 //			dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
@@ -105,12 +105,12 @@ void TorrentFile_t::setPaths(BencodeDictionary_t *infoOrFilesDictionary)
 	}
 }
 
-void TorrentFile_t::addPath(string path)
+void TorrentFile::addPath(string path)
 {
 	paths.push_back(path);
 }
 
-string TorrentFile_t::pathAt(unsigned int i)
+string TorrentFile::pathAt(unsigned int i)
 {
 	return paths[i];
 }

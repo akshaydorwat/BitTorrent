@@ -1,13 +1,13 @@
 
 /*
- * Torrent_t.cpp
+ * Torrent.cpp
  *
  *  Created on: Sep 22, 2014
  *      Author: rkhapare
  */
 
-#include "Torrent_t.h"
-#include "TorrentFile_t.h"
+#include "Torrent.hpp"
+#include "TorrentFile.hpp"
 //#include "TorrentPiece_t.h"
 #include "BencodeDecoder.h"
 #include "Bencode_t.h"
@@ -31,7 +31,7 @@
 #include <stdlib.h>
 using namespace std;
 
-Torrent_t Torrent_t::decode(string torrentString)
+Torrent Torrent::decode(string torrentString)
 {
   string ending = ".torrent";
   if (torrentString.length() > ending.length()
@@ -69,7 +69,7 @@ Torrent_t Torrent_t::decode(string torrentString)
 
   //cout << bencode_t->display() << endl;
 
-  Torrent_t newTorrent;
+  Torrent newTorrent;
   char buffer[33];	
   try
     {
@@ -163,12 +163,14 @@ Torrent_t Torrent_t::decode(string torrentString)
 
       BencodeDictionary_t* torrentDictionary =
 	dynamic_cast<BencodeDictionary_t*>(bencode_t);
-      newTorrent.infoDictionary =
+      BencodeDictionary_t *infoDictionary =
 	dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
+	//newTorrent.infoDictionary = infoDictionary->clone();
+	newTorrent.setInfoDictionary(infoDictionary);
 	LOG (INFO, "Info Dictionary \t:\t\t" + newTorrent.getInfoDictionary());
 
       BencodeList_t *filesList =
-	dynamic_cast<BencodeList_t*>(newTorrent.infoDictionary->at("files"));
+	dynamic_cast<BencodeList_t*>(infoDictionary->at("files"));
       if (filesList) // multiple files torrent
 	{
 	  /* NOTE:files is a list of dictionaries. eg. in bencoding: ld6:lengthi1024e4path:l8:filenameeee */
@@ -181,9 +183,9 @@ Torrent_t Torrent_t::decode(string torrentString)
 	}
       else // single file torrent
 	{
-	  newTorrent.addFile(newTorrent.infoDictionary);
+	  newTorrent.addFile(infoDictionary);
 	}
-      vector<TorrentFile_t> files = newTorrent.getFiles();
+      vector<TorrentFile> files = newTorrent.getFiles();
       //cout << "Files (" << files.size() << ")\t\t:\t\t";
       LOG (INFO, "Files\t\t:\t\t");
       for (size_t i = 0; i < files.size(); i++)
@@ -228,35 +230,38 @@ Torrent_t Torrent_t::decode(string torrentString)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-string Torrent_t::getInfoDictionary()
+void Torrent::setInfoDictionary(BencodeDictionary_t *infoDictionary_t)
 {
-	string infoDictionaryStr = "";
-	if (infoDictionary)
+	if (infoDictionary_t)
 	{
-		infoDictionaryStr += infoDictionary->encode();
+		infoDictionary += infoDictionary_t->encode();
 	}
 	else
     	{
       		throw invalid_argument("Failed to find \"info\" dictionary !!!");
     	}
-	return infoDictionaryStr;
+}
+
+string Torrent::getInfoDictionary()
+{
+	return infoDictionary;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-string Torrent_t::getAnnounce()
+string Torrent::getAnnounce()
 {
   return announce;
 }
 
-void Torrent_t::setAnnounce(string str)
+void Torrent::setAnnounce(string str)
 {
   announce = str;
 }
 
-void Torrent_t::setAnnounce(Bencode_t *bencodeTorrent_t)
+void Torrent::setAnnounce(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeString_t *bencodeString_t =
     dynamic_cast<BencodeString_t*>(torrentDictionary->at("announce"));
   if (bencodeString_t)
@@ -270,20 +275,20 @@ void Torrent_t::setAnnounce(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-vector<string> Torrent_t::getAnnounceList()
+vector<string> Torrent::getAnnounceList()
 {
   return announceList;
 }
 
-void Torrent_t::setAnnounceList(vector<string> list)
+void Torrent::setAnnounceList(vector<string> list)
 {
   announceList = list;
 }
 
-void Torrent_t::setAnnounceList(Bencode_t *bencodeTorrent_t)
+void Torrent::setAnnounceList(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeList_t *bencodeList_t =
     dynamic_cast<BencodeList_t*>(torrentDictionary->at("announce-list"));
 
@@ -308,26 +313,26 @@ void Torrent_t::setAnnounceList(Bencode_t *bencodeTorrent_t)
     }
 }
 
-void Torrent_t::addToAnnounceList(string str)
+void Torrent::addToAnnounceList(string str)
 {
   announceList.push_back(str);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-string Torrent_t::getComment()
+string Torrent::getComment()
 {
   return comment;
 }
 
-void Torrent_t::setComment(string str)
+void Torrent::setComment(string str)
 {
   comment = str;
 }
 
-void Torrent_t::setComment(Bencode_t *bencodeTorrent_t)
+void Torrent::setComment(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeString_t *bencodeString_t =
     dynamic_cast<BencodeString_t*>(torrentDictionary->at("comment"));
   if (bencodeString_t)
@@ -341,20 +346,20 @@ void Torrent_t::setComment(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-string Torrent_t::getCreator()
+string Torrent::getCreator()
 {
   return creator;
 }
 
-void Torrent_t::setCreator(string str)
+void Torrent::setCreator(string str)
 {
   creator = str;
 }
 
-void Torrent_t::setCreator(Bencode_t *bencodeTorrent_t)
+void Torrent::setCreator(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeString_t *bencodeString_t =
     dynamic_cast<BencodeString_t*>(torrentDictionary->at("created by"));
 
@@ -369,20 +374,20 @@ void Torrent_t::setCreator(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-time_t Torrent_t::getCreatedOn()
+time_t Torrent::getCreatedOn()
 {
   return createdOn;
 }
 
-string Torrent_t::showCreatedOn()
+string Torrent::showCreatedOn()
 {
   return ctime(&createdOn);
 }
 
-void Torrent_t::setCreatedOn(Bencode_t *bencodeTorrent_t)
+void Torrent::setCreatedOn(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeInteger_t *bencodeInteger_t =
     dynamic_cast<BencodeInteger_t*>(torrentDictionary->at(
 							  "creation date"));
@@ -398,20 +403,20 @@ void Torrent_t::setCreatedOn(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-string Torrent_t::getEncoding()
+string Torrent::getEncoding()
 {
   return encoding;
 }
 
-void Torrent_t::setEncoding(string str)
+void Torrent::setEncoding(string str)
 {
   encoding = str;
 }
 
-void Torrent_t::setEncoding(Bencode_t *bencodeTorrent_t)
+void Torrent::setEncoding(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeString_t *bencodeString_t =
     dynamic_cast<BencodeString_t*>(torrentDictionary->at("encoding"));
 
@@ -426,20 +431,20 @@ void Torrent_t::setEncoding(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-string Torrent_t::getName()
+string Torrent::getName()
 {
   return name;
 }
 
-void Torrent_t::setName(string str)
+void Torrent::setName(string str)
 {
   name = str;
 }
 
-void Torrent_t::setName(Bencode_t *bencodeTorrent_t)
+void Torrent::setName(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeDictionary_t *bencodeDictionary_t =
     dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
   BencodeString_t *bencodeString_t =
@@ -456,20 +461,20 @@ void Torrent_t::setName(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-size_t Torrent_t::getPieceLength()
+size_t Torrent::getPieceLength()
 {
   return pieceLength;
 }
 
-void Torrent_t::setPieceLength(size_t size)
+void Torrent::setPieceLength(size_t size)
 {
   pieceLength = size;
 }
 
-void Torrent_t::setPieceLength(Bencode_t *bencodeTorrent_t)
+void Torrent::setPieceLength(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeDictionary_t *bencodeDictionary_t =
     dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
   BencodeInteger_t *bencodeInteger_t =
@@ -487,7 +492,7 @@ void Torrent_t::setPieceLength(Bencode_t *bencodeTorrent_t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/*void Torrent_t::piece(string pieceHash)
+/*void Torrent::piece(string pieceHash)
 {
 	size_t pieceLen = 1 + pieces.size();
 	pieceLen *= (size_t) pieceLength;
@@ -503,13 +508,13 @@ void Torrent_t::setPieceLength(Bencode_t *bencodeTorrent_t)
 		pieceHash.push_back(0);
 }
 
-TorrentPiece_t Torrent_t::piece(int idx)
+TorrentPiece_t Torrent::piece(int idx)
 {
 	assert (idx < (int) pieces.size());
 	return pieces[idx];
 }*/
 
-vector<string> Torrent_t::getPieceHashes()
+vector<string> Torrent::getPieceHashes()
 {
 	/*vector<string> pieceHashes;
 	for (size_t i=0; i < pieces.size(); i++)
@@ -519,10 +524,10 @@ vector<string> Torrent_t::getPieceHashes()
   	return pieceHashes;
 }
 
-void Torrent_t::setPieceHashes(Bencode_t *bencodeTorrent_t)
+void Torrent::setPieceHashes(Bencode_t *bencodeTorrent)
 {
   BencodeDictionary_t* torrentDictionary =
-    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent_t);
+    dynamic_cast<BencodeDictionary_t*>(bencodeTorrent);
   BencodeDictionary_t *bencodeDictionary_t =
     dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
   BencodeString_t *bencodeString_t =
@@ -543,37 +548,37 @@ void Torrent_t::setPieceHashes(Bencode_t *bencodeTorrent_t)
     }
 }
 
-void Torrent_t::addPieceHash(string str)
+void Torrent::addPieceHash(string str)
 {
   pieceHashes.push_back(str);
 }
 
-string Torrent_t::pieceHashAt(int i)
+string Torrent::pieceHashAt(int i)
 {
   assert (pieceHashes.size() > (size_t) i);
   return pieceHashes[i];
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-vector<TorrentFile_t> Torrent_t::getFiles()
+vector<TorrentFile> Torrent::getFiles()
 {
   return files;
 }
 
-TorrentFile_t Torrent_t::getFileAt(int i)
+TorrentFile Torrent::getFileAt(int i)
 {
   assert(i >= 0 && i < (int)files.size());
   return files[i];
 }
 
-void Torrent_t::addFile(TorrentFile_t file)
+void Torrent::addFile(TorrentFile file)
 {
   files.push_back(file);
 }
 
-void Torrent_t::addFile(BencodeDictionary_t* filesDictionary)
+void Torrent::addFile(BencodeDictionary_t* filesDictionary)
 {
-  TorrentFile_t torrentFile_t;
+  TorrentFile torrentFile_t;
   torrentFile_t.setLength(filesDictionary);
   try
     {

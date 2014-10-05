@@ -1,12 +1,12 @@
 /*
- * TorrentFile_t.h
+ * TorrentFile.hpp
  *
  *  Created on: Sep 22, 2014
  *      Author: rkhapare
  */
 
-#ifndef TORRENTFILE_T_H_
-#define TORRENTFILE_T_H_
+#ifndef TORRENTFILE_HPP_
+#define TORRENTFILE_HPP_
 
 #include "BencodeDictionary_t.h"
 
@@ -14,7 +14,7 @@
 #include <vector>
 using namespace std;
 
-class TorrentFile_t
+class TorrentFile
 {
  private:
   size_t length;
@@ -31,4 +31,4 @@ class TorrentFile_t
   string pathAt(unsigned int);
 };
 
-#endif /* TORRENTFILE_T_H_ */
+#endif /* TORRENTFILE_HPP_ */

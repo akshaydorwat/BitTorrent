@@ -3,8 +3,8 @@
 #include "TorrentCtx.hpp"
 #include "Logger.hpp"
 
-#include "Torrent_t.h"
-#include "TorrentFile_t.h"
+#include "Torrent.hpp"
+#include "TorrentFile.hpp"
 #include <openssl/sha.h>
 
 using namespace std;
@@ -17,8 +17,8 @@ void TorrentCtx::init(bt_args_t *args){
   
   char id[ID_SIZE];
   char infoHash[20];
-  Torrent_t torrent;
-  vector<TorrentFile_t> files;
+  Torrent torrent;
+  vector<TorrentFile> files;
   string infoDict;
 
   // error handling
@@ -43,7 +43,7 @@ void TorrentCtx::init(bt_args_t *args){
   LOG(INFO, "Client Id :" + peerId);
 
   // parse torrent file and get meta info.
-  torrent = Torrent_t::decode(string(torrentFile));
+  torrent = Torrent::decode(string(torrentFile));
 
   // check for multiple file
   files = torrent.getFiles();
@@ -59,8 +59,8 @@ void TorrentCtx::init(bt_args_t *args){
   numPieces = pieceHashes.size();
   infoDict = torrent.getInfoDictionary();
 
-  for(vector<TorrentFile_t>::iterator it = files.begin(); it != files.end(); ++it ){
-    TorrentFile_t f = *it;
+  for(vector<TorrentFile>::iterator it = files.begin(); it != files.end(); ++it ){
+    TorrentFile f = *it;
     fileLength = f.getLength();
   }
   

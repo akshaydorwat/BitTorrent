@@ -1,15 +1,15 @@
 /*
- * Torrent_t.h
+ * Torrent.hpp
  *
  *  Created on: Sep 22, 2014
  *      Author: rkhapare
  */
 
-#ifndef TORRENT_T_H_
-#define TORRENT_T_H_
+#ifndef TORRENT_HPP_
+#define TORRENT_HPP_
 
-#include "TorrentFile_t.h"
-#include "TorrentPiece_t.h"
+#include "TorrentFile.hpp"
+//#include "TorrentPiece_t.h"
 #include "Bencode_t.h"
 
 #include <string>
@@ -17,7 +17,7 @@
 #include <ctime>
 using namespace std;
 
-class Torrent_t
+class Torrent
 {
  private:
   string announce;
@@ -26,7 +26,7 @@ class Torrent_t
   string creator;
   time_t createdOn;
   string encoding;
-  vector<TorrentFile_t> files;
+  vector<TorrentFile> files;
   string name;
 
   size_t pieceLength;
@@ -34,11 +34,11 @@ class Torrent_t
   //vector<int> pieceAvailable;
   //vector<TorrentPiece_t> pieces;
 
-  BencodeDictionary_t *infoDictionary;
+  string infoDictionary;
 
  public:
   //		static string encode();
-  static Torrent_t decode(string);
+  static Torrent decode(string);
 
   string getAnnounce();
   void setAnnounce(string);
@@ -65,9 +65,9 @@ class Torrent_t
   void setEncoding(string);
   void setEncoding(Bencode_t *);
 
-  vector<TorrentFile_t> getFiles();
-  TorrentFile_t getFileAt(int);
-  void addFile(TorrentFile_t);
+  vector<TorrentFile> getFiles();
+  TorrentFile getFileAt(int);
+  void addFile(TorrentFile);
   void addFile(BencodeDictionary_t*);
 
   string getName();
@@ -87,6 +87,7 @@ class Torrent_t
   //bool isValidPiece(size_t);
 
   string getInfoDictionary();
+  void setInfoDictionary(BencodeDictionary_t *); 
 };
 
-#endif /* TORRENT_T_H_ */
+#endif /* TORRENT_HPP_ */

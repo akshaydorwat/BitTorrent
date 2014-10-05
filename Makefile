@@ -18,8 +18,8 @@ BencodeString_t.o \
 BencodeList_t.o \
 BencodeDictionary_t.o \
 BencodeDecoder.o \
-TorrentFile_t.o \
-Torrent_t.o\
+TorrentFile.o \
+Torrent.o\
 TorrentCtx.o
 
 #TorrentPiece_t.o
