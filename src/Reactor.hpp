@@ -12,13 +12,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <poll.h>
-
+#include <thread>
 #include <iostream>
 #include <map>
 #include <vector>
 #include <mutex>
 #include "bt_lib.h"
 #include "ConnectionHandler.hpp"
+#include "ThreadPool.h"
 
 using namespace std;
 
@@ -26,6 +27,7 @@ class Reactor{
 
 public:
 
+  ~Reactor();
   // Init reactor
   void initReactor();
   
@@ -114,6 +116,8 @@ private:
   int connection_timeout;                // Connection timeout for each socket
   vector<pollfd> poll_fd;                // Polling fds
   map<int,ConnectionHandler*> eventRegister;
+  ThreadPool *pool;
+  
 };
 
 #endif

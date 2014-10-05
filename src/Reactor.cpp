@@ -16,6 +16,10 @@ using namespace std;
 // Intialise the global pointer to NULL
 Reactor* Reactor::reactor = NULL;
 
+
+Reactor::~Reactor(){
+  delete pool;
+}
 // scan the regiter
 ConnectionHandler* Reactor::scanEventRegister(int key){
   ConnectionHandler* p;
@@ -87,6 +91,9 @@ void Reactor::initReactor(){
   LOG(INFO, "Server listening for client connections on port : " + to_string(i));
   // create poll fd vector 
   fillPollFd();
+  // Initialise the thread pool
+  pool = new ThreadPool(POOL_SIZE);
+
 }
 
 void Reactor::handleEvent(){
@@ -158,7 +165,8 @@ void Reactor::handleEvent(){
 	  // Call handler if i have message 
 	  if(numBytesRcvd > 0){
 	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
-	    conn->handle(string(packet_rcvd, numBytesRcvd));
+	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
+	    //conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }
 	  // connection closed
 	  if(numBytesRcvd == 0){

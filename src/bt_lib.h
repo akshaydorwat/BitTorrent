@@ -40,6 +40,9 @@ extern "C"{
   /*Poll time out in miliseconds*/
 #define POLL_TIMEOUT 500
 
+  /*number of threads in thread pool*/
+#define POOL_SIZE 5
+
   /*Different BitTorrent Message Types*/
 #define BT_CHOKE 0
 #define BT_UNCHOKE 1

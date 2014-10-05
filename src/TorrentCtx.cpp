@@ -85,10 +85,10 @@ void TorrentCtx::init(bt_args_t *args){
   } 
   
   // Load pieces from the file 
+  // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
   //loadPieces();
   contact_tracker(args);
 
-  // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
   // Check isComplete ?
   
 }

@@ -26,21 +26,14 @@ public:
     interested = false;
   }
 
-  /*  Peer(){
-    is_initiated_by_me = false;
-    is_active = false;
-    chocked = true;
-    interested = false;
-    }*/
-
   int sfd;
   time_t last_connect;
   
   void readMessage(string msg);
 
-  /* void setTorrentctx(TorrentCtx* context){
+  void setTorrentctx(TorrentCtx* context){
     ctx = context;
-    }*/
+  }
 
   bool isActive(){
     return is_active;
