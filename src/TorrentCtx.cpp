@@ -1,8 +1,7 @@
 #include <vector>
-
+#include <openssl/sha.h>
 #include "TorrentCtx.hpp"
 #include "Logger.hpp"
-
 #include "Torrent_t.h"
 #include "TorrentFile_t.h"
 
@@ -56,7 +55,7 @@ void TorrentCtx::init(bt_args_t *args){
   pieceLength = torrent.getPieceLength();
   pieceHashes = torrent.getPieceHashes();
   numPieces = pieceHashes.size();
-  infoDict = torrent.getInfoDictionary();
+  //infoDict = torrent.getInfoDictionary();
 
   for(vector<TorrentFile_t>::iterator it = files.begin(); it != files.end(); ++it ){
     TorrentFile_t f = *it;
@@ -70,7 +69,7 @@ void TorrentCtx::init(bt_args_t *args){
   LOG(INFO, "File Length : "+ to_string(fileLength));
 
   // calculate the infohash
- SHA1((unsigned char *)infoDict.c_str(), infoDict.length(), (unsigned char *)infoHash);
+  //SHA1((unsigned char *)infoDict.c_str(), infoDict.length(), (unsigned char *)infoHash);
 
   
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 

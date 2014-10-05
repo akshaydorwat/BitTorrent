@@ -17,9 +17,8 @@
 #include <map>
 #include <vector>
 #include <mutex>
-#include "Peer.hpp"
 #include "bt_lib.h"
-
+#include "ConnectionHandler.hpp"
 using namespace std;
 
 class Reactor{
@@ -30,7 +29,7 @@ public:
   void initReactor();
   
   // Register Events with Reactor
-  void registerEvent(int fd, Peer* peer);
+  void registerEvent(int fd, ConnectionHandler* conn);
 
   // Remove event from register
   void unRegisterEvent(int fd);
@@ -39,7 +38,7 @@ public:
   void loopForever();
 
   // scan the regiter
-  Peer* scanEventRegister(int key);
+  ConnectionHandler* scanEventRegister(int key);
 
   // set port range to try while binding
   void setPortRange(unsigned short min_p, unsigned short max_p){
@@ -113,7 +112,7 @@ private:
   int poll_timeout;                      // Polling timeout in milisec
   int connection_timeout;                // Connection timeout for each socket
   vector<pollfd> poll_fd;                // Polling fds
-  map<int,Peer*> eventRegister;
+  map<int,ConnectionHandler*> eventRegister;
 };
 
 #endif

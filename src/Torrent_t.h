@@ -34,8 +34,7 @@ class Torrent_t
  public:
   //		static string encode();
   static Torrent_t decode(string);
-  string getInfoDictionary();
-
+  
   string getAnnounce();
   void setAnnounce(string);
   void setAnnounce(Bencode_t *);
