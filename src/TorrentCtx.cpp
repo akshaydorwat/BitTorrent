@@ -11,6 +11,7 @@
 #include "Logger.hpp"
 #include "Peer.hpp"
 #include "Reactor.hpp"
+#include <stdio.h>
 
 using namespace std;
 
@@ -47,7 +48,7 @@ void TorrentCtx::init(bt_args_t *args){
     peerId = string(args->id);
   }
   
-  LOG(INFO, "Client Id :" + peerId);
+  LOG(INFO, "Client Id("+to_string(peerId.length())+"):" + peerId);
 
   // parse torrent file and get meta info.
   metaData = Torrent::decode(string(torrentFile));
@@ -89,6 +90,18 @@ void TorrentCtx::init(bt_args_t *args){
   //loadPieces();
   contact_tracker(args);
 
+  if(!isComplete){
+    for (std::map<unsigned char*, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
+      Peer *p = (Peer*) it->second;		
+      unsigned char *ptr = p->getId();
+      printf("\nId:");
+      for(int i=0;i<20;i++){
+	printf("%2x", ptr[i]);
+      }
+      printf("\n");
+      //p->startConnection();
+      }
+    }
   // Check isComplete ?
   
 }
@@ -101,8 +114,8 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
   for(i=0; i< bt_args->n_peers; i++){
     p = bt_args->peers[i];
     if(p != NULL){
-      Peer *peer_obj = new Peer(this, string(reinterpret_cast<char*>(p->id)), string(inet_ntoa(p->sockaddr.sin_addr)), p->port );
-      peers[string(reinterpret_cast<const char*> (p->id))] = peer_obj;
+      Peer *peer_obj = new Peer(this, p);
+      peers[p->id] = peer_obj;
     }
   }
 }

@@ -9,27 +9,27 @@
 #include <time.h>
 #include <string>
 #include "TorrentCtx.hpp"
+#include "bt_lib.h"
 
 using namespace std;
 
 class Peer{
   
 public:
-  Peer(TorrentCtx* p_ctx, string p_myId, string p_ip, unsigned short p_port){
+  Peer(TorrentCtx* p_ctx, peer_t *p_p){
     ctx = p_ctx;
-    myId = p_myId;
-    ip = p_ip;
-    port = p_port;
+    p = p_p;
     is_initiated_by_me = false;
     is_active = false;
-    chocked = true;
-    interested = false;
   }
 
   int sfd;
   time_t last_connect;
   
   void readMessage(string msg);
+
+  // Start connection to other Peers in the swarn
+  void startConnection();
 
   void setTorrentctx(TorrentCtx* context){
     ctx = context;
@@ -52,28 +52,32 @@ public:
   }
   
   bool isChocked(){
-    return chocked;
+    return (p->choked == 1);
   }
 
   void setChocked(bool chock){
-    chocked = chock;
+    p->choked = (chock ? 1 : 0);
   }
 
-  string getMyId(){
-    return myId;
+  unsigned char* getId(){
+    return p->id;
   }
 
+  unsigned short getPort(){
+    return p->port;
+  }
+  
+  struct sockaddr_in getSocketAddr(){
+    return p->sockaddr;
+  }
+  
 private:
 
   TorrentCtx* ctx;
+  peer_t *p;
   void *connection;
   bool is_initiated_by_me;
   bool is_active;
-  string myId;
-  string ip;
-  string port;
-  bool chocked;
-  bool interested;
 };
 #endif
 

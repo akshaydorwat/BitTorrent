@@ -85,7 +85,11 @@ int init_peer(peer_t *peer, char * id, char * ip, unsigned short port){
     
   //encode the port
   peer->sockaddr.sin_port = htons(port);
-  
+
+  //initialize the chocked and intrested
+  peer->choked = 1;
+  peer->interested = 0;
+
   return 0;
 
 }

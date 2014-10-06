@@ -35,7 +35,7 @@ private:
   Torrent metaData;
 
   // Book keeping
-  map<string,void*> peers;            // Peers in torrent
+  map<unsigned char*,void*> peers;            // Peers in torrent
   fstream saveFile_fd;                // File descriptor
   time_t start_time;                  // start time
   bool isComplete;                    // donwload complete

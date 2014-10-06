@@ -82,6 +82,7 @@ void __parse_peer(peer_t * peer, char * peer_st){
     exit(1);
   }
 
+  printf("length of ip is %d\n",strlen(ip));
   //calculate the id, value placed in id
   calc_id(ip,port,id);
 
@@ -150,8 +151,6 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       }
 
       bt_args->peers[n_peers] = (peer_t*)malloc(sizeof(peer_t));
-      fprintf(stdout,"NUmber of peers are : %d",n_peers);
-      
       //parse peers
       __parse_peer(bt_args->peers[n_peers], optarg);
       n_peers++;

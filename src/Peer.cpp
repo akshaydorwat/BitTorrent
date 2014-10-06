@@ -14,3 +14,7 @@ using namespace std;
 void Peer::readMessage(string msg){
   LOG(INFO, "Recieved msg : " + msg);
 }
+
+void Peer::startConnection(){
+
+}
