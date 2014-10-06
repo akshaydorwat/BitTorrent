@@ -130,15 +130,14 @@ void Reactor::handleEvent(){
 	    LOG(WARNING,"Max connections exceeded dropping new connection");
 	    close(tsfd);
 	  }
-	  // create peer for this socket
-	  ConnectionHandler* p = new ConnectionHandler(tsfd, srcaddr);
 	  // Resiter Event
 	  if(ioctl(tsfd, FIONBIO, (char *)&on) < 0){
-	    LOG(ERROR, "Failed to set server socket NON-BLOCKING");
-	    close(server_sfd);
+	    LOG(ERROR, "Failed to set client socket NON-BLOCKING");
+	    close(tsfd);
 	    exit(EXIT_FAILURE);
 	  }
-
+	  // create peer for this socket
+	  ConnectionHandler* p = new ConnectionHandler(tsfd, srcaddr);
 	  registerEvent(tsfd, p);
 	}while(tsfd != -1);
       }

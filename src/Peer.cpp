@@ -16,5 +16,9 @@ void Peer::readMessage(string msg){
 }
 
 void Peer::startConnection(){
-
+  if(!isActive()){
+    LOG(DEBUG, "Createing new Connection handler for peer");
+    ConnectionHandler *conn = new ConnectionHandler(this, getSocketAddr());
+    conn->tryConnect();
+  }
 }

@@ -12,6 +12,7 @@
 #include "Peer.hpp"
 #include "Reactor.hpp"
 #include <stdio.h>
+#include <thread>
 
 using namespace std;
 
@@ -90,24 +91,21 @@ void TorrentCtx::init(bt_args_t *args){
   //loadPieces();
   contact_tracker(args);
 
+  // If download is not complete start connection to seeder and intiate handshake
   if(!isComplete){
     for (std::map<unsigned char*, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) it->second;		
-      unsigned char *ptr = p->getId();
-      printf("\nId:");
-      for(int i=0;i<20;i++){
-	printf("%2x", ptr[i]);
-      }
-      printf("\n");
+      
+      std::thread t(&Peer::startConnection, p);
+      t.detach();
       //p->startConnection();
-      }
     }
-  // Check isComplete ?
-  
+    // Check isComplete ?
+  }
 }
 
 void TorrentCtx::contact_tracker(bt_args_t * bt_args){
-
+  
   int i;
   peer_t *p;
   LOG(INFO, "Number of peers in the list :"+ to_string(bt_args->n_peers));
@@ -119,3 +117,4 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
     }
   }
 }
+  

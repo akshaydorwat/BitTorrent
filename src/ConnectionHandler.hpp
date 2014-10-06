@@ -19,11 +19,12 @@ public:
     sfd = fd;
     addr = src_addr;
   }
-  
+
   ConnectionHandler(Peer *p_p, struct sockaddr_in p_sockaddr){
     p = p_p;
     addr = p_sockaddr;
-    time(&last_connected);
+    //time(&last_connected);
+    sfd = -1;
   }
   
   // Handle event on connection
@@ -31,13 +32,13 @@ public:
   
   // close connection
   void closeConn();
-  
+
   // try to reconnect connection
-  void tryReconnect();
+  bool tryConnect();
   
   // send i am live ping 
   void sendLivePing();
-
+  
   // set Peer 
   void setPeer(Peer *peer){
     p = peer;
