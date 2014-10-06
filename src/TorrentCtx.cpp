@@ -97,6 +97,7 @@ void TorrentCtx::init(bt_args_t *args){
       Peer *p = (Peer*) it->second;		
       
       std::thread t(&Peer::startConnection, p);
+      // TODO: Not sure  about detaching but it works i do
       t.detach();
       //p->startConnection();
     }

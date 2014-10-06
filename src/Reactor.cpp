@@ -137,8 +137,8 @@ void Reactor::handleEvent(){
 	    exit(EXIT_FAILURE);
 	  }
 	  // create peer for this socket
-	  ConnectionHandler* p = new ConnectionHandler(tsfd, srcaddr);
-	  registerEvent(tsfd, p);
+	  ConnectionHandler* h = new ConnectionHandler(tsfd, srcaddr);
+	  registerEvent(tsfd, h);
 	}while(tsfd != -1);
       }
     }else{
@@ -239,7 +239,8 @@ void Reactor::unRegisterEvent(int fd){
 
 int Reactor::closeReactor(){
   is_started = false;
-  wait();
+  //wait();
+  reactorThread.join();
   LOG(INFO," Closing reactor");
   return 1;
 }
@@ -248,18 +249,20 @@ bool Reactor::startReactor()
 {
   if(!is_started){
     LOG(INFO,"Starting reactor thread");
-    return (pthread_create(&thread, NULL, threadHelper, this) == 0);
+    //return (pthread_create(&thread, NULL, threadHelper, this) == 0);
+    reactorThread = thread(&Reactor::loopForever,this);
+    return true;
   }else{
     LOG(WARNING,"Reactor already started");
     return false;
   }
 }
 
-void Reactor::wait(){
+/*void Reactor::wait(){
   pthread_join(thread,NULL);
-}
+  }*/
 
-void* Reactor::threadHelper(void * obj_ptr) {
+/*void* Reactor::threadHelper(void * obj_ptr) {
   ((Reactor*)obj_ptr)->loopForever(); 
   return NULL;
-}
+  }*/

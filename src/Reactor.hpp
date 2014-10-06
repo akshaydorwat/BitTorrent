@@ -17,9 +17,11 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <thread>
 #include "bt_lib.h"
 #include "ConnectionHandler.hpp"
 #include "ThreadPool.h"
+#include "TorrentCtx.hpp"
 
 using namespace std;
 
@@ -103,8 +105,10 @@ private:
   // thread helper
   static void* threadHelper(void *obj_ptr);
 
-  static Reactor* reactor;
-  pthread_t thread;                      // Thread to run reactor
+  static Reactor* reactor;               // Reactor singleton 
+  TorrentCtx* ctx;
+  //pthread_t thread;                      // Thread to run reactor
+  thread reactorThread;
   mutex m_lock;                          // Serialize access to eventRegister
   bool is_started;                       // Server on/off
   unsigned short min_port;               // Port range to try  connect on server

@@ -82,7 +82,6 @@ void __parse_peer(peer_t * peer, char * peer_st){
     exit(1);
   }
 
-  printf("length of ip is %d\n",strlen(ip));
   //calculate the id, value placed in id
   calc_id(ip,port,id);
 

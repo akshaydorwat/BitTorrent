@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <time.h>
 #include "Peer.hpp"
+#include "bt_lib.h"
 
 using namespace std;
 
@@ -29,7 +30,10 @@ public:
   
   // Handle event on connection
   void handle(string msg);
-  
+
+  // Write data to socket descriptor
+  void writeConn(char *buff, int buf_len);
+
   // close connection
   void closeConn();
 
@@ -49,11 +53,15 @@ public:
     return p;
   }
   
+  // register socket with rector event register
+  void resgiterSocket();
+
 private:  
   Peer *p;
   struct sockaddr_in addr;
   time_t last_connected;
   int sfd;
+  char buffer[MAX_PACKET_SIZE];
 
 };
 

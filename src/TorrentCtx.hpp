@@ -22,6 +22,10 @@ public:
   
   // contact tracker and load the peers list
   void contact_tracker(bt_args_t * bt_args);
+
+  string getInfoHash(){
+    return infoHash;
+  }
   
 private:
   //command line arguments

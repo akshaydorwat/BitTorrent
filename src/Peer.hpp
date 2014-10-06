@@ -19,36 +19,40 @@ public:
   Peer(TorrentCtx* p_ctx, peer_t *p_p){
     ctx = p_ctx;
     p = p_p;
-    is_initiated_by_me = false;
-    is_active = false;
+    initiated_by_me = false;
+    active = false;
   }
 
   int sfd;
   time_t last_connect;
   
+  // read torrent protocol message
   void readMessage(string msg);
 
   // Start connection to other Peers in the swarn
   void startConnection();
 
+  //send connection
+  void sendHandshake();
+  
   void setTorrentctx(TorrentCtx* context){
     ctx = context;
   }
 
   bool isActive(){
-    return is_active;
+    return active;
   }
   
-  void setActive(bool active){
-    is_active = active;
+  void setActive(bool act){
+    active = act;
   }
 
   bool isInitiatedByMe(){
-    return is_initiated_by_me;
+    return initiated_by_me;
   }
   
   void setInitiatedByMe(bool by_me){
-    is_initiated_by_me = by_me;
+    initiated_by_me = by_me;
   }
   
   bool isChocked(){
@@ -71,13 +75,15 @@ public:
     return p->sockaddr;
   }
   
+  
 private:
 
   TorrentCtx* ctx;
   peer_t *p;
   void *connection;
-  bool is_initiated_by_me;
-  bool is_active;
+  bool initiated_by_me;
+  bool active;
+
 };
 #endif
 
