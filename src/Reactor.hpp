@@ -94,6 +94,16 @@ public:
   // Singleton method to getinstance of reactor
   static Reactor* getInstance();
 
+  // set torrent context
+  void setTorrentCtx(TorrentCtx *c){
+    ctx = c;
+  }
+
+  // get torrent context
+  TorrentCtx* getTorrentCtx(){
+    return ctx;
+  }
+  
 private:
 
   //  Handle events on socket connections
