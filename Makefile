@@ -18,10 +18,10 @@ BencodeList_t.o \
 BencodeDictionary_t.o \
 BencodeDecoder.o \
 TorrentFile.o \
-Torrent.o\
-TorrentCtx.o\
-ConnectionHandler.o
-
+Torrent.o \
+TorrentCtx.o \
+ConnectionHandler.o \
+Piece.o
 
 #TorrentPiece_t.o
 
@@ -46,4 +46,7 @@ clean:
 
 tar:
 	tar -cvf bt_client.tar LOG.log  Makefile  README  ROADMAP.txt  sample  src
+
+test:
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.113:6667 -s . -l LOG.log  sample/download.mp3.torrent
 
