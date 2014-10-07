@@ -19,7 +19,7 @@ void Peer::readMessage(string msg){
 void Peer::startConnection(){
   
   // Create connection Handler for peer
-  if(isConnectionEstablished()){
+  if(!isConnectionEstablished()){
     LOG(DEBUG, "Createing new Connection handler for peer");
     ConnectionHandler *conn = new ConnectionHandler(this, getSocketAddr(), ctx);
     // store handler for future use
