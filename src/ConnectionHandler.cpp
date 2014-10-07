@@ -28,6 +28,8 @@ void ConnectionHandler::handle(string msg){
       p->newConnectionMade();
       handshakeComplete = true;
       return;
+    }else{
+      handshakeComplete = true;
     }
   }else if(!handshakeComplete){
     closeConn();

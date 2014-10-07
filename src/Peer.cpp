@@ -39,6 +39,7 @@ void Peer::startConnection(){
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
 void Peer::newConnectionMade(){
+  LOG(INFO,"Send bitfield and Unchoke message now");
   sendBitField(ctx->getPiecesBitVector(), ctx->getBitVectorSize());
   //sendUnChoked();
 }
@@ -59,6 +60,7 @@ void Peer::sendBitField(char *bitVector, size_t size){
   msg.append((const char*)&length, sizeof(int));
   msg.append(payload);
   
+  LOG(INFO, "Sending bitfield message now");
   c->writeConn(msg.data(),msg.length());
 }
 /*
