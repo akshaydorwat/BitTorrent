@@ -88,6 +88,9 @@ void TorrentCtx::init(bt_args_t *args){
     }
     LOG(INFO, "File :" + filename + " opened sucessfully");
   } 
+ 
+  // Initialise the bit vector
+  initBitVecor();
   
   // Load pieces from the file 
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
@@ -138,3 +141,51 @@ void* TorrentCtx::getPeer(unsigned char *id){
   }
   return NULL;
 }
+
+void TorrentCtx::initBitVecor(){
+  size_t mbyte;
+  size_t mbit;
+  size_t size =  getNumOfPieces();
+
+  if( size > 0){
+    mbyte = size / 8;
+    mbit  = size % 8;
+
+    if(mbit > 0) {
+      mbyte++;
+    }
+    bitVectorSize = mbyte;
+    piecesBitVector = new char[bitVectorSize];
+    memset(piecesBitVector, 0, mbyte*sizeof(char));
+  }else{
+    LOG(ERROR, "Invalid number of pieces ");
+    exit(EXIT_FAILURE);
+  }
+}
+
+void TorrentCtx::setbit( size_t b) {
+  size_t mbyte, mbit;
+ 
+  mbyte = b / 8;
+  mbit = b % 8;
+
+  if(mbyte > bitVectorSize){
+    LOG(ERROR, "Can not set bit");
+  }
+  piecesBitVector[mbyte] |= (0x80 >> mbit);
+}
+
+int TorrentCtx::getbit( size_t b) {
+  size_t mbyte, mbit;
+
+  mbyte = b / 8;
+  mbit = b % 8;
+
+  if((size_t)mbyte > bitVectorSize){
+    LOG(ERROR, "Can not get bit");
+    exit(EXIT_FAILURE);
+  }
+
+  return( ( (piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7);
+}
+

@@ -78,6 +78,9 @@ class Torrent
   void setPieceHashes(Bencode_t *);
   void addPieceHash(string);
   string pieceHashAt(int);
+  size_t getNumOfPieces(){
+    return pieceHashes.size();
+  }
   //void piece(string);
   //TorrentPiece_t piece(int);
   //bool isValidPiece(size_t);

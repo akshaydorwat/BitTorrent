@@ -27,9 +27,11 @@ void ConnectionHandler::handle(string msg){
       sendHandshake();
       p->newConnectionMade();
       handshakeComplete = true;
+      return;
     }
   }else if(!handshakeComplete){
     closeConn();
+    return;
   }
 
   // Check for live message, Dont need to do any thing as Reacor is handling timeouts
@@ -160,7 +162,7 @@ void ConnectionHandler::resgiterSocket(){
   Reactor::getInstance()->registerEvent(sfd,this);
 }
 
-void ConnectionHandler::writeConn(char *buff, int buf_len){
+void ConnectionHandler::writeConn(const char *buff, int buf_len){
   memcpy(buffer, buff, buf_len);
   write(sfd, buffer, buf_len);
 }

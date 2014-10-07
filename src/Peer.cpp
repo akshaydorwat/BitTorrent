@@ -39,14 +39,29 @@ void Peer::startConnection(){
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
 void Peer::newConnectionMade(){
-  //sendBitField();
+  sendBitField(ctx->getPiecesBitVector(), ctx->getBitVectorSize());
   //sendUnChoked();
 }
 
-/*void Peer::sendBitField(){
-  
-}
+void Peer::sendBitField(char *bitVector, size_t size){
+  string payload;
+  string msg;
+  unsigned int msgType = BT_BITFILED;
+  int length;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
 
+  //Actual payload
+  payload.append((const char*)&msgType, sizeof(unsigned int));
+  payload.append((const char*)bitVector, size);
+  
+  // prepend length of payload and append payload
+  length = payload.size();
+  msg.append((const char*)&length, sizeof(int));
+  msg.append(payload);
+  
+  c->writeConn(msg.data(),msg.length());
+}
+/*
 void Peer::sendInterested(){
 }
 

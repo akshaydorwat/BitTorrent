@@ -62,6 +62,9 @@ public:
     p->choked = (chock ? 1 : 0);
   }
 
+  // send bit field message
+  void sendBitField(char *bitVector, size_t size);
+
   unsigned char* getId(){
     return p->id;
   }
@@ -87,6 +90,7 @@ public:
   }
 
   void newConnectionMade();
+
 
 private:
 

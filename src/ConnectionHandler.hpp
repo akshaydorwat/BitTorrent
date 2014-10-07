@@ -45,7 +45,7 @@ public:
   bool checkForLive(const char *message);
 
   // Write data to socket descriptor
-  void writeConn(char *buff, int buf_len);
+  void writeConn(const char *buff, int buf_len);
 
   // close connection
   void closeConn();

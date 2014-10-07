@@ -15,6 +15,11 @@ class TorrentCtx{
 
 public:
   //TorrentCtx(Reactor *r);
+  ~TorrentCtx(){
+    if(piecesBitVector){
+      delete piecesBitVector;
+    }
+  }
 
   // initialise torrent context
   void init(bt_args_t *args);
@@ -35,6 +40,28 @@ public:
     return peerId;
   }
 
+  // send bitvector
+  char* getPiecesBitVector(){
+    return piecesBitVector;
+  }
+
+  size_t getBitVectorSize(){
+    return bitVectorSize;
+  }
+  //get number of pieces in the torrent
+  size_t getNumOfPieces(){
+    return metaData.getNumOfPieces();
+  }
+
+  // init bit set
+  void initBitVecor();
+
+  // set bit
+  void setbit( size_t b);
+
+  // get bit
+  int getbit( size_t b);
+
 private:
   //command line arguments
   unsigned char peerId[20];           // peer id
@@ -51,8 +78,8 @@ private:
   fstream saveFile_fd;                // File descriptor
   time_t start_time;                  // start time
   bool isComplete;                    // donwload complete
-  vector<bool> *piecesBitVector;      // piece bit vector
-  
+  char *piecesBitVector;      // piece bit vector
+  size_t bitVectorSize;
   // ref objects
   //FileManager *m_filemanager;
   //Reactor *reactor;
