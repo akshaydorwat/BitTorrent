@@ -25,6 +25,7 @@ void calc_id_sockaddr(struct sockaddr_in *addr, char *id){
   if(addr != NULL){
     ip = inet_ntoa(addr->sin_addr);
     port = addr->sin_port ;
+    printf("IP: %s Port: %u", ip, port);
     calc_id(ip, port, id);
   }else{
     fprintf(stderr, "[Error] Failed to calculate client Id\n");
@@ -38,7 +39,7 @@ void calc_id(char * ip, unsigned short port, char *id){
   
   //format print
   len = snprintf(data,256,"%s%u",ip,port);
-
+  printf("data : %s\n",data);
   //id is just the SHA1 of the ip and port string
   SHA1((unsigned char *) data, len, (unsigned char *) id); 
 

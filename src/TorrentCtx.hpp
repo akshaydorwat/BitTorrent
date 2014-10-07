@@ -30,7 +30,10 @@ public:
 
   // get Peer pointer from map 
   void* getPeer(unsigned char *peerId);
-  
+
+  string getPeerId(){
+    return peerId;
+  }
 private:
   //command line arguments
   string peerId;                      // peer id

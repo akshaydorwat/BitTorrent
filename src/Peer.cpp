@@ -25,26 +25,41 @@ void Peer::startConnection(){
     // store handler for future use
     connection = conn;
   }
-
   // try connecting 
   ConnectionHandler* c = (ConnectionHandler*)connection;
   if(!c->tryConnect()){
       return;
   }
-  
   // connection is initiated by me
   initiated_by_me = true;
-    
   // Now send handshake
   c->sendHandshake();
 }
 
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
-
-
 void Peer::newConnectionMade(){
-    // send bit field message 
-    // send unchoke message
+  //sendBitField();
+  //sendUnChoked();
 }
+
+/*void Peer::sendBitField(){
+  
+}
+
+void Peer::sendInterested(){
+}
+
+void Peer::sendUnChoked(){
+}
+
+void Peer::sendHave(){
+}
+
+void Peer::sendRequest(){
+}
+
+void Peer::sendPiece(){
+}*/
+
 

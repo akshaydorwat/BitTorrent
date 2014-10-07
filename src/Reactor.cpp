@@ -87,7 +87,7 @@ void Reactor::initReactor(){
     }
     break;
   }
-
+  port_used = i;
   LOG(INFO, "Server listening for client connections on port : " + to_string(i));
   // create poll fd vector 
   fillPollFd();

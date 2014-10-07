@@ -179,6 +179,10 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       bcopy((char *) (hostinfo->h_addr), 
 	    (char *) &(bt_args->sockaddr.sin_addr.s_addr),
 	    hostinfo->h_length);
+      
+      // copy ip so that i can compute hash on it
+
+      bcopy( optarg, (char*) bt_args->ip, strlen(optarg));
       break;
 
     default:

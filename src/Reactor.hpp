@@ -104,6 +104,11 @@ public:
     return ctx;
   }
   
+  //get port used 
+  unsigned short getPortUsed(){
+    return port_used;
+  }
+
 private:
 
   //  Handle events on socket connections
@@ -123,6 +128,7 @@ private:
   bool is_started;                       // Server on/off
   unsigned short min_port;               // Port range to try  connect on server
   unsigned short max_port;              
+  unsigned short port_used;
   struct sockaddr_in addr;               // sockaddr for server
   int server_sfd;                        // Server socket descriptor
   int max_connections;                    // maximum number of connection supported on the server

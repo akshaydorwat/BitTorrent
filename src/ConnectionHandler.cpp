@@ -91,7 +91,7 @@ void ConnectionHandler::sendHandshake(){
   memcpy(&handshake.protocol, PROTOCOL, sizeof(handshake.protocol));
   bzero(&handshake.reserve, sizeof(handshake.reserve));
   memcpy(&handshake.infoHash, ctx->getInfoHash().c_str(), sizeof(handshake.infoHash));
-  memcpy(&handshake.peerId, p->getId(), sizeof(handshake.peerId));
+  memcpy(&handshake.peerId, ctx->getPeerId().c_str(), sizeof(handshake.peerId));
   writeConn((char*)&handshake, sizeof(handshake));
 }
 
@@ -104,8 +104,8 @@ void ConnectionHandler::closeConn(){
   if(p){
     p->destroyConnection();
   }
+  LOG(DEBUG, "Self destruction");
   delete this;
-  
 }
 
 bool ConnectionHandler::tryConnect(){
@@ -128,7 +128,7 @@ bool ConnectionHandler::tryConnect(){
     exit(EXIT_FAILURE);
   }
 
-  // try connecting to destination address
+ // try connecting to destination address
   while(i>0){
     
     if((ret = connect(sfd, (struct sockaddr *)&addr, sizeof(addr))) == -1){

@@ -45,6 +45,8 @@ extern "C"{
 
 #define PROTOCOL "BitTorrent Protocol"
 
+#define MAX_IP_SIZE 16
+
   /*Different BitTorrent Message Types*/
 #define BT_CHOKE 0
 #define BT_UNCHOKE 1
@@ -91,6 +93,7 @@ extern "C"{
     char id[ID_SIZE]; //this bt_clients id
     int sockets[MAX_CONNECTIONS]; //Array of possible sockets
     struct sockaddr_in sockaddr; //sockaddr for server
+    char ip[MAX_IP_SIZE];
   } bt_args_t;
 
   /**

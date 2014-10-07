@@ -29,7 +29,8 @@ void TorrentCtx::init(bt_args_t *args){
   string filename;
   ifstream inp;
   ofstream out;
-  
+  unsigned short port;
+
   // error handling
   if(args == NULL ){
     LOG(ERROR, "Invalid arguments ");
@@ -40,10 +41,11 @@ void TorrentCtx::init(bt_args_t *args){
   saveFile = args->save_file;
   torrentFile = args->torrent_file;
   sockaddr = Reactor::getInstance()->getSocketAddr();
-
+  port = Reactor::getInstance()->getPortUsed();
   //if id is not provided calculate it.
   if(strlen(args->id) == 0){
-    calc_id_sockaddr(&sockaddr, id);
+    //calc_id_sockaddr(&sockaddr, id);
+    calc_id(args->ip, port, id);
     peerId = string(id);
   }else{
     peerId = string(args->id);
@@ -92,6 +94,7 @@ void TorrentCtx::init(bt_args_t *args){
   contact_tracker(args);
   isComplete = true;
   // If download is not complete start connection to seeder and intiate handshake
+  //isComplete = true;
   if(!isComplete){
     for (map<unsigned char, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) it->second;		
