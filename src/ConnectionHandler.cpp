@@ -22,10 +22,7 @@ void ConnectionHandler::handle(string msg){
   const char *message = msg.c_str();
 
   // Verify the hanshake
-  if(!handshakeComplete){
-    closeConn();
-    return;
-  }else if(verifyHandshake(message)){
+  if(verifyHandshake(message)){
     if(!p->isInitiatedByMe()){
       sendHandshake();
       p->newConnectionMade();
@@ -35,6 +32,9 @@ void ConnectionHandler::handle(string msg){
       handshakeComplete = true;
       return;
     }
+  }else if(!handshakeComplete){
+    closeConn();
+    return;
   }
 
   // Check for live message, Dont need to do any thing as Reacor is handling timeouts
@@ -48,6 +48,7 @@ void ConnectionHandler::handle(string msg){
     p->readMessage(msg);
   }
 }
+
 
 bool ConnectionHandler::verifyHandshake(const char *message){
   bt_handshake_t *handshake = (bt_handshake_t*)message;
@@ -83,6 +84,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
   }
   return true;
 }
+
 
 bool ConnectionHandler::checkForLive(const char *message){
   bt_msg_t *msg = (bt_msg_t*)message;
