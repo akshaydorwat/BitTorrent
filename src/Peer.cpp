@@ -41,42 +41,100 @@ void Peer::startConnection(){
 void Peer::newConnectionMade(){
   LOG(INFO,"Send bitfield and Unchoke message now");
   sendBitField(ctx->getPiecesBitVector(), ctx->getBitVectorSize());
-  //sendUnChoked();
+  sendUnChoked();
 }
 
 void Peer::sendBitField(char *bitVector, size_t size){
-  string payload;
   string msg;
   unsigned int msgType = BT_BITFILED;
-  int length;
+  int length = 1 + size;
   ConnectionHandler* c = (ConnectionHandler*)connection;
-
+  
   //Actual payload
-  payload.append((const char*)&msgType, sizeof(unsigned int));
-  payload.append((const char*)bitVector, size);
-  
-  // prepend length of payload and append payload
-  length = payload.size();
   msg.append((const char*)&length, sizeof(int));
-  msg.append(payload);
+  msg.append((const char*)&msgType, sizeof(unsigned int));
+  msg.append((const char*)bitVector, size);
   
-  LOG(INFO, "Sending bitfield message now");
+  LOG(DEBUG,"Bitfield Message is " + msg + " | Message length is " + to_string( msg.size()));
   c->writeConn(msg.data(),msg.length());
-}
-/*
-void Peer::sendInterested(){
 }
 
 void Peer::sendUnChoked(){
+  string msg;
+  int length = 1;
+  unsigned int msgType = BT_UNCHOKE;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+
+  msg.append((const char*)&length, sizeof(int));
+  msg.append((const char*)&msgType, sizeof(unsigned int));
+ 
+  LOG(DEBUG,"UNchoked Message is " + msg + " | Message length is " + to_string( msg.size()));
+  c->writeConn(msg.data(),msg.length());
 }
 
-void Peer::sendHave(){
+
+void Peer::sendInterested(){
+  string msg;
+  int length = 1;
+  unsigned int msgType = BT_INTERSTED; 
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+
+  msg.append((const char*)&length, sizeof(int));
+  msg.append((const char*)&msgType, sizeof(unsigned int));
+ 
+  LOG(DEBUG,"Interested Message is " + msg + " | Message length is " + to_string( msg.size()));
+  c->writeConn(msg.data(),msg.length());
 }
 
-void Peer::sendRequest(){
+
+void Peer::sendHave(int piece){
+  string msg;
+  int length = 5;
+  unsigned int msgType = BT_HAVE; 
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+
+  msg.append((const char*)&length, sizeof(int));
+  msg.append((const char*)&msgType, sizeof(unsigned int));
+  msg.append((const char*)&piece, sizeof(int));
+
+  LOG(DEBUG,"Have Message is " + msg + " | Message length is " + to_string( msg.size()));
+  c->writeConn(msg.data(),msg.length());
 }
 
-void Peer::sendPiece(){
-}*/
+void Peer::sendRequest(int index, int begin, int len){
+  string msg;
+  int length = 13;
+  unsigned int msgType = BT_REQUEST; 
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+
+  msg.append((const char*)&length, sizeof(int));
+  msg.append((const char*)&msgType, sizeof(unsigned int));
+  msg.append((const char*)&index, sizeof(int));
+  msg.append((const char*)&begin, sizeof(int));
+  msg.append((const char*)&len, sizeof(int));
+    
+  LOG(DEBUG,"Request Message is " + msg + " | Message length is " + to_string( msg.size()));
+  c->writeConn(msg.data(),msg.length());
+}
+
+void Peer::sendPiece(int index, int begin, char *block, size_t size){
+
+  string msg;
+  unsigned int msgType = BT_PIECE;
+  int length = 9 + size;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  
+
+  msg.append((const char*)&length, sizeof(int));
+  msg.append((const char*)&msgType, sizeof(unsigned int));
+  msg.append((const char*)&index, sizeof(int));
+  msg.append((const char*)&begin, sizeof(int));
+  msg.append((const char*)block, size);
+  
+  LOG(DEBUG,"Piece Message Len is  " + to_string( msg.size()));
+
+  c->writeConn(msg.data(),msg.length());
+
+}
 
 

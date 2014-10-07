@@ -73,7 +73,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
   if(p == NULL){
     LOG(WARNING, "Peer rejected ");
     // close connection
-    closeConn();
+    // closeConn();
     return false;
   }else{
     // store pointer to peer in the connection
@@ -171,7 +171,7 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
   
   memcpy(buffer, buff, buf_len);
-  LOG(DEBUG, "Writing message to socket");
+ 
   result =   write(sfd, buffer, buf_len);
   if (result == -1) {
     if (errno == EWOULDBLOCK){
@@ -179,4 +179,5 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     }
     LOG(ERROR, "Could not write to socket");
   }
+  LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }
