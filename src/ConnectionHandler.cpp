@@ -22,7 +22,10 @@ void ConnectionHandler::handle(string msg){
   const char *message = msg.c_str();
 
   // Verify the hanshake
-  if(verifyHandshake(message)){
+  if(!handshakeComplete){
+    closeConn();
+    return;
+  }else if(verifyHandshake(message)){
     if(!p->isInitiatedByMe()){
       sendHandshake();
       p->newConnectionMade();
@@ -30,10 +33,8 @@ void ConnectionHandler::handle(string msg){
       return;
     }else{
       handshakeComplete = true;
+      return;
     }
-  }else if(!handshakeComplete){
-    closeConn();
-    return;
   }
 
   // Check for live message, Dont need to do any thing as Reacor is handling timeouts
@@ -165,6 +166,15 @@ void ConnectionHandler::resgiterSocket(){
 }
 
 void ConnectionHandler::writeConn(const char *buff, int buf_len){
+  int result;
+  
   memcpy(buffer, buff, buf_len);
-  write(sfd, buffer, buf_len);
+  LOG(DEBUG, "Writing message to socket");
+  result =   write(sfd, buffer, buf_len);
+  if (result == -1) {
+    if (errno == EWOULDBLOCK){
+      return;
+    }
+    LOG(ERROR, "Could not write to socket");
+  }
 }
