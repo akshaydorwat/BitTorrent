@@ -112,7 +112,7 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
   LOG(INFO, "Number of peers in the list :"+ to_string(bt_args->n_peers));
   for(i=0; i< bt_args->n_peers; i++){
     p = bt_args->peers[i];
-    print_peer(p);
+    //print_peer(p);
     if(p != NULL){
       Peer *peer_obj = new Peer(this, p);
       peers.push_back(peer_obj);
@@ -122,8 +122,8 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
   
 void* TorrentCtx::getPeer(unsigned char *id){
   
-  LOG(DEBUG, "Peer to find :");
-  print_peer_id(id);
+  //LOG(DEBUG, "Peer to find :");
+  //print_peer_id(id);
 
   for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
     Peer *p = (Peer*) *it;		

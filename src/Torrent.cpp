@@ -167,7 +167,7 @@ Torrent Torrent::decode(string torrentString)
 	dynamic_cast<BencodeDictionary_t*>(torrentDictionary->at("info"));
 	//newTorrent.infoDictionary = infoDictionary->clone();
 	newTorrent.setInfoDictionary(infoDictionary);
-	LOG (INFO, "Info Dictionary \t:\t\t" + newTorrent.getInfoDictionary());
+	//LOG (INFO, "Info Dictionary \t:\t\t" + newTorrent.getInfoDictionary());
 
       BencodeList_t *filesList =
 	dynamic_cast<BencodeList_t*>(infoDictionary->at("files"));
@@ -217,7 +217,7 @@ Torrent Torrent::decode(string torrentString)
 	  //LOG (INFO, ",\n\t\t\t\t\t");
 	  //cout << ",\n\t\t\t\t\t";
 	}
-      LOG (INFO, buf);
+      //LOG (INFO, buf);
       //cout << endl << endl;
     }
   catch (const exception& e)
