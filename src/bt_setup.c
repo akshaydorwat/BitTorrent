@@ -181,8 +181,7 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
 	    hostinfo->h_length);
       
       // copy ip so that i can compute hash on it
-
-      bcopy( optarg, (char*) bt_args->ip, strlen(optarg));
+      bcopy( optarg, (char*) bt_args->ip, strlen(optarg)+1);
       break;
 
     default:

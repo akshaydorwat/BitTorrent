@@ -97,21 +97,18 @@ void TorrentCtx::init(bt_args_t *args){
   // If download is not complete start connection to seeder and intiate handshake
   isComplete = true;
   if(!isComplete){
-    for (map<unsigned char, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
-      Peer *p = (Peer*) it->second;		
-      
+    for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
+      Peer *p = (Peer*) *it;		
       std::thread t(&Peer::startConnection, p);
       // TODO: Not sure  about detaching but it works i do
       t.detach();
-      //p->startConnection();
     }
-    // Check isComplete ?
   }
 }
 
 void TorrentCtx::contact_tracker(bt_args_t * bt_args){
   
-  int i,j;
+  int i;
   peer_t *p;
   LOG(INFO, "Number of peers in the list :"+ to_string(bt_args->n_peers));
   for(i=0; i< bt_args->n_peers; i++){
@@ -119,19 +116,18 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
     print_peer(p);
     if(p != NULL){
       Peer *peer_obj = new Peer(this, p);
-      peers[*p->id] = peer_obj;
+      peers.push_back(peer_obj);
     }
   }
 }
   
 void* TorrentCtx::getPeer(unsigned char *id){
   
-  LOG(INFO, "Peer to find :");
+  LOG(DEBUG, "Peer to find :");
   print_peer_id(id);
-  map<unsigned char, void*>::iterator it;
-  it = peers.find(*id);
-  if(it != peers.end()){
-    Peer *p = (Peer*)it->second;
+
+  for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
+    Peer *p = (Peer*) *it;		
     if(!p->isConnectionEstablished()){
       return (void*)p;
     }

@@ -1,7 +1,6 @@
 #ifndef TORRENT_CTX_HPP
 #define TORRENT_CTX_HPP
 
-#include <map>
 #include <vector>
 #include <string>
 #include <time.h>
@@ -48,7 +47,7 @@ private:
   Torrent metaData;
 
   // Book keeping
-  map<unsigned char,void*> peers;            // Peers in torrent
+  vector<void*> peers;            // Peers in torrent
   fstream saveFile_fd;                // File descriptor
   time_t start_time;                  // start time
   bool isComplete;                    // donwload complete
