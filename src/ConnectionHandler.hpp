@@ -20,6 +20,7 @@ public:
     sfd = fd;
     addr = src_addr;
     torrentCtx = ctx;
+    handshakeComplete = false;
   }
 
   ConnectionHandler(Peer *p_p, struct sockaddr_in p_sockaddr, void *ctx){
@@ -28,6 +29,7 @@ public:
     //time(&last_connected);
     sfd = -1;
     torrentCtx = ctx;
+    handshakeComplete = false;
   }
   
   // Handle event on connection
@@ -70,6 +72,7 @@ public:
 private:  
   Peer *p;
   void *torrentCtx;
+  bool handshakeComplete;
   struct sockaddr_in addr;
   time_t last_connected;
   int sfd;

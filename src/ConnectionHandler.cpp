@@ -26,16 +26,21 @@ void ConnectionHandler::handle(string msg){
     if(!p->isInitiatedByMe()){
       sendHandshake();
       p->newConnectionMade();
+      handshakeComplete = true;
     }
+  }else if(!handshakeComplete){
+    closeConn();
+  }
+
   // Check for live message, Dont need to do any thing as Reacor is handling timeouts
-  }else if(checkForLive(message)){
+  if(checkForLive(message)){
     return;
   // Send mesage to Peer for further investigation
-  }else{
-    if(p){
-      LOG(DEBUG, "Sending message to peer for handling");
-      p->readMessage(msg);
-    }
+  }
+
+  if(p){
+    LOG(DEBUG, "Sending message to peer for handling");
+    p->readMessage(msg);
   }
 }
 
