@@ -90,7 +90,7 @@ void TorrentCtx::init(bt_args_t *args){
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
   //loadPieces();
   contact_tracker(args);
-
+  isComplete = true;
   // If download is not complete start connection to seeder and intiate handshake
   if(!isComplete){
     for (map<unsigned char, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){

@@ -46,5 +46,5 @@ void Peer::startConnection(){
 void Peer::newConnectionMade(){
     // send bit field message 
     // send unchoke message
-  }
+}
 

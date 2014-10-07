@@ -63,6 +63,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
     LOG(WARNING, "Peer rejected ");
     // close connection
     closeConn();
+    return false;
   }else{
     // store pointer to peer in the connection
     if(!p->isConnectionEstablished()){
