@@ -23,9 +23,13 @@ public:
   // contact tracker and load the peers list
   void contact_tracker(bt_args_t * bt_args);
 
+  // get info hash
   string getInfoHash(){
     return infoHash;
   }
+
+  // get Peer pointer from map 
+  void* getPeer(unsigned char *peerId);
   
 private:
   //command line arguments
@@ -39,7 +43,7 @@ private:
   Torrent metaData;
 
   // Book keeping
-  map<unsigned char*,void*> peers;            // Peers in torrent
+  map<unsigned char,void*> peers;            // Peers in torrent
   fstream saveFile_fd;                // File descriptor
   time_t start_time;                  // start time
   bool isComplete;                    // donwload complete

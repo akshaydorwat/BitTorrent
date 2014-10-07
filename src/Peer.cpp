@@ -19,40 +19,32 @@ void Peer::readMessage(string msg){
 void Peer::startConnection(){
   
   // Create connection Handler for peer
-  if(connection ){
+  if(isConnectionEstablished()){
     LOG(DEBUG, "Createing new Connection handler for peer");
-    ConnectionHandler *conn = new ConnectionHandler(this, getSocketAddr());
+    ConnectionHandler *conn = new ConnectionHandler(this, getSocketAddr(), ctx);
+    // store handler for future use
     connection = conn;
   }
 
   // try connecting 
   ConnectionHandler* c = (ConnectionHandler*)connection;
-  if(!active){
-    if(!c->tryConnect()){
+  if(!c->tryConnect()){
       return;
-    }
   }
-  // connection is active now
-  active = true;
-  // store handler for future use
   
   // connection is initiated by me
   initiated_by_me = true;
     
   // Now send handshake
-  
+  c->sendHandshake();
 }
 
-void Peer::sendHandshake(){
-  bt_handshake_t handshake;
-  ConnectionHandler* c = (ConnectionHandler*)connection;
-  
-  handshake.len = (uint8_t)strlen(PROTOCOL);
-  memcpy(&handshake.protocol, PROTOCOL, sizeof(handshake.protocol));
-  bzero(&handshake.reserve, sizeof(handshake.reserve));
-  memcpy(&handshake.infoHash, ctx->getInfoHash().c_str(), sizeof(handshake.infoHash));
-  memcpy(&handshake.peerId, getId(), sizeof(handshake.peerId));
-  c->writeConn((char*)&handshake, sizeof(handshake));
-}
+//TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
+
+
+void Peer::newConnectionMade(){
+    // send bit field message 
+    // send unchoke message
+  }
 

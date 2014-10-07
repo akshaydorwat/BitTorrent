@@ -16,20 +16,31 @@ using namespace std;
 class ConnectionHandler {
 
 public:
-  ConnectionHandler(int fd, struct sockaddr_in src_addr){
+  ConnectionHandler(int fd, struct sockaddr_in src_addr, void *ctx){
     sfd = fd;
     addr = src_addr;
+    torrentCtx = ctx;
   }
 
-  ConnectionHandler(Peer *p_p, struct sockaddr_in p_sockaddr){
+  ConnectionHandler(Peer *p_p, struct sockaddr_in p_sockaddr, void *ctx){
     p = p_p;
     addr = p_sockaddr;
     //time(&last_connected);
     sfd = -1;
+    torrentCtx = ctx;
   }
   
   // Handle event on connection
   void handle(string msg);
+
+  // Send hand shake
+  void sendHandshake();
+
+  // Verify handshake
+  bool verifyHandshake(const char *message);
+
+  // Check for live message
+  bool checkForLive(const char *message);
 
   // Write data to socket descriptor
   void writeConn(char *buff, int buf_len);
@@ -58,11 +69,11 @@ public:
 
 private:  
   Peer *p;
+  void *torrentCtx;
   struct sockaddr_in addr;
   time_t last_connected;
   int sfd;
   char buffer[MAX_PACKET_SIZE];
-
 };
 
 #endif

@@ -41,7 +41,7 @@ $(BIN): $(OBJ)
 run:
 	./bt_client -v -b 10.0.0.113 -p 10.0.0.88:6667 -p 10.0.0.2:6667 -s . -l LOG.log  sample/download.mp3.torrent
 
-test:
+test1:
 	./bt_client -v -b 10.0.0.113 -p 10.0.0.217:6669  -s . -l LOG.log  sample/download.mp3.torrent
 
 clean:
@@ -50,6 +50,6 @@ clean:
 tar:
 	tar -cvf bt_client.tar LOG.log  Makefile  README  ROADMAP.txt  sample  src
 
-test:
+test2:
 	./bt_client -v -b 10.0.0.217 -p 10.0.0.113:6667 -s . -l LOG.log  sample/download.mp3.torrent
 

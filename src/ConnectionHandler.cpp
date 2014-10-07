@@ -1,6 +1,7 @@
 #include "ConnectionHandler.hpp"
 #include "Reactor.hpp"
 #include "Logger.hpp"
+#include "Peer.hpp"
 #include "bt_lib.h"
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -10,33 +11,100 @@
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
-
+#include <stdio.h>
 
 #define MAX_TRY 6
 
 using namespace std;
 
 void ConnectionHandler::handle(string msg){
-  //LOG(INFO, "Recieved msg : " + msg);
 
-  uint8_t *size;
-  int *length;
   const char *message = msg.c_str();
-  
-  size = (uint8_t*)message;
-  if(*size == strlen(PROTOCOL)){
-    //if(verifyHandshake(message)){
-    //}
-  }else if(*length == 0){
+
+  // Verify the hanshake
+  if(verifyHandshake(message)){
+    if(!p->isInitiatedByMe()){
+      sendHandshake();
+      p->newConnectionMade();
+    }
+  // Check for live message, Dont need to do any thing as Reacor is handling timeouts
+  }else if(checkForLive(message)){
     return;
+  // Send mesage to Peer for further investigation
   }else{
-    p->readMessage(msg);
+    if(p){
+      LOG(DEBUG, "Sending message to peer for handling");
+      p->readMessage(msg);
+    }
   }
 }
 
+bool ConnectionHandler::verifyHandshake(const char *message){
+  bt_handshake_t *handshake = (bt_handshake_t*)message;
+  TorrentCtx *ctx = (TorrentCtx*)torrentCtx;
+  //compare protocol lengh
+  if(handshake->len != strlen(PROTOCOL)){
+    LOG(DEBUG, "Protocol length didnt match");
+    return false;
+  }
+  // comapre protocol name
+  if(memcmp(handshake->protocol,PROTOCOL, strlen(PROTOCOL)) != 0){
+    LOG(DEBUG, "Protocol name didnt match");
+    return false;
+  }
+  // comapre info hash
+  if(memcmp(handshake->infoHash,ctx->getInfoHash().c_str(), 20) != 0){
+    LOG(DEBUG, "info hash didnt match");
+    return false;
+  }
+  // Try to associate connection with peer
+  p = (Peer*)ctx->getPeer((unsigned char*)handshake->peerId);
+  if(p == NULL){
+    LOG(WARNING, "Peer rejected ");
+    // close connection
+    closeConn();
+  }else{
+    // store pointer to peer in the connection
+    if(!p->isConnectionEstablished()){
+      LOG(INFO,"New Peer joined");
+      p->setConnection((void*)this);
+    }
+  }
+  return true;
+}
+
+bool ConnectionHandler::checkForLive(const char *message){
+  bt_msg_t *msg = (bt_msg_t*)message;
+  
+  if(msg->length != 0){
+    return false;
+  }
+  return true;
+}
+
+void ConnectionHandler::sendHandshake(){
+  bt_handshake_t handshake;
+  TorrentCtx *ctx = (TorrentCtx*)torrentCtx;
+
+  handshake.len = (uint8_t)strlen(PROTOCOL);
+  memcpy(&handshake.protocol, PROTOCOL, sizeof(handshake.protocol));
+  bzero(&handshake.reserve, sizeof(handshake.reserve));
+  memcpy(&handshake.infoHash, ctx->getInfoHash().c_str(), sizeof(handshake.infoHash));
+  memcpy(&handshake.peerId, p->getId(), sizeof(handshake.peerId));
+  writeConn((char*)&handshake, sizeof(handshake));
+}
+
+
 void ConnectionHandler::closeConn(){
   close(sfd);
+  // unregister socket from reactor if we want to do sucide
+  Reactor::getInstance()->unRegisterEvent(sfd);
   LOG(INFO, "Closing connection: " + to_string(sfd));
+  if(p){
+    p->destroyConnection();
+  }
+  delete this;
+  
 }
 
 bool ConnectionHandler::tryConnect(){

@@ -20,7 +20,7 @@ public:
     ctx = p_ctx;
     p = p_p;
     initiated_by_me = false;
-    active = false;
+    //active = false;
   }
 
   int sfd;
@@ -32,21 +32,19 @@ public:
   // Start connection to other Peers in the swarn
   void startConnection();
 
-  //send connection
-  void sendHandshake();
-  
+
   void setTorrentctx(TorrentCtx* context){
     ctx = context;
   }
 
-  bool isActive(){
+  /*  bool isActive(){
     return active;
   }
   
   void setActive(bool act){
     active = act;
   }
-
+  */
   bool isInitiatedByMe(){
     return initiated_by_me;
   }
@@ -75,14 +73,27 @@ public:
     return p->sockaddr;
   }
   
+  bool isConnectionEstablished(){
+    return ((connection) ? true : false);
+  }
   
+  void destroyConnection(){
+    connection = NULL;
+  }
+
+  void setConnection(void *c){
+    connection = c;
+  }
+
+  void newConnectionMade();
+
 private:
 
   TorrentCtx* ctx;
   peer_t *p;
   void *connection;
   bool initiated_by_me;
-  bool active;
+  //bool active;
 
 };
 #endif

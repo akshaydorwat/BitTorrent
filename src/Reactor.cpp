@@ -137,11 +137,12 @@ void Reactor::handleEvent(){
 	    exit(EXIT_FAILURE);
 	  }
 	  // create peer for this socket
-	  ConnectionHandler* h = new ConnectionHandler(tsfd, srcaddr);
+	  ConnectionHandler* h = new ConnectionHandler(tsfd, srcaddr, (void*)getTorrentCtx());
 	  registerEvent(tsfd, h);
 	}while(tsfd != -1);
       }
     }else{
+      //TODO: connection timeouts
       if(p_fd.events & (POLLHUP|POLLERR)){
 	LOG(WARNING,"Connection got disconnected trying again");
 	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
@@ -232,7 +233,7 @@ void Reactor::registerEvent(int fd, ConnectionHandler* conn){
 
 void Reactor::unRegisterEvent(int fd){
   m_lock.lock();
-  eventRegister.erase( fd);
+  eventRegister.erase(fd);
   m_lock.unlock();
   LOG(INFO, "Removed socket  " + to_string(fd) + " from event register ");
 }

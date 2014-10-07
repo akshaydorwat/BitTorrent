@@ -93,7 +93,7 @@ void TorrentCtx::init(bt_args_t *args){
 
   // If download is not complete start connection to seeder and intiate handshake
   if(!isComplete){
-    for (std::map<unsigned char*, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
+    for (map<unsigned char, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) it->second;		
       
       std::thread t(&Peer::startConnection, p);
@@ -114,8 +114,19 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
     p = bt_args->peers[i];
     if(p != NULL){
       Peer *peer_obj = new Peer(this, p);
-      peers[p->id] = peer_obj;
+      peers[*p->id] = peer_obj;
     }
   }
 }
   
+void* TorrentCtx::getPeer(unsigned char *peerId){
+  map<unsigned char, void*>::iterator it;
+  it = peers.find(*peerId);
+  if(it != peers.end()){
+    Peer *p = (Peer*)it->second;
+    if(!p->isConnectionEstablished()){
+      return (void*)p;
+    }
+  }
+  return NULL;
+}
