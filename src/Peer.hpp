@@ -20,6 +20,7 @@ public:
     ctx = p_ctx;
     p = p_p;
     initiated_by_me = false;
+    connection = NULL;
     //active = false;
   }
 
@@ -74,7 +75,7 @@ public:
   }
   
   bool isConnectionEstablished(){
-    return ((connection) ? true : false);
+    return ((connection == NULL) ? false : true);
   }
   
   void destroyConnection(){

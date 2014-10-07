@@ -128,8 +128,16 @@ void* TorrentCtx::getPeer(unsigned char *id){
 
   for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
     Peer *p = (Peer*) *it;		
-    if(!p->isConnectionEstablished()){
-      return (void*)p;
+    if(p != NULL){
+      if(memcmp(p->getId(), id, ID_SIZE) != 0){
+	continue;
+      }
+      if(!p->isConnectionEstablished()){
+	LOG(INFO, "Peer found for connection!");
+	return (void*)p;
+      }
+    }else{
+      LOG(WARNING, "NULL pointer in peer list");
     }
   }
   return NULL;
