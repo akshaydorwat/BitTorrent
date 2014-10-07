@@ -17,9 +17,11 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <thread>
 #include "bt_lib.h"
 #include "ConnectionHandler.hpp"
 #include "ThreadPool.h"
+#include "TorrentCtx.hpp"
 
 using namespace std;
 
@@ -92,6 +94,21 @@ public:
   // Singleton method to getinstance of reactor
   static Reactor* getInstance();
 
+  // set torrent context
+  void setTorrentCtx(TorrentCtx *c){
+    ctx = c;
+  }
+
+  // get torrent context
+  TorrentCtx* getTorrentCtx(){
+    return ctx;
+  }
+  
+  //get port used 
+  unsigned short getPortUsed(){
+    return port_used;
+  }
+
 private:
 
   //  Handle events on socket connections
@@ -103,12 +120,15 @@ private:
   // thread helper
   static void* threadHelper(void *obj_ptr);
 
-  static Reactor* reactor;
-  pthread_t thread;                      // Thread to run reactor
+  static Reactor* reactor;               // Reactor singleton 
+  TorrentCtx* ctx;
+  //pthread_t thread;                      // Thread to run reactor
+  thread reactorThread;
   mutex m_lock;                          // Serialize access to eventRegister
   bool is_started;                       // Server on/off
   unsigned short min_port;               // Port range to try  connect on server
   unsigned short max_port;              
+  unsigned short port_used;
   struct sockaddr_in addr;               // sockaddr for server
   int server_sfd;                        // Server socket descriptor
   int max_connections;                    // maximum number of connection supported on the server

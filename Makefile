@@ -40,7 +40,11 @@ $(BIN): $(OBJ)
 	$(CC) -c $(CPFLAGS) -o $@ $<  
 
 run:
-	./bt_client -v -b 10.0.0.113 -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
+	./bt_client -v -b 10.0.0.113 -p 10.0.0.44:6667  -s . -l LOG.log  sample/download.mp3.torrent
+
+
+test1:
+	./bt_client -v -b 10.0.0.113 -p 10.0.0.217:6669  -s . -l LOG.log  sample/download.mp3.torrent
 
 clean:
 	rm -rf $(OBJ) $(BIN) bt_client.tar
@@ -48,6 +52,6 @@ clean:
 tar:
 	tar -cvf bt_client.tar LOG.log  Makefile  README  ROADMAP.txt  sample  src
 
-test:
-	./bt_client -v -b 10.0.0.217 -p 10.0.0.113:6667 -s . -l LOG.log  sample/download.mp3.torrent
+test2:
+	./bt_client -v -b 10.0.0.44 -p 10.0.0.113:6667 -s . -l LOG.log  sample/download.mp3.torrent
 

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <stdint.h>
 #include <poll.h>
 
 //networking stuff
@@ -23,7 +23,7 @@ extern "C"{
 
   //#include "bt_lib.h"
 
-#define MAX_PACKET_SIZE 100000
+#define MAX_PACKET_SIZE 65536
 
   /*Maximum file name size, to make things easy*/
 #define FILE_NAME_MAX 1024
@@ -42,6 +42,10 @@ extern "C"{
 
   /*number of threads in thread pool*/
 #define POOL_SIZE 5
+
+#define PROTOCOL "BitTorrent Protocol"
+
+#define MAX_IP_SIZE 16
 
   /*Different BitTorrent Message Types*/
 #define BT_CHOKE 0
@@ -89,9 +93,21 @@ extern "C"{
     char id[ID_SIZE]; //this bt_clients id
     int sockets[MAX_CONNECTIONS]; //Array of possible sockets
     struct sockaddr_in sockaddr; //sockaddr for server
+    char ip[MAX_IP_SIZE];
   } bt_args_t;
 
-
+  /**
+   * Hanshake structure
+   **/
+  
+  typedef struct {
+    uint8_t len;
+    char protocol[19];
+    char reserve[8];
+    char infoHash[20];
+    char peerId[20];
+  } bt_handshake_t;
+  
   /**
    * Message structures
    **/
@@ -155,7 +171,9 @@ extern "C"{
   /* print info about this peer */
   void print_peer(peer_t *peer);
 
+  void print_peer_id(unsigned char *peerId );
   /* check status on peers, maybe they went offline? */
+
   int check_peer(peer_t *peer);
 
   /*check if peers want to send me something*/

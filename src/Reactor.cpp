@@ -87,7 +87,7 @@ void Reactor::initReactor(){
     }
     break;
   }
-
+  port_used = i;
   LOG(INFO, "Server listening for client connections on port : " + to_string(i));
   // create poll fd vector 
   fillPollFd();
@@ -137,11 +137,12 @@ void Reactor::handleEvent(){
 	    exit(EXIT_FAILURE);
 	  }
 	  // create peer for this socket
-	  ConnectionHandler* p = new ConnectionHandler(tsfd, srcaddr);
-	  registerEvent(tsfd, p);
+	  ConnectionHandler* h = new ConnectionHandler(tsfd, srcaddr, (void*)getTorrentCtx());
+	  registerEvent(tsfd, h);
 	}while(tsfd != -1);
       }
     }else{
+      //TODO: connection timeouts
       if(p_fd.events & (POLLHUP|POLLERR)){
 	LOG(WARNING,"Connection got disconnected trying again");
 	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
@@ -232,14 +233,15 @@ void Reactor::registerEvent(int fd, ConnectionHandler* conn){
 
 void Reactor::unRegisterEvent(int fd){
   m_lock.lock();
-  eventRegister.erase( fd);
+  eventRegister.erase(fd);
   m_lock.unlock();
   LOG(INFO, "Removed socket  " + to_string(fd) + " from event register ");
 }
 
 int Reactor::closeReactor(){
   is_started = false;
-  wait();
+  //wait();
+  reactorThread.join();
   LOG(INFO," Closing reactor");
   return 1;
 }
@@ -248,18 +250,20 @@ bool Reactor::startReactor()
 {
   if(!is_started){
     LOG(INFO,"Starting reactor thread");
-    return (pthread_create(&thread, NULL, threadHelper, this) == 0);
+    //return (pthread_create(&thread, NULL, threadHelper, this) == 0);
+    reactorThread = thread(&Reactor::loopForever,this);
+    return true;
   }else{
     LOG(WARNING,"Reactor already started");
     return false;
   }
 }
 
-void Reactor::wait(){
+/*void Reactor::wait(){
   pthread_join(thread,NULL);
-}
+  }*/
 
-void* Reactor::threadHelper(void * obj_ptr) {
+/*void* Reactor::threadHelper(void * obj_ptr) {
   ((Reactor*)obj_ptr)->loopForever(); 
   return NULL;
-}
+  }*/

@@ -82,7 +82,6 @@ void __parse_peer(peer_t * peer, char * peer_st){
     exit(1);
   }
 
-  printf("length of ip is %d\n",strlen(ip));
   //calculate the id, value placed in id
   calc_id(ip,port,id);
 
@@ -180,6 +179,9 @@ void parse_args(bt_args_t * bt_args, int argc,  char * argv[]){
       bcopy((char *) (hostinfo->h_addr), 
 	    (char *) &(bt_args->sockaddr.sin_addr.s_addr),
 	    hostinfo->h_length);
+      
+      // copy ip so that i can compute hash on it
+      bcopy( optarg, (char*) bt_args->ip, strlen(optarg)+1);
       break;
 
     default:

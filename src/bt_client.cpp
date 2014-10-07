@@ -56,11 +56,11 @@ int main (int argc, char * argv[]){
   reactor->initReactor();
 
   // Load Torrent Context
-  TorrentCtx t; //(reactor);
+  TorrentCtx t; 
 
   // Intialise the context
   t.init(&bt_args);
-
+  reactor->setTorrentCtx(&t);
   reactor->startReactor();
   std::cout << "Press Q or q to quit \n";
   while( inp != 'Q'){
