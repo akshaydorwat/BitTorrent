@@ -21,7 +21,8 @@ TorrentFile.o \
 Torrent.o \
 TorrentCtx.o \
 ConnectionHandler.o \
-Piece.o
+Piece.o \
+FileHandler.o
 
 #TorrentPiece_t.o
 

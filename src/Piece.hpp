@@ -12,7 +12,8 @@
 #include <vector>
 using namespace std;
 
-#define BLOCK_SIZE 256000 //characters
+#define BLOCK_SIZE 16384 // =16 KB 
+//32768 =32 KB
 
 class Piece
 {
