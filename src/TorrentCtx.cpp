@@ -13,6 +13,9 @@
 #include "Reactor.hpp"
 #include <stdio.h>
 #include <thread>
+#include <stdio.h>
+#include "bt_lib.h"
+#include <string.h>
 
 using namespace std;
 
@@ -22,7 +25,6 @@ using namespace std;
 
 void TorrentCtx::init(bt_args_t *args){
   
-  char id[ID_SIZE];
   char md[20];
   vector<TorrentFile> files;
   string infoDict;
@@ -44,14 +46,13 @@ void TorrentCtx::init(bt_args_t *args){
   port = Reactor::getInstance()->getPortUsed();
   //if id is not provided calculate it.
   if(strlen(args->id) == 0){
-    //calc_id_sockaddr(&sockaddr, id);
-    calc_id(args->ip, port, id);
-    peerId = string(id);
+    calc_id(args->ip, port, (char *)peerId);
   }else{
-    peerId = string(args->id);
+    bcopy(args->id, peerId, ID_SIZE);
   }
   
-  LOG(INFO, "Client Id("+to_string(peerId.length())+"):" + peerId);
+  LOG(INFO, "Client Id("+to_string(strlen((const char*)peerId))+"):");
+  print_peer_id(peerId);
 
   // parse torrent file and get meta info.
   metaData = Torrent::decode(string(torrentFile));
@@ -94,7 +95,7 @@ void TorrentCtx::init(bt_args_t *args){
   contact_tracker(args);
   isComplete = true;
   // If download is not complete start connection to seeder and intiate handshake
-  //isComplete = true;
+  isComplete = true;
   if(!isComplete){
     for (map<unsigned char, void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) it->second;		
@@ -110,11 +111,12 @@ void TorrentCtx::init(bt_args_t *args){
 
 void TorrentCtx::contact_tracker(bt_args_t * bt_args){
   
-  int i;
+  int i,j;
   peer_t *p;
   LOG(INFO, "Number of peers in the list :"+ to_string(bt_args->n_peers));
   for(i=0; i< bt_args->n_peers; i++){
     p = bt_args->peers[i];
+    print_peer(p);
     if(p != NULL){
       Peer *peer_obj = new Peer(this, p);
       peers[*p->id] = peer_obj;
@@ -122,9 +124,12 @@ void TorrentCtx::contact_tracker(bt_args_t * bt_args){
   }
 }
   
-void* TorrentCtx::getPeer(unsigned char *peerId){
+void* TorrentCtx::getPeer(unsigned char *id){
+  
+  LOG(INFO, "Peer to find :");
+  print_peer_id(id);
   map<unsigned char, void*>::iterator it;
-  it = peers.find(*peerId);
+  it = peers.find(*id);
   if(it != peers.end()){
     Peer *p = (Peer*)it->second;
     if(!p->isConnectionEstablished()){

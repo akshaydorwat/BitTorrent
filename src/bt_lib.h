@@ -171,7 +171,9 @@ extern "C"{
   /* print info about this peer */
   void print_peer(peer_t *peer);
 
+  void print_peer_id(unsigned char *peerId );
   /* check status on peers, maybe they went offline? */
+
   int check_peer(peer_t *peer);
 
   /*check if peers want to send me something*/

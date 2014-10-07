@@ -116,4 +116,11 @@ void print_peer(peer_t *peer){
   }
 }
 
+void print_peer_id(unsigned char *peerId ){
+  int i;
+  for(i=0;i<ID_SIZE;i++){
+    printf("%02x",peerId[i]);
+  }
+  printf("\n");
+}
 

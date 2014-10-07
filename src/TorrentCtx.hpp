@@ -31,12 +31,14 @@ public:
   // get Peer pointer from map 
   void* getPeer(unsigned char *peerId);
 
-  string getPeerId(){
+  // get peer id 
+  unsigned char* getPeerId(){
     return peerId;
   }
+
 private:
   //command line arguments
-  string peerId;                      // peer id
+  unsigned char peerId[20];           // peer id
   string saveFile;                    //the filename to save to
   string torrentFile;                 //torrent file name
   struct sockaddr_in sockaddr;        //sockaddr for server

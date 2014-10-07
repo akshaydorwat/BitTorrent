@@ -91,7 +91,7 @@ void ConnectionHandler::sendHandshake(){
   memcpy(&handshake.protocol, PROTOCOL, sizeof(handshake.protocol));
   bzero(&handshake.reserve, sizeof(handshake.reserve));
   memcpy(&handshake.infoHash, ctx->getInfoHash().c_str(), sizeof(handshake.infoHash));
-  memcpy(&handshake.peerId, ctx->getPeerId().c_str(), sizeof(handshake.peerId));
+  memcpy(&handshake.peerId, ctx->getPeerId(), sizeof(handshake.peerId));
   writeConn((char*)&handshake, sizeof(handshake));
 }
 
