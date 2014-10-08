@@ -100,7 +100,7 @@ extern "C"{
    * Hanshake structure
    **/
   
-  typedef struct {
+  typedef struct __attribute__((__packed__)) {
     uint8_t len;
     char protocol[19];
     char reserve[8];

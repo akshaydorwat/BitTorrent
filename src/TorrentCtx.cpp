@@ -97,7 +97,7 @@ void TorrentCtx::init(bt_args_t *args){
   //loadPieces();
   contact_tracker(args);
   // If download is not complete start connection to seeder and intiate handshake
-  isComplete = true;
+  //isComplete = true;
   if(!isComplete){
     for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) *it;		

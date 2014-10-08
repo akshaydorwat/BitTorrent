@@ -60,80 +60,110 @@ void Peer::sendBitField(char *bitVector, size_t size){
 }
 
 void Peer::sendUnChoked(){
-  string msg;
+
   int length = 1;
   unsigned int msgType = BT_UNCHOKE;
   ConnectionHandler* c = (ConnectionHandler*)connection;
-
-  msg.append((const char*)&length, sizeof(int));
-  msg.append((const char*)&msgType, sizeof(unsigned int));
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  
+  memcpy((void*)buff, (const void*)&length, sizeof(int));
+  memcpy((void*)(buff + sizeof(int)),(const void*)&msgType, sizeof(unsigned int));
  
-  LOG(DEBUG,"UNchoked Message is " + msg + " | Message length is " + to_string( msg.size()));
-  c->writeConn(msg.data(),msg.length());
+  LOG(DEBUG,"Sending Unchoked Message");
+  c->writeConn(buff, buff_size);
 }
 
 
 void Peer::sendInterested(){
-  string msg;
-  int length = 1;
-  unsigned int msgType = BT_INTERSTED; 
-  ConnectionHandler* c = (ConnectionHandler*)connection;
 
-  msg.append((const char*)&length, sizeof(int));
-  msg.append((const char*)&msgType, sizeof(unsigned int));
+  int length = 1;
+  unsigned int msgType = BT_INTERSTED;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  
+  memcpy((void*)buff, (const void*)&length, sizeof(int));
+  memcpy((void*)(buff + sizeof(int)),(const void*)&msgType, sizeof(unsigned int));
  
-  LOG(DEBUG,"Interested Message is " + msg + " | Message length is " + to_string( msg.size()));
-  c->writeConn(msg.data(),msg.length());
+  LOG(DEBUG,"Sending Interested Message ");
+  c->writeConn(buff, buff_size);
 }
 
 
 void Peer::sendHave(int piece){
-  string msg;
+
   int length = 5;
   unsigned int msgType = BT_HAVE; 
   ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
 
-  msg.append((const char*)&length, sizeof(int));
-  msg.append((const char*)&msgType, sizeof(unsigned int));
-  msg.append((const char*)&piece, sizeof(int));
+  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
+  runner = runner + sizeof(unsigned int);
 
-  LOG(DEBUG,"Have Message is " + msg + " | Message length is " + to_string( msg.size()));
-  c->writeConn(msg.data(),msg.length());
+  memcpy((void*)runner,(const void*)&piece, sizeof(int));
+
+  LOG(DEBUG,"Sendinf Have Message");
+  c->writeConn(buff, buff_size);
 }
 
 void Peer::sendRequest(int index, int begin, int len){
-  string msg;
+
   int length = 13;
   unsigned int msgType = BT_REQUEST; 
   ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
 
-  msg.append((const char*)&length, sizeof(int));
-  msg.append((const char*)&msgType, sizeof(unsigned int));
-  msg.append((const char*)&index, sizeof(int));
-  msg.append((const char*)&begin, sizeof(int));
-  msg.append((const char*)&len, sizeof(int));
-    
-  LOG(DEBUG,"Request Message is " + msg + " | Message length is " + to_string( msg.size()));
-  c->writeConn(msg.data(),msg.length());
+  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
+  runner = runner + sizeof(unsigned int);
+
+  memcpy((void*)runner,(const void*)&index, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&begin, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&len, sizeof(int));
+  
+  LOG(DEBUG,"Sending Request Message");
+  c->writeConn(buff, buff_size);
 }
 
 void Peer::sendPiece(int index, int begin, char *block, size_t size){
 
-  string msg;
   unsigned int msgType = BT_PIECE;
   int length = 9 + size;
   ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
   
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
 
-  msg.append((const char*)&length, sizeof(int));
-  msg.append((const char*)&msgType, sizeof(unsigned int));
-  msg.append((const char*)&index, sizeof(int));
-  msg.append((const char*)&begin, sizeof(int));
-  msg.append((const char*)block, size);
-  
-  LOG(DEBUG,"Piece Message Len is  " + to_string( msg.size()));
+  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
+  runner = runner + sizeof(unsigned int);
 
-  c->writeConn(msg.data(),msg.length());
+  memcpy((void*)runner,(const void*)&index, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&begin, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&block, size);
+
+  LOG(DEBUG,"Sending Piece Message");
+  c->writeConn(buff, buff_size);
 
 }
 
