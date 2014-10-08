@@ -45,6 +45,9 @@ public:
   // Check for live message
   bool checkForLive(const char *message);
 
+  // check for hanshake message
+  bool checkForhandshakeMsg(const char *message);
+
   // Write data to socket descriptor
   void writeConn(const char *buff, int buf_len);
 

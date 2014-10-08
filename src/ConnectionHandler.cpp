@@ -21,28 +21,30 @@ void ConnectionHandler::handle(string msg){
 
   const char *message = msg.c_str();
 
-  // Verify the hanshake
-  if(verifyHandshake(message)){
-    if(!p->isInitiatedByMe()){
-      sendHandshake();
-      p->newConnectionMade();
-      handshakeComplete = true;
-      return;
-    }else{
-      handshakeComplete = true;
+  if(checkForhandshakeMsg(message)){
+    // Verify the hanshake
+    if(verifyHandshake(message)){
+      if(!p->isInitiatedByMe()){
+	sendHandshake();
+	p->newConnectionMade();
+	handshakeComplete = true;
+	return;
+      }else{
+	handshakeComplete = true;
+	return;
+      }
+    }else if(!handshakeComplete){
+      closeConn();
       return;
     }
-  }else if(!handshakeComplete){
-    closeConn();
-    return;
   }
 
   // Check for live message, Dont need to do any thing as Reacor is handling timeouts
   if(checkForLive(message)){
     return;
-  // Send mesage to Peer for further investigation
   }
 
+  // Send mesage to Peer for further investigation
   if(p){
     LOG(DEBUG, "Sending message to peer for handling");
     p->readMessage(msg);
@@ -85,6 +87,14 @@ bool ConnectionHandler::verifyHandshake(const char *message){
   return true;
 }
 
+bool ConnectionHandler::checkForhandshakeMsg(const char *message){
+  bt_handshake_t *handshake = (bt_handshake_t*)message;
+  if(handshake->len == strlen(PROTOCOL)){
+    LOG(DEBUG, "Protocol length didnt match");
+    return true;
+  }
+  return false;
+}
 
 bool ConnectionHandler::checkForLive(const char *message){
   bt_msg_t *msg = (bt_msg_t*)message;
@@ -170,7 +180,7 @@ void ConnectionHandler::resgiterSocket(){
 void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
 
-  m_lock.lock();
+  //m_lock.lock();
 
   memcpy(buffer, buff, buf_len);
  
@@ -182,6 +192,6 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     LOG(ERROR, "Could not write to socket");
   }
 
-  m_lock.unlock();
+  //m_lock.unlock();
   LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }
