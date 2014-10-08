@@ -10,6 +10,7 @@
 #include <time.h>
 #include "Peer.hpp"
 #include "bt_lib.h"
+#include <mutex>
 
 using namespace std;
 
@@ -70,6 +71,7 @@ public:
   void resgiterSocket();
 
 private:  
+  mutex m_lock;
   Peer *p;
   void *torrentCtx;
   bool handshakeComplete;

@@ -169,7 +169,9 @@ void ConnectionHandler::resgiterSocket(){
 
 void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
-  
+
+  m_lock.lock();
+
   memcpy(buffer, buff, buf_len);
  
   result =   write(sfd, buffer, buf_len);
@@ -179,5 +181,7 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     }
     LOG(ERROR, "Could not write to socket");
   }
+
+  m_lock.unlock();
   LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }

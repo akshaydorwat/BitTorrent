@@ -14,6 +14,7 @@ using namespace std;
 
 void Peer::readMessage(string msg){
   LOG(INFO, "Recieved msg : " + msg);
+  sendLiveMessage();
 }
 
 void Peer::startConnection(){
@@ -39,9 +40,26 @@ void Peer::startConnection(){
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
 void Peer::newConnectionMade(){
-  LOG(INFO,"Send bitfield and Unchoke message now");
+  char test[11] = "0123456789";
   sendBitField(ctx->getPiecesBitVector(), ctx->getBitVectorSize());
   sendUnChoked();
+  sendInterested();
+  sendHave(50);
+  sendRequest(500, 500, 500);
+  sendPiece(0,0,test,11);
+
+}
+
+void Peer::sendLiveMessage(){
+  int length = 0;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+
+  memcpy((void*)buff, (const void*)&length, sizeof(int));
+
+  LOG(DEBUG,"Sending Live Message");
+  c->writeConn(buff, buff_size);
 }
 
 void Peer::sendBitField(char *bitVector, size_t size){

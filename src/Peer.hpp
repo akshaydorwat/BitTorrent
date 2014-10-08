@@ -107,6 +107,8 @@ public:
   // send piece
   void sendPiece(int index, int begin, char *block, size_t size);
 
+  //send live message
+  void sendLiveMessage();
 private:
 
   TorrentCtx* ctx;
