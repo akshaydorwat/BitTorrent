@@ -19,8 +19,8 @@ using namespace std;
 
 void ConnectionHandler::handle(string msg){
 
-  const char *message = msg.c_str();
 
+  const char *message = msg.c_str();
   if(checkForhandshakeMsg(message)){
     // Verify the hanshake
     if(verifyHandshake(message)){
@@ -45,7 +45,7 @@ void ConnectionHandler::handle(string msg){
 
   // Send mesage to Peer for further investigation
   if(p && handshakeComplete){
-    LOG(DEBUG, "Sending message to peer for handling");
+    //LOG(DEBUG, "Sending message to peer for handling");
     p->readMessage(msg);
     return;
   }
@@ -181,10 +181,8 @@ void ConnectionHandler::resgiterSocket(){
 void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
 
-  //m_lock.lock();
-
+  m_lock.lock();
   memcpy(buffer, buff, buf_len);
- 
   result =   write(sfd, buffer, buf_len);
   if (result == -1) {
     if (errno == EWOULDBLOCK){
@@ -193,6 +191,6 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     LOG(ERROR, "Could not write to socket");
   }
 
-  //m_lock.unlock();
+  m_lock.unlock();
   LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }

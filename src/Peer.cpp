@@ -9,12 +9,32 @@
 #include "ConnectionHandler.hpp"
 #include "string"
 #include "bt_lib.h"
+#include <stdint.h>
 
 using namespace std;
 
 void Peer::readMessage(string msg){
-  LOG(INFO, "Recieved msg : " + msg);
-  sendLiveMessage();
+
+  //LOG(INFO, "Recieved msg : " + msg );
+  int length;
+  const char *payload = msg.data();
+  int payloadLen = msg.size();
+  int runner = 0;
+  
+  do{
+    // length of the message in the header    
+    memcpy((void*)&length,(void *)(payload+runner), sizeof(length));
+    runner = runner + sizeof(length);
+
+    if(length == 0){
+      LOG(INFO, "Reciecved Live message");
+    }else{
+      ctx->processMsg((const char *)(payload + runner), length);
+    }
+    runner = runner + length;
+
+  }while(runner < payloadLen);
+    
 }
 
 void Peer::startConnection(){
@@ -64,7 +84,7 @@ void Peer::sendLiveMessage(){
 
 void Peer::sendBitField(char *bitVector, size_t size){
   
-  unsigned int msgType = BT_BITFILED;
+  uint8_t msgType = BT_BITFILED;
   int length = 1 + size;
   ConnectionHandler* c = (ConnectionHandler*)connection;
   int buff_size = length+sizeof(int);
@@ -74,8 +94,8 @@ void Peer::sendBitField(char *bitVector, size_t size){
   memcpy((void*)runner, (const void*)&length, sizeof(int));
   runner = runner + sizeof(int);
 
-  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
-  runner = runner + sizeof(unsigned int);
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
 
   memcpy((void*)runner,(const void*)&bitVector, size);
 
@@ -86,13 +106,18 @@ void Peer::sendBitField(char *bitVector, size_t size){
 void Peer::sendUnChoked(){
 
   int length = 1;
-  unsigned int msgType = BT_UNCHOKE;
+  uint8_t msgType = BT_UNCHOKE;
   ConnectionHandler* c = (ConnectionHandler*)connection;
   int buff_size = length+sizeof(int);
   char buff[buff_size];
+  char *runner = (char*)buff;
   
-  memcpy((void*)buff, (const void*)&length, sizeof(int));
-  memcpy((void*)(buff + sizeof(int)),(const void*)&msgType, sizeof(unsigned int));
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
  
   LOG(DEBUG,"Sending Unchoked Message");
   c->writeConn(buff, buff_size);
@@ -102,13 +127,17 @@ void Peer::sendUnChoked(){
 void Peer::sendInterested(){
 
   int length = 1;
-  unsigned int msgType = BT_INTERSTED;
+  uint8_t msgType = BT_INTERSTED;
   ConnectionHandler* c = (ConnectionHandler*)connection;
   int buff_size = length+sizeof(int);
   char buff[buff_size];
+  char *runner = (char*)buff;
   
-  memcpy((void*)buff, (const void*)&length, sizeof(int));
-  memcpy((void*)(buff + sizeof(int)),(const void*)&msgType, sizeof(unsigned int));
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
  
   LOG(DEBUG,"Sending Interested Message ");
   c->writeConn(buff, buff_size);
@@ -118,7 +147,7 @@ void Peer::sendInterested(){
 void Peer::sendHave(int piece){
 
   int length = 5;
-  unsigned int msgType = BT_HAVE; 
+  uint8_t msgType = BT_HAVE; 
   ConnectionHandler* c = (ConnectionHandler*)connection;
   int buff_size = length+sizeof(int);
   char buff[buff_size];
@@ -127,8 +156,8 @@ void Peer::sendHave(int piece){
   memcpy((void*)runner, (const void*)&length, sizeof(int));
   runner = runner + sizeof(int);
 
-  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
-  runner = runner + sizeof(unsigned int);
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
 
   memcpy((void*)runner,(const void*)&piece, sizeof(int));
 
@@ -139,7 +168,7 @@ void Peer::sendHave(int piece){
 void Peer::sendRequest(int index, int begin, int len){
 
   int length = 13;
-  unsigned int msgType = BT_REQUEST; 
+  uint8_t msgType = BT_REQUEST; 
   ConnectionHandler* c = (ConnectionHandler*)connection;
   int buff_size = length+sizeof(int);
   char buff[buff_size];
@@ -148,8 +177,8 @@ void Peer::sendRequest(int index, int begin, int len){
   memcpy((void*)runner, (const void*)&length, sizeof(int));
   runner = runner + sizeof(int);
 
-  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
-  runner = runner + sizeof(unsigned int);
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
 
   memcpy((void*)runner,(const void*)&index, sizeof(int));
   runner = runner + sizeof(int);
@@ -165,7 +194,7 @@ void Peer::sendRequest(int index, int begin, int len){
 
 void Peer::sendPiece(int index, int begin, char *block, size_t size){
 
-  unsigned int msgType = BT_PIECE;
+  uint8_t msgType = BT_PIECE;
   int length = 9 + size;
   ConnectionHandler* c = (ConnectionHandler*)connection;
   int buff_size = length+sizeof(int);
@@ -175,8 +204,8 @@ void Peer::sendPiece(int index, int begin, char *block, size_t size){
   memcpy((void*)runner, (const void*)&length, sizeof(int));
   runner = runner + sizeof(int);
 
-  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
-  runner = runner + sizeof(unsigned int);
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
 
   memcpy((void*)runner,(const void*)&index, sizeof(int));
   runner = runner + sizeof(int);

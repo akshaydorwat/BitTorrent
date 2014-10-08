@@ -75,8 +75,9 @@ public:
   void resgiterSocket();
 
 private:  
-  mutex m_lock;
+
   Peer *p;
+  mutex m_lock;
   void *torrentCtx;
   bool handshakeComplete;
   struct sockaddr_in addr;

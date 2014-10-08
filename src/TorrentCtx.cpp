@@ -189,3 +189,84 @@ int TorrentCtx::getbit( size_t b) {
   return( ( (piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7);
 }
 
+void TorrentCtx::processMsg(const char *msg, size_t len){
+  
+  uint8_t msgType;
+  int runner = 0;
+  
+  memcpy((void*)&msgType,(const void *)(msg+runner), sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  printf("Message Type is %u & message len : %d\n",msgType, (int)len);
+
+  switch(msgType){
+    
+  case BT_CHOKE:
+    if(len == 1){
+      LOG(INFO,"Recieved CHOKE message");
+    }
+    break;
+
+  case BT_UNCHOKE: 
+    if(len == 1){
+      LOG(INFO, "Recieved UNCHOKE message");
+    }
+    break;
+
+  case BT_INTERSTED :
+    if(len == 1){
+      LOG(INFO, "Recieved INTERESTED message");
+    }
+    break;
+
+  case BT_NOT_INTERESTED :
+    if(len == 1){
+      LOG(INFO, "Recieved NOT INTERESTED message");
+    }
+    break;
+
+  case BT_HAVE :
+    if(len == 5){
+      LOG(INFO, "Recieved HAVE message");
+    }
+    break;
+
+  case BT_BITFILED :
+    if(len > 1){
+      LOG(INFO, "Recieved BTFILED message");
+    }
+    break;
+    
+  case BT_REQUEST :
+    if(len == 13)
+    {
+      int index;
+      int begin;
+      int len;
+      
+      memcpy((void*)&index,(const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&begin,(const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&len,(const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+
+      printf("index : %d Begin : %d len : %d \n",index, begin, len);
+
+      // queue this request to Torrent context request threadpool
+    }
+    break;
+    
+  case BT_PIECE :
+    if(len > 9){
+      LOG(INFO, "Recieved PIECE message");
+    }
+    break;
+    
+  case BT_CANCEL :
+    LOG(INFO, "Recieved CANCEL message");
+    break;
+  }
+}
