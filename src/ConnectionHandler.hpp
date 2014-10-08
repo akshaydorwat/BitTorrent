@@ -22,6 +22,7 @@ public:
     addr = src_addr;
     torrentCtx = ctx;
     handshakeComplete = false;
+    p = NULL;
   }
 
   ConnectionHandler(Peer *p_p, struct sockaddr_in p_sockaddr, void *ctx){

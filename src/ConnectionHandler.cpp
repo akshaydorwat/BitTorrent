@@ -27,14 +27,12 @@ void ConnectionHandler::handle(string msg){
       if(!p->isInitiatedByMe()){
 	sendHandshake();
 	p->newConnectionMade();
-	handshakeComplete = true;
-	return;
-      }else{
-	handshakeComplete = true;
-	return;
       }
+      handshakeComplete = true;
+      return;
     }else if(!handshakeComplete){
       closeConn();
+      delete this;
       return;
     }
   }
@@ -45,10 +43,13 @@ void ConnectionHandler::handle(string msg){
   }
 
   // Send mesage to Peer for further investigation
-  if(p){
+  if(p && handshake){
     LOG(DEBUG, "Sending message to peer for handling");
     p->readMessage(msg);
   }
+
+  closeConn();
+  delete this;
 }
 
 
@@ -126,8 +127,6 @@ void ConnectionHandler::closeConn(){
   if(p){
     p->destroyConnection();
   }
-  LOG(DEBUG, "Self destruction");
-  delete this;
 }
 
 bool ConnectionHandler::tryConnect(){
