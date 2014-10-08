@@ -45,18 +45,24 @@ void Peer::newConnectionMade(){
 }
 
 void Peer::sendBitField(char *bitVector, size_t size){
-  string msg;
+  
   unsigned int msgType = BT_BITFILED;
   int length = 1 + size;
   ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
   
-  //Actual payload
-  msg.append((const char*)&length, sizeof(int));
-  msg.append((const char*)&msgType, sizeof(unsigned int));
-  msg.append((const char*)bitVector, size);
-  
-  LOG(DEBUG,"Bitfield Message is " + msg + " | Message length is " + to_string( msg.size()));
-  c->writeConn(msg.data(),msg.length());
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(unsigned int));
+  runner = runner + sizeof(unsigned int);
+
+  memcpy((void*)runner,(const void*)&bitVector, size);
+
+  LOG(DEBUG,"Sending Bitfield Message");
+  c->writeConn(buff, buff_size);
 }
 
 void Peer::sendUnChoked(){
