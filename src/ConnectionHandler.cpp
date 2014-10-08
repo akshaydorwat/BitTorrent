@@ -39,15 +39,17 @@ void ConnectionHandler::handle(string msg){
 
   // Check for live message, Dont need to do any thing as Reacor is handling timeouts
   if(checkForLive(message)){
+    LOG(INFO,"Got Live Message");
     return;
   }
 
   // Send mesage to Peer for further investigation
-  if(p && handshake){
+  if(p && handshakeComplete){
     LOG(DEBUG, "Sending message to peer for handling");
     p->readMessage(msg);
+    return;
   }
-
+   
   closeConn();
   delete this;
 }
@@ -91,7 +93,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
 bool ConnectionHandler::checkForhandshakeMsg(const char *message){
   bt_handshake_t *handshake = (bt_handshake_t*)message;
   if(handshake->len == strlen(PROTOCOL)){
-    LOG(DEBUG, "Protocol length didnt match");
+    LOG(DEBUG, "Recieved Handshake Message");
     return true;
   }
   return false;
