@@ -553,9 +553,9 @@ void Torrent::addPieceHash(string str)
   pieceHashes.push_back(str);
 }
 
-string Torrent::pieceHashAt(int i)
+string Torrent::pieceHashAt(size_t i)
 {
-  assert (pieceHashes.size() > (size_t) i);
+  assert (pieceHashes.size() > i);
   return pieceHashes[i];
 }
 
@@ -565,9 +565,9 @@ vector<TorrentFile> Torrent::getFiles()
   return files;
 }
 
-TorrentFile Torrent::getFileAt(int i)
+TorrentFile Torrent::getFileAt(size_t i)
 {
-  assert(i >= 0 && i < (int)files.size());
+  assert(i >= 0 && i < files.size());
   return files[i];
 }
 

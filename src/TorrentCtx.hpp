@@ -4,10 +4,13 @@
 #include <vector>
 #include <string>
 #include <time.h>
+#include <fstream>
+
 #include "bt_lib.h"
 //#include "Reactor.hpp"
 #include "Torrent.hpp"
-#include <fstream>
+#include "Piece.hpp"
+#include "FileHandler.hpp"
 
 using namespace std;
 
@@ -15,6 +18,7 @@ class TorrentCtx{
 
 public:
   //TorrentCtx(Reactor *r);
+  ~TorrentCtx();
 
   // initialise torrent context
   void init(bt_args_t *args);
@@ -35,23 +39,27 @@ public:
     return peerId;
   }
 
+  void loadPieceStatus();
+
 private:
   //command line arguments
-  unsigned char peerId[20];           // peer id
-  string saveFile;                    //the filename to save to
-  string torrentFile;                 //torrent file name
-  struct sockaddr_in sockaddr;        //sockaddr for server
+  unsigned char peerId[20];           	// peer id
+  string saveFile;                    	//the filename to save to
+  string torrentFile;                 	//torrent file name
+  struct sockaddr_in sockaddr;        	//sockaddr for server
   
   // Tracker info
-  string infoHash;                    // info hash
-  Torrent metaData;
+  string infoHash;                    	// info hash
+  Torrent metaData;			// static torrent metadata
+  vector<Piece *> pieces;			// runtime piece info
+  FileHandler *fileMgr;
 
   // Book keeping
-  vector<void*> peers;            // Peers in torrent
-  fstream saveFile_fd;                // File descriptor
-  time_t start_time;                  // start time
-  bool isComplete;                    // donwload complete
-  vector<bool> *piecesBitVector;      // piece bit vector
+  vector<void*> peers;            	// Peers in torrent
+  fstream saveFile_fd;                	// File descriptor
+  time_t start_time;                  	// start time
+  bool isComplete;                    	// donwload complete
+  vector<bool> *piecesBitVector;      	// piece bit vector
   
   // ref objects
   //FileManager *m_filemanager;

@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include "bt_lib.h"
 #include <string.h>
+#include <iostream>
 
 using namespace std;
 
@@ -23,10 +24,17 @@ using namespace std;
   reactor = r;
   }*/
 
+TorrentCtx::~TorrentCtx()
+{
+	delete fileMgr;
+	for (size_t i=0; i<pieces.size(); i++)
+		delete pieces[i];
+}
+
 void TorrentCtx::init(bt_args_t *args){
   
   char md[20];
-  vector<TorrentFile> files;
+  //vector<TorrentFile> files;
   string infoDict;
   string filename;
   ifstream inp;
@@ -58,8 +66,9 @@ void TorrentCtx::init(bt_args_t *args){
   metaData = Torrent::decode(string(torrentFile));
 
   // check for multiple file
-  files = metaData.getFiles();
-  if(files.size() > 1){
+  //files = metaData.getFiles();
+  //if(files.size() > 1){
+  if (metaData.numOfFiles() > 1) {
     LOG(ERROR,"This version of Bit Torrent does not support multiple file download");
     exit(EXIT_FAILURE);
   }
@@ -72,7 +81,8 @@ void TorrentCtx::init(bt_args_t *args){
   
   // check if file exist
   filename = saveFile +"/" + metaData.getName();
-  saveFile_fd.open(filename.c_str(), std::fstream::in | std::fstream::out);
+  LOG (INFO, "Target file " + filename);
+  /*saveFile_fd.open(filename.c_str(), std::fstream::in | std::fstream::out);
   if(!saveFile_fd.is_open()){
     saveFile_fd.close();
     saveFile_fd.open(filename.c_str(), std::fstream::out);
@@ -87,8 +97,15 @@ void TorrentCtx::init(bt_args_t *args){
       exit(EXIT_FAILURE);
     }
     LOG(INFO, "File :" + filename + " opened sucessfully");
-  } 
-  
+  }*/
+
+  vector<string> saveFiles;
+  saveFiles.push_back(filename);
+  fileMgr = new FileHandler (metaData, saveFiles);
+  LOG (INFO, "New File Handler initiated."); 
+  loadPieceStatus();
+  LOG (INFO, "Loaded Piece availability.");
+
   // Load pieces from the file 
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
   //loadPieces();
@@ -140,4 +157,25 @@ void* TorrentCtx::getPeer(unsigned char *id){
     }
   }
   return NULL;
+}
+
+void TorrentCtx::loadPieceStatus()
+{
+	//cout << "Loading " << metaData.numOfPieces() << " pieces." << endl;
+	string test ("");
+	for (size_t i=0; i<metaData.getPieceLength(); i+=4)
+		test += "test";
+	for (size_t i=0; i < metaData.numOfPieces(); i++)
+	{
+		size_t pieceLength = i+1 < metaData.numOfPieces() ? metaData.getPieceLength() : metaData.getFiles().back().getLength() - (i * metaData.getPieceLength());
+		//cout << "Piece#" << i << " size = " << pieceLength << " bytes" << endl;
+		pieces.push_back(new Piece(i, i * metaData.getPieceLength(), pieceLength, metaData.pieceHashAt(i), fileMgr));
+		//LOG (DEBUG, "Checking validity of piece.");
+		string pieceData;
+		bool pieceAvailable = fileMgr->readIfValidPiece(i, pieceData);
+		if (pieceAvailable)
+			pieces.back()->setAvailable();
+			//pieces.back()->setData(pieceData);
+		//fileMgr->writePiece(i, test, pieceLength, i * metaData.getPieceLength());
+	}
 }

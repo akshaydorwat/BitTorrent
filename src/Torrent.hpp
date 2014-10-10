@@ -62,9 +62,10 @@ class Torrent
   void setEncoding(Bencode_t *);
 
   vector<TorrentFile> getFiles();
-  TorrentFile getFileAt(int);
+  TorrentFile getFileAt(size_t);
   void addFile(TorrentFile);
   void addFile(BencodeDictionary_t*);
+  size_t numOfFiles() { return files.size(); }
 
   string getName();
   void setName(string);
@@ -77,7 +78,8 @@ class Torrent
   vector<string> getPieceHashes();
   void setPieceHashes(Bencode_t *);
   void addPieceHash(string);
-  string pieceHashAt(int);
+  string pieceHashAt(size_t);
+  size_t numOfPieces() { return pieceHashes.size(); }
   //void piece(string);
   //TorrentPiece_t piece(int);
   //bool isValidPiece(size_t);
