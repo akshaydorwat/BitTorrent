@@ -148,7 +148,7 @@ void Reactor::handleEvent(){
 	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
       }else if(p_fd.events & (POLLIN)){
 	do{
-	  numBytesRcvd = read(p_fd.fd, packet_rcvd, sizeof(packet_rcvd));
+	  numBytesRcvd = read(p_fd.fd, packet_rcvd, MAX_PACKET_SIZE);
 	  if(numBytesRcvd < 0){						
 	    if (errno != EWOULDBLOCK){					
 	      close(p_fd.fd);						
@@ -165,8 +165,10 @@ void Reactor::handleEvent(){
 	  // Call handler if i have message 
 	  if(numBytesRcvd > 0){
 	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
-	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
-	    //conn->handle(string(packet_rcvd, numBytesRcvd));
+	    //cout << "Printing message at Rector :" << string(packet_rcvd, numBytesRcvd);
+	    //readMessage(packet_rcvd, numBytesRcvd);
+	    //pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
+	    conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }
 	  // connection closed
 	  if(numBytesRcvd == 0){
@@ -179,6 +181,29 @@ void Reactor::handleEvent(){
       }
     }
   }
+}
+
+void Reactor::readMessage(char *msg, int len){
+
+  //LOG(INFO, "Recieved msg : " + msg );
+  int length;
+  const char *payload = msg;
+  int payloadLen = len;
+  int runner = 0;
+  
+  do{
+    // length of the message in the header    
+    memcpy((void*)&length,(void *)(payload+runner), sizeof(length));
+    runner = runner + sizeof(length);
+
+    if(length == 0){
+      LOG(INFO, "Reciecved Live message");
+    }else{
+      ctx->processMsg((const char *)(payload + runner), length);
+    }
+    runner = runner + length;
+  }while(runner < payloadLen);
+    
 }
 
 void Reactor::loopForever(){

@@ -100,7 +100,7 @@ extern "C"{
    * Hanshake structure
    **/
   
-  typedef struct {
+  typedef struct __attribute__((__packed__)) {
     uint8_t len;
     char protocol[19];
     char reserve[8];
@@ -115,7 +115,6 @@ extern "C"{
   typedef struct {
     char * bitfield; //bitfield where each bit represents a piece that
     //the peer has or doesn't have
-    size_t size;//size of the bitfiled
   } bt_bitfield_t;
 
   typedef struct{

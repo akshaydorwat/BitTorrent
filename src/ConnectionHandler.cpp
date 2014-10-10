@@ -19,25 +19,41 @@ using namespace std;
 
 void ConnectionHandler::handle(string msg){
 
-  const char *message = msg.c_str();
 
-  // Verify the hanshake
-  if(verifyHandshake(message)){
-    if(!p->isInitiatedByMe()){
-      sendHandshake();
-      p->newConnectionMade();
-    }
-  // Check for live message, Dont need to do any thing as Reacor is handling timeouts
-  }else if(checkForLive(message)){
-    return;
-  // Send mesage to Peer for further investigation
-  }else{
-    if(p){
-      LOG(DEBUG, "Sending message to peer for handling");
-      p->readMessage(msg);
+  const char *message = msg.c_str();
+  if(checkForhandshakeMsg(message)){
+    // Verify the hanshake
+    if(verifyHandshake(message)){
+      if(!p->isInitiatedByMe()){
+	sendHandshake();
+	p->newConnectionMade();
+      }
+      handshakeComplete = true;
+      return;
+    }else if(!handshakeComplete){
+      closeConn();
+      delete this;
+      return;
     }
   }
+
+  // Check for live message, Dont need to do any thing as Reacor is handling timeouts
+  if(checkForLive(message)){
+    LOG(INFO,"Got Live Message");
+    return;
+  }
+
+  // Send mesage to Peer for further investigation
+  if(p && handshakeComplete){
+    //LOG(DEBUG, "Sending message to peer for handling");
+    p->readMessage(msg);
+    return;
+  }
+   
+  closeConn();
+  delete this;
 }
+
 
 bool ConnectionHandler::verifyHandshake(const char *message){
   bt_handshake_t *handshake = (bt_handshake_t*)message;
@@ -62,7 +78,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
   if(p == NULL){
     LOG(WARNING, "Peer rejected ");
     // close connection
-    closeConn();
+    // closeConn();
     return false;
   }else{
     // store pointer to peer in the connection
@@ -72,6 +88,15 @@ bool ConnectionHandler::verifyHandshake(const char *message){
     }
   }
   return true;
+}
+
+bool ConnectionHandler::checkForhandshakeMsg(const char *message){
+  bt_handshake_t *handshake = (bt_handshake_t*)message;
+  if(handshake->len == strlen(PROTOCOL)){
+    LOG(DEBUG, "Recieved Handshake Message");
+    return true;
+  }
+  return false;
 }
 
 bool ConnectionHandler::checkForLive(const char *message){
@@ -104,8 +129,6 @@ void ConnectionHandler::closeConn(){
   if(p){
     p->destroyConnection();
   }
-  LOG(DEBUG, "Self destruction");
-  delete this;
 }
 
 bool ConnectionHandler::tryConnect(){
@@ -155,7 +178,19 @@ void ConnectionHandler::resgiterSocket(){
   Reactor::getInstance()->registerEvent(sfd,this);
 }
 
-void ConnectionHandler::writeConn(char *buff, int buf_len){
+void ConnectionHandler::writeConn(const char *buff, int buf_len){
+  int result;
+
+  m_lock.lock();
   memcpy(buffer, buff, buf_len);
-  write(sfd, buffer, buf_len);
+  result =   write(sfd, buffer, buf_len);
+  if (result == -1) {
+    if (errno == EWOULDBLOCK){
+      return;
+    }
+    LOG(ERROR, "Could not write to socket");
+  }
+
+  m_lock.unlock();
+  LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }

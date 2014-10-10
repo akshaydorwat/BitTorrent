@@ -9,11 +9,32 @@
 #include "ConnectionHandler.hpp"
 #include "string"
 #include "bt_lib.h"
+#include <stdint.h>
 
 using namespace std;
 
 void Peer::readMessage(string msg){
-  LOG(INFO, "Recieved msg : " + msg);
+
+  //LOG(INFO, "Recieved msg : " + msg );
+  int length;
+  const char *payload = msg.data();
+  int payloadLen = msg.size();
+  int runner = 0;
+  
+  do{
+    // length of the message in the header    
+    memcpy((void*)&length,(void *)(payload+runner), sizeof(length));
+    runner = runner + sizeof(length);
+
+    if(length == 0){
+      LOG(INFO, "Reciecved Live message");
+    }else{
+      ctx->processMsg((const char *)(payload + runner), length);
+    }
+    runner = runner + length;
+
+  }while(runner < payloadLen);
+    
 }
 
 void Peer::startConnection(){
@@ -39,27 +60,164 @@ void Peer::startConnection(){
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
 void Peer::newConnectionMade(){
-  //sendBitField();
-  //sendUnChoked();
+  char test[11] = "0123456789";
+  sendBitField(ctx->getPiecesBitVector(), ctx->getBitVectorSize());
+  sendUnChoked();
+  sendInterested();
+  sendHave(50);
+  sendRequest(500, 500, 500);
+  sendPiece(0,0,test,11);
+
 }
 
-/*void Peer::sendBitField(){
+void Peer::sendLiveMessage(){
+  int length = 0;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+
+  memcpy((void*)buff, (const void*)&length, sizeof(int));
+
+  LOG(DEBUG,"Sending Live Message");
+  c->writeConn(buff, buff_size);
+}
+
+void Peer::sendBitField(char *bitVector, size_t size){
   
-}
+  uint8_t msgType = BT_BITFILED;
+  int length = 1 + size;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
 
-void Peer::sendInterested(){
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  memcpy((void*)runner,(const void*)&bitVector, size);
+
+  LOG(DEBUG,"Sending Bitfield Message");
+  c->writeConn(buff, buff_size);
 }
 
 void Peer::sendUnChoked(){
+
+  int length = 1;
+  uint8_t msgType = BT_UNCHOKE;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+ 
+  LOG(DEBUG,"Sending Unchoked Message");
+  c->writeConn(buff, buff_size);
 }
 
-void Peer::sendHave(){
+
+void Peer::sendInterested(){
+
+  int length = 1;
+  uint8_t msgType = BT_INTERSTED;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+ 
+  LOG(DEBUG,"Sending Interested Message ");
+  c->writeConn(buff, buff_size);
 }
 
-void Peer::sendRequest(){
+
+void Peer::sendHave(int piece){
+
+  int length = 5;
+  uint8_t msgType = BT_HAVE; 
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  memcpy((void*)runner,(const void*)&piece, sizeof(int));
+
+  LOG(DEBUG,"Sendinf Have Message");
+  c->writeConn(buff, buff_size);
 }
 
-void Peer::sendPiece(){
-}*/
+void Peer::sendRequest(int index, int begin, int len){
+
+  int length = 13;
+  uint8_t msgType = BT_REQUEST; 
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  memcpy((void*)runner,(const void*)&index, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&begin, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&len, sizeof(int));
+  
+  LOG(DEBUG,"Sending Request Message");
+  c->writeConn(buff, buff_size);
+}
+
+void Peer::sendPiece(int index, int begin, char *block, size_t size){
+
+  uint8_t msgType = BT_PIECE;
+  int length = 9 + size;
+  ConnectionHandler* c = (ConnectionHandler*)connection;
+  int buff_size = length+sizeof(int);
+  char buff[buff_size];
+  char *runner = (char*)buff;
+  
+  memcpy((void*)runner, (const void*)&length, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  memcpy((void*)runner,(const void*)&index, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&begin, sizeof(int));
+  runner = runner + sizeof(int);
+
+  memcpy((void*)runner,(const void*)&block, size);
+
+  LOG(DEBUG,"Sending Piece Message");
+  c->writeConn(buff, buff_size);
+
+}
 
 

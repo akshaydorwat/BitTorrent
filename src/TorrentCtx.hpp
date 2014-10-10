@@ -18,6 +18,7 @@ class TorrentCtx{
 
 public:
   //TorrentCtx(Reactor *r);
+
   ~TorrentCtx();
 
   // initialise torrent context
@@ -41,6 +42,32 @@ public:
 
   void loadPieceStatus();
 
+  // send bitvector
+  char* getPiecesBitVector(){
+    return piecesBitVector;
+  }
+
+  size_t getBitVectorSize(){
+    return bitVectorSize;
+  }
+  //get number of pieces in the torrent
+  size_t getNumOfPieces(){
+    return metaData.numOfPieces();
+  }
+
+  // init bit set
+  void initBitVecor();
+
+  // set bit
+  void setbit( size_t b);
+
+  // get bit
+  int getbit( size_t b);
+
+  // Process the message recieved
+  void processMsg(const char *msg, size_t len);
+
+
 private:
   //command line arguments
   unsigned char peerId[20];           	// peer id
@@ -55,12 +82,13 @@ private:
   FileHandler *fileMgr;
 
   // Book keeping
-  vector<void*> peers;            	// Peers in torrent
-  fstream saveFile_fd;                	// File descriptor
-  time_t start_time;                  	// start time
-  bool isComplete;                    	// donwload complete
-  vector<bool> *piecesBitVector;      	// piece bit vector
-  
+  vector<void*> peers;            // Peers in torrent
+  fstream saveFile_fd;                // File descriptor
+  time_t start_time;                  // start time
+  bool isComplete;                    // donwload complete
+  char *piecesBitVector;      // piece bit vector
+  size_t bitVectorSize;
+
   // ref objects
   //FileManager *m_filemanager;
   //Reactor *reactor;

@@ -10,6 +10,7 @@
 #include <time.h>
 #include "Peer.hpp"
 #include "bt_lib.h"
+#include <mutex>
 
 using namespace std;
 
@@ -20,6 +21,8 @@ public:
     sfd = fd;
     addr = src_addr;
     torrentCtx = ctx;
+    handshakeComplete = false;
+    p = NULL;
   }
 
   ConnectionHandler(Peer *p_p, struct sockaddr_in p_sockaddr, void *ctx){
@@ -28,6 +31,7 @@ public:
     //time(&last_connected);
     sfd = -1;
     torrentCtx = ctx;
+    handshakeComplete = false;
   }
   
   // Handle event on connection
@@ -42,8 +46,11 @@ public:
   // Check for live message
   bool checkForLive(const char *message);
 
+  // check for hanshake message
+  bool checkForhandshakeMsg(const char *message);
+
   // Write data to socket descriptor
-  void writeConn(char *buff, int buf_len);
+  void writeConn(const char *buff, int buf_len);
 
   // close connection
   void closeConn();
@@ -68,8 +75,11 @@ public:
   void resgiterSocket();
 
 private:  
+
   Peer *p;
+  mutex m_lock;
   void *torrentCtx;
+  bool handshakeComplete;
   struct sockaddr_in addr;
   time_t last_connected;
   int sfd;

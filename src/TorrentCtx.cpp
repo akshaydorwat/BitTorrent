@@ -26,9 +26,12 @@ using namespace std;
 
 TorrentCtx::~TorrentCtx()
 {
-	delete fileMgr;
-	for (size_t i=0; i<pieces.size(); i++)
-		delete pieces[i];
+  delete fileMgr;
+  for (size_t i=0; i<pieces.size(); i++)
+    delete pieces[i];
+  if(piecesBitVector){
+    delete piecesBitVector;
+  }
 }
 
 void TorrentCtx::init(bt_args_t *args){
@@ -82,22 +85,6 @@ void TorrentCtx::init(bt_args_t *args){
   // check if file exist
   filename = saveFile +"/" + metaData.getName();
   LOG (INFO, "Target file " + filename);
-  /*saveFile_fd.open(filename.c_str(), std::fstream::in | std::fstream::out);
-  if(!saveFile_fd.is_open()){
-    saveFile_fd.close();
-    saveFile_fd.open(filename.c_str(), std::fstream::out);
-    if(!saveFile_fd.is_open()){
-      LOG(ERROR, "Unable to open file");
-      exit(EXIT_FAILURE);
-    }
-    saveFile_fd.close();
-    saveFile_fd.open(filename.c_str(), std::fstream::in | std::fstream::out);
-    if(!saveFile_fd.is_open()){
-      LOG(ERROR, "Unable to open file");
-      exit(EXIT_FAILURE);
-    }
-    LOG(INFO, "File :" + filename + " opened sucessfully");
-  }*/
 
   vector<string> saveFiles;
   saveFiles.push_back(filename);
@@ -106,12 +93,15 @@ void TorrentCtx::init(bt_args_t *args){
   loadPieceStatus();
   LOG (INFO, "Loaded Piece availability.");
 
+  // Initialise the bit vector
+  initBitVecor();
+  
   // Load pieces from the file 
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
   //loadPieces();
   contact_tracker(args);
   // If download is not complete start connection to seeder and intiate handshake
-  isComplete = true;
+  //isComplete = true;
   if(!isComplete){
     for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) *it;		
@@ -156,23 +146,153 @@ void* TorrentCtx::getPeer(unsigned char *id){
   return NULL;
 }
 
+
 void TorrentCtx::loadPieceStatus()
 {
-	//cout << "Loading " << metaData.numOfPieces() << " pieces." << endl;
-	string test ("");
-	for (size_t i=0; i<metaData.getPieceLength(); i+=4)
-		test += "test";
-	for (size_t i=0; i < metaData.numOfPieces(); i++)
-	{
-		size_t pieceLength = i+1 < metaData.numOfPieces() ? metaData.getPieceLength() : metaData.getFiles().back().getLength() - (i * metaData.getPieceLength());
-		//cout << "Piece#" << i << " size = " << pieceLength << " bytes" << endl;
-		pieces.push_back(new Piece(i, i * metaData.getPieceLength(), pieceLength, metaData.pieceHashAt(i), fileMgr));
-		//LOG (DEBUG, "Checking validity of piece.");
-		string pieceData;
-		bool pieceAvailable = fileMgr->readIfValidPiece(i, pieceData);
-		if (pieceAvailable)
-			pieces.back()->setAvailable();
-			//pieces.back()->setData(pieceData);
-		//fileMgr->writePiece(i, test, pieceLength, i * metaData.getPieceLength());
-	}
+  //cout << "Loading " << metaData.numOfPieces() << " pieces." << endl;
+  string test ("");
+  for (size_t i=0; i<metaData.getPieceLength(); i+=4)
+    test += "test";
+  for (size_t i=0; i < metaData.numOfPieces(); i++)
+    {
+      size_t pieceLength = i+1 < metaData.numOfPieces() ? metaData.getPieceLength() : metaData.getFiles().back().getLength() - (i * metaData.getPieceLength());
+      //cout << "Piece#" << i << " size = " << pieceLength << " bytes" << endl;
+      pieces.push_back(new Piece(i, i * metaData.getPieceLength(), pieceLength, metaData.pieceHashAt(i), fileMgr));
+      //LOG (DEBUG, "Checking validity of piece.");
+      string pieceData;
+      bool pieceAvailable = fileMgr->readIfValidPiece(i, pieceData);
+      if (pieceAvailable)
+	pieces.back()->setAvailable();
+      //pieces.back()->setData(pieceData);
+      //fileMgr->writePiece(i, test, pieceLength, i * metaData.getPieceLength());
+    }
+}
+
+void TorrentCtx::initBitVecor(){
+  size_t mbyte;
+  size_t mbit;
+  size_t size =  getNumOfPieces();
+
+  if( size > 0){
+    mbyte = size / 8;
+    mbit  = size % 8;
+
+    if(mbit > 0) {
+      mbyte++;
+    }
+    bitVectorSize = mbyte;
+    piecesBitVector = new char[bitVectorSize];
+    memset(piecesBitVector, 0, mbyte*sizeof(char));
+  }else{
+    LOG(ERROR, "Invalid number of pieces ");
+    exit(EXIT_FAILURE);
+  }
+}
+
+void TorrentCtx::setbit( size_t b) {
+  size_t mbyte, mbit;
+ 
+  mbyte = b / 8;
+  mbit = b % 8;
+
+  if(mbyte > bitVectorSize){
+    LOG(ERROR, "Can not set bit");
+  }
+  piecesBitVector[mbyte] |= (0x80 >> mbit);
+}
+
+int TorrentCtx::getbit( size_t b) {
+  size_t mbyte, mbit;
+
+  mbyte = b / 8;
+  mbit = b % 8;
+
+  if((size_t)mbyte > bitVectorSize){
+    LOG(ERROR, "Can not get bit");
+    exit(EXIT_FAILURE);
+  }
+
+  return( ( (piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7);
+}
+
+void TorrentCtx::processMsg(const char *msg, size_t len){
+  
+  uint8_t msgType;
+  int runner = 0;
+  
+  memcpy((void*)&msgType,(const void *)(msg+runner), sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  printf("Message Type is %u & message len : %d\n",msgType, (int)len);
+
+  switch(msgType){
+    
+  case BT_CHOKE:
+    if(len == 1){
+      LOG(INFO,"Recieved CHOKE message");
+    }
+    break;
+
+  case BT_UNCHOKE: 
+    if(len == 1){
+      LOG(INFO, "Recieved UNCHOKE message");
+    }
+    break;
+
+  case BT_INTERSTED :
+    if(len == 1){
+      LOG(INFO, "Recieved INTERESTED message");
+    }
+    break;
+
+  case BT_NOT_INTERESTED :
+    if(len == 1){
+      LOG(INFO, "Recieved NOT INTERESTED message");
+    }
+    break;
+
+  case BT_HAVE :
+    if(len == 5){
+      LOG(INFO, "Recieved HAVE message");
+    }
+    break;
+
+  case BT_BITFILED :
+    if(len > 1){
+      LOG(INFO, "Recieved BTFILED message");
+    }
+    break;
+    
+  case BT_REQUEST :
+    if(len == 13)
+      {
+	int index;
+	int begin;
+	int len;
+      
+	memcpy((void*)&index,(const void *)(msg+runner), sizeof(int));
+	runner = runner + sizeof(int);
+      
+	memcpy((void*)&begin,(const void *)(msg+runner), sizeof(int));
+	runner = runner + sizeof(int);
+      
+	memcpy((void*)&len,(const void *)(msg+runner), sizeof(int));
+	runner = runner + sizeof(int);
+
+	printf("index : %d Begin : %d len : %d \n",index, begin, len);
+
+	// queue this request to Torrent context request threadpool
+      }
+    break;
+    
+  case BT_PIECE :
+    if(len > 9){
+      LOG(INFO, "Recieved PIECE message");
+    }
+    break;
+    
+  case BT_CANCEL :
+    LOG(INFO, "Recieved CANCEL message");
+    break;
+  }
 }

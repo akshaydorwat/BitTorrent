@@ -103,11 +103,14 @@ public:
   TorrentCtx* getTorrentCtx(){
     return ctx;
   }
-  
+
   //get port used 
   unsigned short getPortUsed(){
     return port_used;
   }
+
+  // helper function
+  void readMessage(char *msg, int len);
 
 private:
 

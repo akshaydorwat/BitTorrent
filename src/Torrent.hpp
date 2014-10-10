@@ -78,8 +78,11 @@ class Torrent
   vector<string> getPieceHashes();
   void setPieceHashes(Bencode_t *);
   void addPieceHash(string);
+
   string pieceHashAt(size_t);
   size_t numOfPieces() { return pieceHashes.size(); }
+
+  
   //void piece(string);
   //TorrentPiece_t piece(int);
   //bool isValidPiece(size_t);

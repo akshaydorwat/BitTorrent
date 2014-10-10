@@ -44,7 +44,7 @@ run:
 
 
 test1:
-	./bt_client -v -b 10.0.0.113 -p 10.0.0.217:6669  -s . -l LOG.log  sample/download.mp3.torrent
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.113:6667  -s . -l LOG.log  sample/download.mp3.torrent
 
 clean:
 	rm -rf $(OBJ) $(BIN) bt_client.tar
@@ -55,3 +55,5 @@ tar:
 test2:
 	./bt_client -v -b 10.0.0.44 -p 10.0.0.113:6667 -s . -l LOG.log  sample/download.mp3.torrent
 
+test4:
+	./bt_client -v -b 10.0.0.113 -p 10.0.0.217:6667  -s . -l LOG.log  sample/download.mp3.torrent
