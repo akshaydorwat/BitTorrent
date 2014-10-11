@@ -67,7 +67,6 @@ void Peer::newConnectionMade(){
   sendHave(50);
   sendRequest(500, 500, 500);
   sendPiece(0,0,test,11);
-
 }
 
 void Peer::setBitVector(int piece){
@@ -124,7 +123,7 @@ void Peer::sendBitField(char *bitVector, size_t size){
   memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
   runner = runner + sizeof(uint8_t);
 
-  memcpy((void*)runner,(const void*)&bitVector, size);
+  memcpy((void*)runner,(const void*)bitVector, size);
 
   LOG(DEBUG,"Sending Bitfield Message");
   c->writeConn(buff, buff_size);
@@ -240,7 +239,7 @@ void Peer::sendPiece(int index, int begin, char *block, size_t size){
   memcpy((void*)runner,(const void*)&begin, sizeof(int));
   runner = runner + sizeof(int);
 
-  memcpy((void*)runner,(const void*)&block, size);
+  memcpy((void*)runner,(const void*)block, size);
 
   LOG(DEBUG,"Sending Piece Message");
   c->writeConn(buff, buff_size);
