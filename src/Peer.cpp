@@ -29,7 +29,7 @@ void Peer::readMessage(string msg){
     if(length == 0){
       LOG(INFO, "Reciecved Live message");
     }else{
-      ctx->processMsg((const char *)(payload + runner), length);
+      ctx->processMsg((const char *)(payload + runner), length, (void *)this);
     }
     runner = runner + length;
 
@@ -68,6 +68,30 @@ void Peer::newConnectionMade(){
   sendRequest(500, 500, 500);
   sendPiece(0,0,test,11);
 
+}
+
+void Peer::setBitVector(int piece){
+  m_lock.lock();
+  bitVector[piece] = true;
+  m_lock.unlock();
+}
+
+void Peer::copyBitVector(char *piecesBitVector, int numOfPieces){
+  int i;
+
+  // Reset the size of bit vector
+  bitVector.resize(numOfPieces, false);
+  
+  for(i=0; i<numOfPieces; i++){
+    size_t mbyte, mbit;
+
+    mbyte = i / 8;
+    mbit = i % 8;
+    
+    if(((piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7){
+      setBitVector(i);
+    }
+  }
 }
 
 void Peer::sendLiveMessage(){

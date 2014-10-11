@@ -18,8 +18,6 @@
 using namespace std;
 
 void ConnectionHandler::handle(string msg){
-
-
   const char *message = msg.c_str();
   if(checkForhandshakeMsg(message)){
     // Verify the hanshake

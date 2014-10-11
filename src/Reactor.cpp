@@ -166,9 +166,8 @@ void Reactor::handleEvent(){
 	  if(numBytesRcvd > 0){
 	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
 	    //cout << "Printing message at Rector :" << string(packet_rcvd, numBytesRcvd);
-	    //readMessage(packet_rcvd, numBytesRcvd);
-	    //pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
-	    conn->handle(string(packet_rcvd, numBytesRcvd));
+	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
+	    //conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }
 	  // connection closed
 	  if(numBytesRcvd == 0){
@@ -183,28 +182,6 @@ void Reactor::handleEvent(){
   }
 }
 
-void Reactor::readMessage(char *msg, int len){
-
-  //LOG(INFO, "Recieved msg : " + msg );
-  int length;
-  const char *payload = msg;
-  int payloadLen = len;
-  int runner = 0;
-  
-  do{
-    // length of the message in the header    
-    memcpy((void*)&length,(void *)(payload+runner), sizeof(length));
-    runner = runner + sizeof(length);
-
-    if(length == 0){
-      LOG(INFO, "Reciecved Live message");
-    }else{
-      ctx->processMsg((const char *)(payload + runner), length);
-    }
-    runner = runner + length;
-  }while(runner < payloadLen);
-    
-}
 
 void Reactor::loopForever(){
   

@@ -109,9 +109,6 @@ public:
     return port_used;
   }
 
-  // helper function
-  void readMessage(char *msg, int len);
-
 private:
 
   //  Handle events on socket connections

@@ -65,7 +65,7 @@ public:
   int getbit( size_t b);
 
   // Process the message recieved
-  void processMsg(const char *msg, size_t len);
+  void processMsg(const char *msg, size_t len, void *p);
 
 
 private:

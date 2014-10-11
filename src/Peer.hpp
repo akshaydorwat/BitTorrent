@@ -6,6 +6,7 @@
 #ifndef PEER_HPP
 #define PEER_HPP
 
+#include <mutex>
 #include <time.h>
 #include <string>
 #include "TorrentCtx.hpp"
@@ -21,6 +22,8 @@ public:
     p = p_p;
     initiated_by_me = false;
     connection = NULL;
+    setChocked(true);
+    setInterested(false);
     //active = false;
   }
 
@@ -62,6 +65,14 @@ public:
     p->choked = (chock ? 1 : 0);
   }
 
+  bool isInterested(){
+    return (p->interested == 1);
+  }
+
+  void setInterested(bool interested){
+    p->interested = (interested ? 1 : 0);
+  }
+  
   unsigned char* getId(){
     return p->id;
   }
@@ -109,12 +120,21 @@ public:
 
   //send live message
   void sendLiveMessage();
+
+  //set bit vector
+  void setBitVector(int piece);
+
+  //copy bit vector
+  void copyBitVector(char *piecesBitVector, int numOfPieces);
+
 private:
 
   TorrentCtx* ctx;
   peer_t *p;
   void *connection;
   bool initiated_by_me;
+  vector<bool> bitVector;
+  mutex m_lock;
   //bool active;
 
 };

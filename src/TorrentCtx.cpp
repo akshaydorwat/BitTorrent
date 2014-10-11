@@ -1,5 +1,6 @@
 
 #include <fstream>
+#include <thread>
 #include <openssl/sha.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -7,15 +8,15 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdio.h>
+#include <string.h>
+#include "bt_lib.h"
 #include "TorrentCtx.hpp"
 #include "Logger.hpp"
 #include "Peer.hpp"
 #include "Reactor.hpp"
-#include <stdio.h>
-#include <thread>
-#include <stdio.h>
-#include "bt_lib.h"
-#include <string.h>
+
+
 #include <iostream>
 
 using namespace std;
@@ -81,24 +82,25 @@ void TorrentCtx::init(bt_args_t *args){
   SHA1((unsigned char *)infoDict.c_str(), infoDict.length(), (unsigned char *)md);
   infoHash = string(md);
   LOG(INFO, "Calculated Info hash successfully" );
-  
-  // check if file exist
-  filename = saveFile +"/" + metaData.getName();
-  LOG (INFO, "Target file " + filename);
-
-  vector<string> saveFiles;
-  saveFiles.push_back(filename);
-  fileMgr = new FileHandler (metaData, saveFiles);
-  LOG (INFO, "New File Handler initiated."); 
-  loadPieceStatus();
-  LOG (INFO, "Loaded Piece availability.");
 
   // Initialise the bit vector
   initBitVecor();
+
+  // check if file exist
+  filename = saveFile +"/" + metaData.getName();
+  LOG (INFO, "Target file " + filename);
+  vector<string> saveFiles;
+  saveFiles.push_back(filename);
   
+  fileMgr = new FileHandler (metaData, saveFiles);
+  LOG (INFO, "New File Handler initiated."); 
+
   // Load pieces from the file 
   // Check how many pieces we have ? Compute hash over them and verify. After that  Build the bitvector. 
-  //loadPieces();
+  
+  loadPieceStatus();
+  LOG (INFO, "Loaded Piece availability.");
+  
   contact_tracker(args);
   // If download is not complete start connection to seeder and intiate handshake
   //isComplete = true;
@@ -150,9 +152,7 @@ void* TorrentCtx::getPeer(unsigned char *id){
 void TorrentCtx::loadPieceStatus()
 {
   //cout << "Loading " << metaData.numOfPieces() << " pieces." << endl;
-  string test ("");
-  for (size_t i=0; i<metaData.getPieceLength(); i+=4)
-    test += "test";
+  bool AllPiecesCompleteFlag = true; 
   for (size_t i=0; i < metaData.numOfPieces(); i++)
     {
       size_t pieceLength = i+1 < metaData.numOfPieces() ? metaData.getPieceLength() : metaData.getFiles().back().getLength() - (i * metaData.getPieceLength());
@@ -161,11 +161,16 @@ void TorrentCtx::loadPieceStatus()
       //LOG (DEBUG, "Checking validity of piece.");
       string pieceData;
       bool pieceAvailable = fileMgr->readIfValidPiece(i, pieceData);
-      if (pieceAvailable)
+      if (pieceAvailable){
 	pieces.back()->setAvailable();
-      //pieces.back()->setData(pieceData);
-      //fileMgr->writePiece(i, test, pieceLength, i * metaData.getPieceLength());
+	setbit((size_t)i);
+      }
+      AllPiecesCompleteFlag = false;
     }
+  // If all the pieces are available then set isComplete flag
+  if(AllPiecesCompleteFlag){
+    isComplete = true;
+  }
 }
 
 void TorrentCtx::initBitVecor(){
@@ -215,10 +220,11 @@ int TorrentCtx::getbit( size_t b) {
   return( ( (piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7);
 }
 
-void TorrentCtx::processMsg(const char *msg, size_t len){
+void TorrentCtx::processMsg(const char *msg, size_t len, void *p){
   
   uint8_t msgType;
   int runner = 0;
+  Peer *peer = (Peer *)p;
   
   memcpy((void*)&msgType,(const void *)(msg+runner), sizeof(uint8_t));
   runner = runner + sizeof(uint8_t);
@@ -230,24 +236,28 @@ void TorrentCtx::processMsg(const char *msg, size_t len){
   case BT_CHOKE:
     if(len == 1){
       LOG(INFO,"Recieved CHOKE message");
+      peer->setChocked(true);
     }
     break;
 
   case BT_UNCHOKE: 
     if(len == 1){
       LOG(INFO, "Recieved UNCHOKE message");
+      peer->setChocked(false);
     }
     break;
 
   case BT_INTERSTED :
     if(len == 1){
       LOG(INFO, "Recieved INTERESTED message");
+      peer->setInterested(true);
     }
     break;
 
   case BT_NOT_INTERESTED :
     if(len == 1){
       LOG(INFO, "Recieved NOT INTERESTED message");
+      peer->setInterested(false);
     }
     break;
 
@@ -260,34 +270,56 @@ void TorrentCtx::processMsg(const char *msg, size_t len){
   case BT_BITFILED :
     if(len > 1){
       LOG(INFO, "Recieved BTFILED message");
+      size_t sizeOfBitField = len - 1;
+      if(sizeOfBitField != bitVectorSize){
+	LOG(ERROR, "Bit vector size didnt match");
+	exit(EXIT_FAILURE);
+      }
+      peer->copyBitVector((char *)(msg+runner) , getNumOfPieces());
     }
     break;
     
   case BT_REQUEST :
-    if(len == 13)
-      {
-	int index;
-	int begin;
-	int len;
+    if(len == 13){
+      LOG(INFO, "Recieved REQUEST message");
       
-	memcpy((void*)&index,(const void *)(msg+runner), sizeof(int));
-	runner = runner + sizeof(int);
+      int index;
+      int begin;
+      int length;
       
-	memcpy((void*)&begin,(const void *)(msg+runner), sizeof(int));
-	runner = runner + sizeof(int);
+      memcpy((void*)&index, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
       
-	memcpy((void*)&len,(const void *)(msg+runner), sizeof(int));
-	runner = runner + sizeof(int);
-
-	printf("index : %d Begin : %d len : %d \n",index, begin, len);
-
-	// queue this request to Torrent context request threadpool
-      }
+      memcpy((void*)&begin, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&length, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      printf("index : %d Begin : %d len : %d \n",index, begin, length);
+      
+      // queue this request to Torrent context request threadpool
+    }
     break;
     
   case BT_PIECE :
     if(len > 9){
       LOG(INFO, "Recieved PIECE message");
+      
+      int index;
+      int begin;
+      string block;
+      int blockLen = len - 9;
+
+      memcpy((void*)&index, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&begin, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      block = string((const char *)(msg+runner), (size_t)blockLen);
+
+      // queue this request to Torrent context piece threadpool
     }
     break;
     
