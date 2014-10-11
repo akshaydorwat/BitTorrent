@@ -89,7 +89,10 @@ void Peer::copyBitVector(char *piecesBitVector, int numOfPieces){
     mbit = i % 8;
     
     if(((piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7){
+      LOG(DEBUG, "BIT[" + to_string(i) + "] = true");
       setBitVector(i);
+    }else{
+      LOG(DEBUG, "BIT[" + to_string(i) + "] = false");
     }
   }
 }

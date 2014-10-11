@@ -164,8 +164,10 @@ void TorrentCtx::loadPieceStatus()
       if (pieceAvailable){
 	pieces.back()->setAvailable();
 	setbit((size_t)i);
+	LOG(DEBUG, "BIT[" + to_string(i) + "] = true");
       }else{
 	AllPiecesCompleteFlag = false;
+	LOG(DEBUG, "BIT[" + to_string(i) + "] = false");
       }
     }
   // If all the pieces are available then set isComplete flag
@@ -280,14 +282,13 @@ void TorrentCtx::processMsg(const char *msg, size_t len, void *p){
 	LOG(ERROR, "Bit vector size didnt match");
 	exit(EXIT_FAILURE);
       }
+      LOG(DEBUG,"Bit Vector size matched copying it into local peer");
       peer->copyBitVector((char *)(msg+runner) , getNumOfPieces());
     }
     break;
     
   case BT_REQUEST :
     if(len == 13){
-      LOG(INFO, "Recieved REQUEST message");
-      
       int index;
       int begin;
       int length;
@@ -300,8 +301,8 @@ void TorrentCtx::processMsg(const char *msg, size_t len, void *p){
       
       memcpy((void*)&length, (const void *)(msg+runner), sizeof(int));
       runner = runner + sizeof(int);
-      
-      printf("index : %d Begin : %d len : %d \n",index, begin, length);
+
+      LOG(INFO,"Received REQUEST message : index :"+to_string(index) + " Begin :"+to_string(begin)+ "len :" + to_string (length));
       
       // queue this request to Torrent context request threadpool
     }
@@ -309,8 +310,6 @@ void TorrentCtx::processMsg(const char *msg, size_t len, void *p){
     
   case BT_PIECE :
     if(len > 9){
-      LOG(INFO, "Recieved PIECE message");
-      
       int index;
       int begin;
       string block;
@@ -324,6 +323,7 @@ void TorrentCtx::processMsg(const char *msg, size_t len, void *p){
       
       block = string((const char *)(msg+runner), (size_t)blockLen);
 
+      LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
       // queue this request to Torrent context piece threadpool
     }
     break;
