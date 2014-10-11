@@ -53,7 +53,7 @@ tar:
 	tar -cvf bt_client.tar LOG.log  Makefile  README  ROADMAP.txt  sample  src
 
 test2:
-	./bt_client -v -b 10.0.0.44 -p 10.0.0.113:6667 -s . -l LOG.log  sample/download.mp3.torrent
+	./bt_client -v -b 10.0.0.44 -p 10.0.0.113:6667 -s ./sample/ -l LOG.log  sample/download.mp3.torrent
 
 test4:
 	./bt_client -v -b 10.0.0.113 -p 10.0.0.217:6667  -s . -l LOG.log  sample/download.mp3.torrent

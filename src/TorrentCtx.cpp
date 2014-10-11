@@ -164,13 +164,18 @@ void TorrentCtx::loadPieceStatus()
       if (pieceAvailable){
 	pieces.back()->setAvailable();
 	setbit((size_t)i);
+      }else{
+	AllPiecesCompleteFlag = false;
       }
-      AllPiecesCompleteFlag = false;
     }
   // If all the pieces are available then set isComplete flag
   if(AllPiecesCompleteFlag){
+    LOG(INFO, "This client will act as SEEDER");
     isComplete = true;
+  }else{
+    LOG(INFO, "This client will act as LEECHER");
   }
+
 }
 
 void TorrentCtx::initBitVecor(){
