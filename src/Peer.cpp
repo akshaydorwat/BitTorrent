@@ -62,7 +62,7 @@ void Peer::startConnection(){
 void Peer::newConnectionMade(){
   char test[11] = "0123456789";
   sendUnChoked();
-  sendBitField((const)ctx->getPiecesBitVector(), ctx->getBitVectorSize());
+  sendBitField((const char *)ctx->getPiecesBitVector(), ctx->getBitVectorSize());
 
   //sendInterested();
   //sendHave(50);

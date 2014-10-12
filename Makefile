@@ -22,7 +22,8 @@ Torrent.o \
 TorrentCtx.o \
 ConnectionHandler.o \
 Piece.o \
-FileHandler.o
+FileHandler.o \
+RequestProcessor.o
 
 #TorrentPiece_t.o
 
