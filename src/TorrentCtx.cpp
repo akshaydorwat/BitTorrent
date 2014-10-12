@@ -201,6 +201,16 @@ void TorrentCtx::initBitVecor(){
   }
 }
 
+char* getPiecesBitVector()
+{
+	for (size_t i=0; i<pieces.size(); i++)
+	{
+		if (getbit(i) == 0 && pieces[i]->isValid())
+			setbit(i);
+	}
+	return piecesBitVector;
+}
+
 void TorrentCtx::setbit( size_t b) {
   size_t mbyte, mbit;
  

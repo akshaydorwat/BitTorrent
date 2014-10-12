@@ -45,9 +45,10 @@ public:
   void loadPieceStatus();
 
   // send bitvector
-  char* getPiecesBitVector(){
+  char *getPiecesBitVector();
+  /*char* getPiecesBitVector(){
     return piecesBitVector;
-  }
+  }*/
 
   size_t getBitVectorSize(){
     return bitVectorSize;
