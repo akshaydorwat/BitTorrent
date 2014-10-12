@@ -35,9 +35,9 @@ TorrentCtx::~TorrentCtx()
     delete piecesBitVector;
   }
   if (pieceRequestor)
-	delete pieceRequestor;
+    delete pieceRequestor;
   if (pieceProcessor)
-	delete pieceProcessor;
+    delete pieceProcessor;
 }
 
 void TorrentCtx::init(bt_args_t *args){
@@ -201,14 +201,13 @@ void TorrentCtx::initBitVecor(){
   }
 }
 
-char* getPiecesBitVector()
+char* TorrentCtx::getPiecesBitVector()
 {
-	for (size_t i=0; i<pieces.size(); i++)
-	{
-		if (getbit(i) == 0 && pieces[i]->isValid())
-			setbit(i);
-	}
-	return piecesBitVector;
+  for (size_t i=0; i<pieces.size(); i++){
+    if (getbit(i) == 0 && pieces[i]->isValid())
+      setbit(i);
+  }
+  return piecesBitVector;
 }
 
 void TorrentCtx::setbit( size_t b) {
@@ -310,8 +309,8 @@ void TorrentCtx::processMsg(const char *msg, size_t len){
   case BT_PIECE :
     if(len > 9){
       LOG(INFO, "Recieved PIECE message");
-	// pieceProcessor
-	// PieceProcessor::addTask(int index, int begin, string block, Peer *)
+      // pieceProcessor
+      // PieceProcessor::addTask(int index, int begin, string block, Peer *)
     }
     break;
     
