@@ -38,6 +38,8 @@ Piece::Piece(size_t id, size_t offset, size_t length, string hash, FileHandler *
       blockProcessing.push_back(0);
       blockDirty.push_back(0);
     }
+  valid = false;
+
 }
 
 Piece::~Piece()
@@ -202,7 +204,12 @@ void Piece::writeContiguousBlocksToDisk()
 		      resetBlockDirty(writeBatches[i] + j);
 		    }
 		}
+
 	    }
+
+	  if (isValid() && !isDirty())
+	    data = "";		// remove data from memory to free up some space
+
 	}
     }
 }
@@ -331,6 +338,27 @@ bool Piece::isAvailable()
     }
   LOG (DEBUG, "Piece#" + to_string(id) + " : status-check = available.");
   return true;
+}
+
+string Piece::getAvailableBlock(size_t blockId)
+{
+  if (isBlockAvailable(blockId))
+    {
+      bool isLastBlock = blockId+1 == numOfBlocks();
+      size_t blockSize = !isLastBlock ? BLOCK_SIZE : length - (blockId * BLOCK_SIZE);
+      if (data.size() == blockId * BLOCK_SIZE + blockSize)
+	return data.substr(blockId * BLOCK_SIZE, blockSize);
+      else // fetch entire piece from disk and return 
+	{
+	  string temp;
+	  if (fileMgr->readIfValidPiece(id, temp))
+	    {
+	      data = temp;
+	      return data.substr(blockId * BLOCK_SIZE, blockSize);
+	    }
+	}
+    }
+  return "";
 }
 
 void Piece::setBlockDirty(size_t blockId)
@@ -491,7 +519,7 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
 //////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isValid(string hash)
 {
-  if (isComplete() && isAvailable() && hash.size() == 20)
+  if (valid || (isAvailable() && hash.size() == 20)) // isComplete() has been removed from validity to support lazy-fetching of servicable piece
     {
       unsigned char pieceHash[20];
       SHA1 ((unsigned char *)data.c_str(), length, pieceHash);
@@ -502,9 +530,11 @@ bool Piece::isValid(string hash)
 	LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
       else
 	LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
-      return pieceHashStr == hash;
+      valid = pieceHashStr == hash;
     }
-  return false;
+  valid = false;
+  return valid;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

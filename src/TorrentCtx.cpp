@@ -16,6 +16,8 @@
 #include "Logger.hpp"
 #include "Peer.hpp"
 #include "Reactor.hpp"
+#include "PieceRequestor.hpp"
+#include "PieceProcessor.hpp"
 
 using namespace std;
 
@@ -31,6 +33,10 @@ TorrentCtx::~TorrentCtx()
   if(piecesBitVector){
     delete piecesBitVector;
   }
+  if (pieceRequestor)
+    delete pieceRequestor;
+  if (pieceProcessor)
+    delete pieceProcessor;
 }
 
 void TorrentCtx::init(bt_args_t *args){
@@ -109,6 +115,12 @@ void TorrentCtx::init(bt_args_t *args){
       // TODO: Not sure  about detaching but it works i do
       t.detach();
     }
+
+    pieceRequestor = new PieceRequestor(pieces, peers);
+    std::thread t(&PieceRequestor::startPieceRequestor, pieceRequestor);
+    t.detach();
+
+    pieceProcessor = new PieceProcessor(pieces, pieceRequestor);
   }
 }
 
@@ -197,6 +209,15 @@ void TorrentCtx::initBitVecor(){
     LOG(ERROR, "Invalid number of pieces ");
     exit(EXIT_FAILURE);
   }
+}
+
+char* TorrentCtx::getPiecesBitVector()
+{
+  for (size_t i=0; i<pieces.size(); i++){
+    if (getbit(i) == 0 && pieces[i]->isValid())
+      setbit(i);
+  }
+  return piecesBitVector;
 }
 
 void TorrentCtx::setbit( size_t b) {
