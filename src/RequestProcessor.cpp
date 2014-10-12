@@ -8,10 +8,10 @@ void RequestProcessor::addTask(int index, int begin, int len, void *p){
 
 void RequestProcessor::handleRequest(int index, int begin, int len, void *p){
 
-  string pieceData;
+  string blockData;
   Peer *peer = (Peer *) p;
 
-  if(index > (int) pieces->size()){
+  if(index > (int) pieces->size() || len > BLOCK_SIZE){
     LOG(WARNING, "Invalid request received ");
   }
   
@@ -25,7 +25,12 @@ void RequestProcessor::handleRequest(int index, int begin, int len, void *p){
   }
   
   // get actual data from piece
-
-  // send piece message to peer
-  peer->sendPiece(index, begin, pieceData.data(), (size_t)pieceData.size());
+  blockData = piece->getAvailableBlock(begin/BLOCK_SIZE);
+  if (blockData.size() > 0){
+    // send piece message to peer
+    peer->sendPiece(index, begin, blockData.data(), (size_t)blockData.size());
+  }
+  else{
+    LOG(ERROR, "Failed to serve Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE));
+  }
 }

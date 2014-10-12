@@ -18,6 +18,12 @@ using namespace std;
 class TorrentCtx{
 
 public:
+  
+  // Managers
+  PieceRequestor *pieceRequestor;       // request message maker  manager
+  PieceProcessor *pieceProcessor;       // piece message processing manager 
+  RequestProcessor *requestProcessor;   // request message processing manager 
+
   TorrentCtx();
   
   ~TorrentCtx();
@@ -66,6 +72,15 @@ public:
   // get bit
   int getbit( size_t b);
 
+  // set complete flag
+  void setComplete(bool val){
+    complete = val;
+  }
+  
+  // get complete value
+  bool isComplete(){
+    return complete;
+  }
   
 private:
   //command line arguments
@@ -84,14 +99,10 @@ private:
   vector<void*> peers;                  // Peers in torrent
   fstream saveFile_fd;                  // File descriptor
   time_t start_time;                    // start time
-  bool isComplete;                      // donwload complete
+  bool complete;                        // donwload complete
   char *piecesBitVector;                // piece bit vector
   size_t bitVectorSize;                 // size of bit vector
 
-  // Managers
-  PieceRequestor *pieceRequestor;       // request message maker  manager
-  PieceProcessor *pieceProcessor;       // piece message processing manager 
-  RequestProcessor *requestProcessor;   // request message processing manager 
 
 };
 #endif 

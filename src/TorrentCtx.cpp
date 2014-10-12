@@ -126,7 +126,7 @@ void TorrentCtx::init(bt_args_t *args){
   contact_tracker(args);
   
   // depending upon the role start managers
-  if(!isComplete){                                                              // LEECHER
+  if(!complete){                                                              // LEECHER
     // try to start connections to seeder
     for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) *it;		
@@ -208,7 +208,7 @@ void TorrentCtx::loadPieceStatus()
   // If all the pieces are available then set isComplete flag
   if(AllPiecesCompleteFlag){
     LOG(INFO, "This client will act as SEEDER");
-    isComplete = true;
+    complete = true;
   }else{
     LOG(INFO, "This client will act as LEECHER");
   }

@@ -53,6 +53,8 @@ void Peer::readMessage(const char *msg, size_t len){
     if(len == 1){
       LOG(INFO, "Recieved INTERESTED message");
       setInterested(true);
+      // send Unchoke message
+      sendUnChoked();
     }
     break;
 
@@ -79,6 +81,10 @@ void Peer::readMessage(const char *msg, size_t len){
       }
       LOG(DEBUG,"Bit Vector size matched copying it into local peer");
       copyBitVector((char *)(msg+runner) , ctx->getNumOfPieces());
+      if(!ctx->isComplete()){
+	setInterested(true);
+	sendInterested();
+      }
     }
     break;
     
@@ -99,7 +105,8 @@ void Peer::readMessage(const char *msg, size_t len){
 
       LOG(INFO,"Received REQUEST message : index :"+to_string(index) + " Begin :"+to_string(begin)+ "len :" + to_string (length));
       
-      // queue this request to Torrent context request threadpool
+      ctx->requestProcessor->addTask(index, begin, length, this);
+
     }
     break;
     
@@ -119,7 +126,8 @@ void Peer::readMessage(const char *msg, size_t len){
       block = string((const char *)(msg+runner), (size_t)blockLen);
 
       LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
-      // queue this request to Torrent context piece threadpool
+      ctx->pieceProcessor->addTask(index, begin, block, this);
+
     }
     break;
     
@@ -153,10 +161,9 @@ void Peer::startConnection(){
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
 void Peer::newConnectionMade(){
-  // send Unchoke message
-  sendUnChoked();
   // send bit field message
   sendBitField((const char *)ctx->getPiecesBitVector(), ctx->getBitVectorSize());
+  
 }
 
 void Peer::setBitVector(int piece){
@@ -338,5 +345,4 @@ void Peer::sendPiece(int index, int begin, const char *block, size_t size){
   LOG(DEBUG,"Sending Piece Message");
   c->writeConn(buff, buff_size);
 }
-
 

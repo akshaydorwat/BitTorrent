@@ -24,12 +24,12 @@ class PieceProcessor
   vector<Piece*> &pieces; 
   PieceRequestor *pieceRequestor;
   ThreadPool *pool;
-
+  void handlePiece(size_t, size_t, string, void *);
  public:
   PieceProcessor(vector<Piece*> &, PieceRequestor *);
   ~PieceProcessor();
   void addTask(int, int, string, void *);
-  void handlePiece(size_t, size_t, string, void *);
+
 };
 
 #endif /* PIECEPROCESSOR_HPP_ */

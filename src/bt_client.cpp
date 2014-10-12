@@ -67,11 +67,5 @@ int main (int argc, char * argv[]){
   }
   
   reactor->closeReactor();
-
-  //TODO: Take care of closing all the resorces
-
-  //Free manually allocated memory
-  /*for(i=0; i<bt_args.n_peers; i++)
-    free(bt_args.peers[i]);*/
   return 0;
 }
