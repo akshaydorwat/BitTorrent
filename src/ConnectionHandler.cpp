@@ -136,6 +136,8 @@ void ConnectionHandler::closeConn(){
   Reactor::getInstance()->unRegisterEvent(sfd);
   LOG(INFO, "Closing connection: " + to_string(sfd));
   if(p){
+    p->setChocked(true);
+    p->setInterested(false);
     p->destroyConnection();
   }
 }

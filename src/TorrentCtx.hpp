@@ -3,24 +3,23 @@
 
 #include <vector>
 #include <string>
-#include <time.h>
 #include <fstream>
-
+#include <time.h>
 #include "bt_lib.h"
-//#include "Reactor.hpp"
 #include "Torrent.hpp"
 #include "Piece.hpp"
 #include "FileHandler.hpp"
 #include "PieceRequestor.hpp"
 #include "PieceProcessor.hpp"
+#include "RequestProcessor.hpp"
 
 using namespace std;
 
 class TorrentCtx{
 
 public:
-  //TorrentCtx(Reactor *r);
-
+  TorrentCtx();
+  
   ~TorrentCtx();
 
   // initialise torrent context
@@ -67,6 +66,7 @@ public:
   // get bit
   int getbit( size_t b);
 
+  
 private:
   //command line arguments
   unsigned char peerId[20];           	// peer id
@@ -81,19 +81,17 @@ private:
   FileHandler *fileMgr;
 
   // Book keeping
-  vector<void*> peers;            // Peers in torrent
-  fstream saveFile_fd;                // File descriptor
-  time_t start_time;                  // start time
-  bool isComplete;                    // donwload complete
-  char *piecesBitVector;      // piece bit vector
-  size_t bitVectorSize;
+  vector<void*> peers;                  // Peers in torrent
+  fstream saveFile_fd;                  // File descriptor
+  time_t start_time;                    // start time
+  bool isComplete;                      // donwload complete
+  char *piecesBitVector;                // piece bit vector
+  size_t bitVectorSize;                 // size of bit vector
 
-  PieceRequestor *pieceRequestor;
-  PieceProcessor *pieceProcessor;
-  // ref objects
-  //FileManager *m_filemanager;
-  //Reactor *reactor;
-  
+  // Managers
+  PieceRequestor *pieceRequestor;       // request message maker  manager
+  PieceProcessor *pieceProcessor;       // piece message processing manager 
+  RequestProcessor *requestProcessor;   // request message processing manager 
 
 };
 #endif 

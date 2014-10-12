@@ -26,6 +26,8 @@ public:
     setInterested(false);
     //active = false;
   }
+  
+  ~Peer();
 
   int sfd;
   time_t last_connect;
@@ -91,6 +93,8 @@ public:
   
   void destroyConnection(){
     connection = NULL;
+    setChocked(true);
+    setInterested(false);
   }
 
   void setConnection(void *c){
@@ -124,6 +128,8 @@ public:
   //set bit vector
   void setBitVector(int piece);
 
+  //get bit from vector
+  bool getBitVector(int piece);
   //copy bit vector
   void copyBitVector(char *piecesBitVector, int numOfPieces);
 

@@ -21,22 +21,39 @@
 
 using namespace std;
 
-/*TorrentCtx::TorrentCtx(Reactor *r){
-  reactor = r;
-  }*/
+TorrentCtx::TorrentCtx(){
+  pieceProcessor = NULL;
+  pieceRequestor = NULL;
+  requestProcessor = NULL;
+  piecesBitVector = NULL;
+}
 
 TorrentCtx::~TorrentCtx()
 {
-  delete fileMgr;
+  
+  if(pieceProcessor)
+    delete pieceProcessor;
+
+  if(pieceRequestor)
+    delete pieceRequestor;
+  
+  if(requestProcessor){ 
+    delete requestProcessor;
+  }
+  
   for (size_t i=0; i<pieces.size(); i++)
     delete pieces[i];
+
+  delete fileMgr;
+  
   if(piecesBitVector){
     delete piecesBitVector;
   }
-  if (pieceRequestor)
-    delete pieceRequestor;
-  if (pieceProcessor)
-    delete pieceProcessor;
+
+  for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
+    Peer *p = (Peer*) *it;		
+    delete p;
+  }
 }
 
 void TorrentCtx::init(bt_args_t *args){
@@ -104,23 +121,31 @@ void TorrentCtx::init(bt_args_t *args){
   
   loadPieceStatus();
   LOG (INFO, "Loaded Piece availability.");
-  
+
+  // load Peers
   contact_tracker(args);
-  // If download is not complete start connection to seeder and intiate handshake
-  //isComplete = true;
-  if(!isComplete){
+  
+  // depending upon the role start managers
+  if(!isComplete){                                                              // LEECHER
+    // try to start connections to seeder
     for (vector< void*>::iterator it=peers.begin(); it!=peers.end(); ++it){
       Peer *p = (Peer*) *it;		
       std::thread t(&Peer::startConnection, p);
-      // TODO: Not sure  about detaching but it works i do
+      // TODO: Not sure  about detaching but it works.
       t.detach();
     }
-
+    
+    // start piece requestor
     pieceRequestor = new PieceRequestor(pieces, peers);
     std::thread t(&PieceRequestor::startPieceRequestor, pieceRequestor);
     t.detach();
 
+    // start piece processor
     pieceProcessor = new PieceProcessor(pieces, pieceRequestor);
+    
+  }else{                                                                         // SEEDER
+    // start request processor
+    requestProcessor = new RequestProcessor(&pieces);
   }
 }
 

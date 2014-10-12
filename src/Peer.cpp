@@ -13,6 +13,16 @@
 
 using namespace std;
 
+Peer::~Peer(){
+  ConnectionHandler *h = (ConnectionHandler*) connection;
+  if(isConnectionEstablished()){
+    h->closeConn();
+    delete h;
+  }
+  // free the memory allocted by bt_args
+  free(p);
+}
+
 void Peer::readMessage(const char *msg, size_t len){
 
   uint8_t msgType;
@@ -143,14 +153,10 @@ void Peer::startConnection(){
 //TODO: If connection is closed or dropped but packet are in qeuue i can try to reconnect. Considering it was glith in the network. Need to think through
 
 void Peer::newConnectionMade(){
-  char test[11] = "0123456789";
+  // send Unchoke message
   sendUnChoked();
+  // send bit field message
   sendBitField((const char *)ctx->getPiecesBitVector(), ctx->getBitVectorSize());
-
-  //sendInterested();
-  //sendHave(50);
-  //sendRequest(500, 500, 500);
-  //sendPiece(0,0,test,11);
 }
 
 void Peer::setBitVector(int piece){
@@ -159,6 +165,10 @@ void Peer::setBitVector(int piece){
   m_lock.unlock();
 }
 
+bool Peer::getBitVector(int piece){
+  return bitVector[piece];
+  
+}
 void Peer::copyBitVector(char *piecesBitVector, int numOfPieces){
   int i;
 
