@@ -18,21 +18,21 @@ using namespace std;
 
 class FileHandler
 {
- public:
+public:
   struct movable_mutex : std::mutex
   {
-  	movable_mutex() = default;
-  	movable_mutex(movable_mutex const&) noexcept : std::mutex() {}
-  	bool operator==(movable_mutex const&other) noexcept { return this==&other; }
+    movable_mutex() = default;
+    movable_mutex(movable_mutex const&) noexcept : std::mutex() {}
+    bool operator==(movable_mutex const&other) noexcept { return this==&other; }
   };
 
- private:
+private:
   Torrent& torrent;
   vector<string>& saveFiles;
   vector<fstream*> fileStreams;
   vector<movable_mutex> fileMutexes;
 
- public:
+public:
   FileHandler(Torrent&, vector<string>&);
   ~FileHandler();
   void closeOpenFiles();

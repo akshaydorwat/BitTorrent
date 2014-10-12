@@ -1,6 +1,7 @@
 
 #include <fstream>
 #include <thread>
+#include <iostream>
 #include <openssl/sha.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -15,9 +16,6 @@
 #include "Logger.hpp"
 #include "Peer.hpp"
 #include "Reactor.hpp"
-
-
-#include <iostream>
 
 using namespace std;
 

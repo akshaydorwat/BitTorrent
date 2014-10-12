@@ -61,12 +61,13 @@ void Peer::startConnection(){
 
 void Peer::newConnectionMade(){
   char test[11] = "0123456789";
-  sendBitField(ctx->getPiecesBitVector(), ctx->getBitVectorSize());
   sendUnChoked();
-  sendInterested();
-  sendHave(50);
-  sendRequest(500, 500, 500);
-  sendPiece(0,0,test,11);
+  sendBitField((const)ctx->getPiecesBitVector(), ctx->getBitVectorSize());
+
+  //sendInterested();
+  //sendHave(50);
+  //sendRequest(500, 500, 500);
+  //sendPiece(0,0,test,11);
 }
 
 void Peer::setBitVector(int piece){
@@ -108,7 +109,7 @@ void Peer::sendLiveMessage(){
   c->writeConn(buff, buff_size);
 }
 
-void Peer::sendBitField(char *bitVector, size_t size){
+void Peer::sendBitField(const char *bitVector, size_t size){
   
   uint8_t msgType = BT_BITFILED;
   int length = 1 + size;
@@ -218,7 +219,7 @@ void Peer::sendRequest(int index, int begin, int len){
   c->writeConn(buff, buff_size);
 }
 
-void Peer::sendPiece(int index, int begin, char *block, size_t size){
+void Peer::sendPiece(int index, int begin, const char *block, size_t size){
 
   uint8_t msgType = BT_PIECE;
   int length = 9 + size;
@@ -243,7 +244,6 @@ void Peer::sendPiece(int index, int begin, char *block, size_t size){
 
   LOG(DEBUG,"Sending Piece Message");
   c->writeConn(buff, buff_size);
-
 }
 
 

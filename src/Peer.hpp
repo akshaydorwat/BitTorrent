@@ -101,7 +101,7 @@ public:
   void newConnectionMade();
 
   // send bit field message
-  void sendBitField(char *bitVector, size_t size);
+  void sendBitField(const char *bitVector, size_t size);
 
   //send unchoked message
   void sendUnChoked();
@@ -116,7 +116,7 @@ public:
   void sendRequest(int index, int begin, int len);
   
   // send piece
-  void sendPiece(int index, int begin, char *block, size_t size);
+  void sendPiece(int index, int begin, const char *block, size_t size);
 
   //send live message
   void sendLiveMessage();
