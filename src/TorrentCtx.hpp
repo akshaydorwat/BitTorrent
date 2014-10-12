@@ -11,6 +11,8 @@
 #include "Torrent.hpp"
 #include "Piece.hpp"
 #include "FileHandler.hpp"
+#include "PieceRequestor.hpp"
+#include "PieceProcessor.hpp"
 
 using namespace std;
 
@@ -78,7 +80,7 @@ private:
   // Tracker info
   string infoHash;                    	// info hash
   Torrent metaData;			// static torrent metadata
-  vector<Piece *> pieces;			// runtime piece info
+  vector<Piece *> pieces;		// runtime piece info
   FileHandler *fileMgr;
 
   // Book keeping
@@ -89,6 +91,8 @@ private:
   char *piecesBitVector;      // piece bit vector
   size_t bitVectorSize;
 
+  PieceRequestor *pieceRequestor;
+  PieceProcessor *pieceProcessor;
   // ref objects
   //FileManager *m_filemanager;
   //Reactor *reactor;

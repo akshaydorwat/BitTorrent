@@ -22,6 +22,7 @@ class Piece
  private:
   string data;
 
+  bool valid;
   size_t id;
   size_t offset;
   size_t length;
@@ -40,8 +41,8 @@ class Piece
   size_t getLength() { return length; }
   //void setLength(size_t);
 
-  void setData(string);
-  string getData() { return data; }
+  void setData(string);					// discouraged => to save system memory
+  string getData() { return data; }			// discouraged => currently not holding data for already completed blocks
 
   bool isComplete() { return length == data.size(); } 	// is Piece data complete (no hash check) 
   bool isAvailable();					// are all blocks available (no hash check)
@@ -63,6 +64,7 @@ class Piece
   bool isBlockAvailable(size_t);			// is block available
   void setBlockAvailable(size_t);			// block available = true
   void resetBlockAvailable(size_t);			// block available = false
+  string getAvailableBlock(size_t);			// fetch a block if available
 
   void setBlockDirty(size_t);				// block dirty = true
   void resetBlockDirty(size_t);				// block dirty = false

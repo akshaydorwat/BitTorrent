@@ -11,6 +11,8 @@
 #include "Logger.hpp"
 #include "Peer.hpp"
 #include "Reactor.hpp"
+#include "PieceRequestor.hpp"
+#include "PieceProcessor.hpp"
 #include <stdio.h>
 #include <thread>
 #include <stdio.h>
@@ -32,6 +34,10 @@ TorrentCtx::~TorrentCtx()
   if(piecesBitVector){
     delete piecesBitVector;
   }
+  if (pieceRequestor)
+	delete pieceRequestor;
+  if (pieceProcessor)
+	delete pieceProcessor;
 }
 
 void TorrentCtx::init(bt_args_t *args){
@@ -109,6 +115,12 @@ void TorrentCtx::init(bt_args_t *args){
       // TODO: Not sure  about detaching but it works i do
       t.detach();
     }
+
+    pieceRequestor = new PieceRequestor(pieces, peers);
+    std::thread t(&PieceRequestor::startPieceRequestor, pieceRequestor);
+    t.detach();
+
+    pieceProcessor = new PieceProcessor(pieces, pieceRequestor);
   }
 }
 
@@ -288,6 +300,8 @@ void TorrentCtx::processMsg(const char *msg, size_t len){
   case BT_PIECE :
     if(len > 9){
       LOG(INFO, "Recieved PIECE message");
+	// pieceProcessor
+	// PieceProcessor::addTask(int index, int begin, string block, Peer *)
     }
     break;
     
