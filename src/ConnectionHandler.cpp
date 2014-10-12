@@ -18,38 +18,49 @@
 using namespace std;
 
 void ConnectionHandler::handle(string msg){
+  int runner = 0;
   const char *message = msg.c_str();
-  if(checkForhandshakeMsg(message)){
-    // Verify the hanshake
-    if(verifyHandshake(message)){
-      if(!p->isInitiatedByMe()){
-	sendHandshake();
-	p->newConnectionMade();
+  int msgLen = msg.length();
+  int length; //bt protocol length
+  
+  while(runner < msgLen){
+    if(checkForhandshakeMsg((const char*)(message+runner))){
+      // Verify the hanshake
+      if(verifyHandshake(message)){
+	if(!p->isInitiatedByMe()){
+	  sendHandshake();
+	  p->newConnectionMade();
+	}
+	handshakeComplete = true;
+	runner = runner+sizeof(bt_handshake_t);
+	continue;
+      }else if(!handshakeComplete){
+	closeConn();
+	delete this;
+	return;
       }
-      handshakeComplete = true;
-      return;
-    }else if(!handshakeComplete){
-      closeConn();
-      delete this;
-      return;
     }
-  }
+    
+    memcpy((void*)&length,(void *)(message+runner), sizeof(length));
+    runner = runner + sizeof(length);
 
-  // Check for live message, Dont need to do any thing as Reacor is handling timeouts
-  if(checkForLive(message)){
-    LOG(INFO,"Got Live Message");
-    return;
-  }
+    if(length == 0){
+      LOG(INFO, "Reciecved Live message");
+      runner = runner + length;
+      continue;
+    }
 
-  // Send mesage to Peer for further investigation
-  if(p && handshakeComplete){
-    //LOG(DEBUG, "Sending message to peer for handling");
-    p->readMessage(msg);
-    return;
+    // Send mesage to Peer for further investigation
+    if(p && handshakeComplete){
+      LOG(DEBUG, "Sending message to peer for handling");
+      p->readMessage((const char*)(message+runner), (size_t)length);
+      runner = runner + length;
+      continue;
+    }
+
+    closeConn();
+    delete this;
   }
-   
-  closeConn();
-  delete this;
 }
 
 

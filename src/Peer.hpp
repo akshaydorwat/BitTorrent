@@ -31,7 +31,7 @@ public:
   time_t last_connect;
   
   // read torrent protocol message
-  void readMessage(string msg);
+  void readMessage(const char *msg, size_t len);
 
   // Start connection to other Peers in the swarn
   void startConnection();

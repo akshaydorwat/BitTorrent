@@ -165,7 +165,6 @@ void Reactor::handleEvent(){
 	  // Call handler if i have message 
 	  if(numBytesRcvd > 0){
 	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
-	    //cout << "Printing message at Rector :" << string(packet_rcvd, numBytesRcvd);
 	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
 	    //conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }

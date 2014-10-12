@@ -13,28 +13,111 @@
 
 using namespace std;
 
-void Peer::readMessage(string msg){
+void Peer::readMessage(const char *msg, size_t len){
 
-  //LOG(INFO, "Recieved msg : " + msg );
-  int length;
-  const char *payload = msg.data();
-  int payloadLen = msg.size();
+  uint8_t msgType;
   int runner = 0;
-  
-  do{
-    // length of the message in the header    
-    memcpy((void*)&length,(void *)(payload+runner), sizeof(length));
-    runner = runner + sizeof(length);
-
-    if(length == 0){
-      LOG(INFO, "Reciecved Live message");
-    }else{
-      ctx->processMsg((const char *)(payload + runner), length, (void *)this);
-    }
-    runner = runner + length;
-
-  }while(runner < payloadLen);
     
+  memcpy((void*)&msgType,(const void *)(msg+runner), sizeof(uint8_t));
+  runner = runner + sizeof(uint8_t);
+
+  printf("Message Type is %u & message len : %d\n",msgType, (int)len);
+
+  switch(msgType){
+    
+  case BT_CHOKE:
+    if(len == 1){
+      LOG(INFO,"Recieved CHOKE message");
+      setChocked(true);
+    }
+    break;
+
+  case BT_UNCHOKE: 
+    if(len == 1){
+      LOG(INFO, "Recieved UNCHOKE message");
+      setChocked(false);
+    }
+    break;
+
+  case BT_INTERSTED :
+    if(len == 1){
+      LOG(INFO, "Recieved INTERESTED message");
+      setInterested(true);
+    }
+    break;
+
+  case BT_NOT_INTERESTED :
+    if(len == 1){
+      LOG(INFO, "Recieved NOT INTERESTED message");
+      setInterested(false);
+    }
+    break;
+
+  case BT_HAVE :
+    if(len == 5){
+      LOG(INFO, "Recieved HAVE message");
+    }
+    break;
+
+  case BT_BITFILED :
+    if(len > 1){
+      LOG(INFO, "Recieved BTFILED message");
+      size_t sizeOfBitField = len - 1;
+      if(sizeOfBitField != ctx->getBitVectorSize()){
+	LOG(ERROR, "Bit vector size didnt match");
+	exit(EXIT_FAILURE);
+      }
+      LOG(DEBUG,"Bit Vector size matched copying it into local peer");
+      copyBitVector((char *)(msg+runner) , ctx->getNumOfPieces());
+    }
+    break;
+    
+  case BT_REQUEST :
+    if(len == 13){
+      int index;
+      int begin;
+      int length;
+      
+      memcpy((void*)&index, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&begin, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&length, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+
+      LOG(INFO,"Received REQUEST message : index :"+to_string(index) + " Begin :"+to_string(begin)+ "len :" + to_string (length));
+      
+      // queue this request to Torrent context request threadpool
+    }
+    break;
+    
+  case BT_PIECE :
+    if(len > 9){
+      int index;
+      int begin;
+      string block;
+      int blockLen = len - 9;
+
+      memcpy((void*)&index, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      memcpy((void*)&begin, (const void *)(msg+runner), sizeof(int));
+      runner = runner + sizeof(int);
+      
+      block = string((const char *)(msg+runner), (size_t)blockLen);
+
+      LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
+      // queue this request to Torrent context piece threadpool
+    }
+    break;
+    
+  case BT_CANCEL :
+    LOG(INFO, "Recieved CANCEL message");
+    break;
+
+  }
 }
 
 void Peer::startConnection(){
