@@ -123,7 +123,7 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
 	      blockOffset = i * BLOCK_SIZE;
 	      blockLength = i+1 < numOfBlocks() ? BLOCK_SIZE : length - blockOffset;
 	      found = true;
-	      LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(i) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
+	      //LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(i) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
 	      break;
 	    }
 	}
@@ -269,9 +269,9 @@ bool Piece::isBlockProcessing(size_t blockId)
       processingMtx.unlock();
       temp &= 1 << lvl2Offset;
       if (temp > 0)
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = processing.");
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = processing.");
       else
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not processing.");
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not processing.");
       return temp > 0;
     }
   return false;
@@ -321,9 +321,9 @@ bool Piece::isBlockAvailable(size_t blockId)
       availableMtx.unlock();
       temp &= 1 << lvl2Offset;
       if (temp > 0)
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = available.");
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = available.");
       else
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not available.");
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not available.");
       return temp > 0;
     }
   return false;
@@ -405,9 +405,9 @@ bool Piece::isBlockDirty(size_t blockId)
       dirtyMtx.unlock();
       temp &= 1 << lvl2Offset;
       if (temp > 0)
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = dirty.");
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = dirty.");
       else
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not dirty.");
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not dirty.");
       return temp > 0;
     }
   return false;
@@ -419,7 +419,7 @@ bool Piece::isDirty()
     {
       if (isBlockDirty(i))
 	{
-	  LOG (DEBUG, "Piece#" + to_string(id) + " : status-check = dirty.");
+	  //LOG (DEBUG, "Piece#" + to_string(id) + " : status-check = dirty.");
 	  return true;
 	}
     }
@@ -527,9 +527,9 @@ bool Piece::isValid(string hash)
       for (size_t i=0; i<20; i++)
 	pieceHashStr += pieceHash[i];
       if (pieceHashStr == hash)
-	LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
+	//LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
       else
-	LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
+	//LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
       valid = pieceHashStr == hash;
     }
   valid = false;

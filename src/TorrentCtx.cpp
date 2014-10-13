@@ -30,7 +30,7 @@ TorrentCtx::TorrentCtx(){
 
 TorrentCtx::~TorrentCtx()
 {
-  
+ 
   if(pieceProcessor)
     delete pieceProcessor;
 
@@ -134,16 +134,19 @@ void TorrentCtx::init(bt_args_t *args){
       // TODO: Not sure  about detaching but it works.
       t.detach();
     }
-    
+   
+    LOG(DEBUG,"Starting REQUEST maker");
     // start piece requestor
     pieceRequestor = new PieceRequestor(pieces, peers);
     std::thread t(&PieceRequestor::startPieceRequestor, pieceRequestor);
     t.detach();
 
+    LOG(DEBUG, "starting PIECE processor");
     // start piece processor
     pieceProcessor = new PieceProcessor(pieces, pieceRequestor);
     
-  }else{                                                                         // SEEDER
+  }else{                                                                      // SEEDER
+    LOG(DEBUG, "starting REQUEST processor");
     // start request processor
     requestProcessor = new RequestProcessor(&pieces);
   }

@@ -9,11 +9,12 @@
 #include "Piece.hpp"
 #include "Peer.hpp"
 #include "Logger.hpp"
-
+#include "bt_lib.h"
 #include <string>
 #include <vector>
 #include <thread>
 #include <chrono>
+
 using namespace std;
 
 PieceRequestor::PieceRequestor(vector<Piece*> &pieces, vector<void*> &peers)
@@ -38,28 +39,49 @@ void PieceRequestor::startPieceRequestor()
   size_t requestBlockBegin;
   size_t requestBlockLength;
   unsigned char *peerId;
-  while(selectRandomUnavailableUnprocessedPiece(requestPieceId, requestBlockBegin, requestBlockLength, peerId))
+  LOG (DEBUG, "PieceRequestor : Starting to formulate new REQUESTS.");
+  while(!allPiecesAvailable()){
+    if(selectRandomUnavailableUnprocessedPiece(requestPieceId, requestBlockBegin, requestBlockLength, &peerId))
     {
+      LOG (DEBUG, "PieceRequestor : while loop.");
       waitForGoAhead();
       pieces[requestPieceId]->setBlockProcessing(requestBlockBegin/BLOCK_SIZE);
       for (size_t p=0; p<peers.size(); p++)
 	{
-	  Peer *peer = (Peer *)peers[p];
-	  if (peer->getId() == peerId)
-	    {
-	      requestedPeerIds.push_back(peerId);
-	      peer->sendRequest(requestPieceId, requestBlockBegin, requestBlockLength);
-	      break;
-	    }
+	Peer *peer = (Peer *)peers[p];
+	if (memcmp((void*)peer->getId(),(void *)peerId, ID_SIZE) == 0)
+	  {
+	    requestedPeerIds.push_back(peerId);
+	    LOG(DEBUG,"Ready to send REQUEST message");
+	    peer->sendRequest(requestPieceId, requestBlockBegin, requestBlockLength);
+	    break;
+	  }
 	}
     }
+    else{
+      LOG (DEBUG, "PieceRequestor : Unable to formulate new REQUEST. Sleeping ... ");
+      this_thread::sleep_for(chrono::seconds(1));
+    }
+  }
+  LOG (DEBUG, "PieceRequestor : All pieces available/received. Terminating.");
+}
+
+bool PieceRequestor::allPiecesAvailable()
+{
+  for (size_t i=0; i<pieces.size(); i++){
+    if (!pieces[i]->isValid())
+      return false;
+  }
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void PieceRequestor::waitForGoAhead()
 {
-  while (requestedPeerIds.size() == MAX_REQUESTS)
+  while (requestedPeerIds.size() == MAX_REQUESTS){
+    LOG (DEBUG, "PieceRequestor : MAX_REQUESTS formulated. Waiting for GO_AHEAD ...");
     this_thread::sleep_for(chrono::seconds(1));
+  }
 }
 
 void PieceRequestor::signalGoAhead(void *peerPtr)
@@ -68,7 +90,7 @@ void PieceRequestor::signalGoAhead(void *peerPtr)
   requestMtx.lock();
   for (size_t i=0; i < requestedPeerIds.size(); i++)
     {
-      if (requestedPeerIds[i] == peer->getId())	// comparing unsigned char * .. duh
+      if(memcmp((void *)requestedPeerIds[i], (void *)peer->getId(), ID_SIZE) == 0)	// comparing unsigned char * .. duh
 	{
 	  requestedPeerIds.erase(requestedPeerIds.begin() + i);
 	  /*
@@ -82,19 +104,22 @@ void PieceRequestor::signalGoAhead(void *peerPtr)
   requestMtx.unlock();
 }
 
-bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char *peerId)
+bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId)
 {
   // check whether some unchoked peer/seeder possesses this piece at all
   vector<unsigned char *> servicablePeerIds;
   for (size_t p=0; p < peers.size(); p++)
     {
       Peer *peer = (Peer *) peers[p];
-      if (peer->isConnectionEstablished() && !peer->isChocked() && peer->getBitVector(pieceId)) // && peer->containsPiece(pieceId)
-	servicablePeerIds.push_back(peer->getId());
+      if (peer->isConnectionEstablished() && !peer->isChocked() && peer->getBitVector(pieceId)){ // && peer->containsPiece(pieceId)
+	servicablePeerIds.push_back( peer->getId());
+      }
     }
   if (servicablePeerIds.size() == 0)	// no unchoked, connected peer can currently service this piece
     return false;
-
+  else if (servicablePeerIds.size() == 1){
+    *peerId = servicablePeerIds[0];
+  }
   else if (servicablePeerIds.size() > 1)
     {
       requestMtx.lock();
@@ -102,13 +127,13 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char *peerId)
 	{						
 	  if (p+1 == servicablePeerIds.size()) // if this is the only servicable peer for this piece
 	    {
-	      peerId = servicablePeerIds[p];	// choose/make do with him even if he is overloaded
+	      //peerId = servicablePeerIds[p];	// choose/make do with him even if he is overloaded
 	      break;
 	    }
 
 	  for (size_t r=0; r<requestedPeerIds.size(); r++)
 	    {
-	      if (servicablePeerIds[p] == requestedPeerIds[r])
+	      if (memcmp((void *)servicablePeerIds[p], (void *)requestedPeerIds[r], ID_SIZE) == 0)
 		break; // this peer has already been requested
 	    }
 	}	
@@ -120,7 +145,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char *peerId)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Random piece selector : must be followed by the setPieceProcessing method
 // NOTE: the blockOffset specifies the 0 based offset of a block within the selected piece
-bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, size_t& blockOffset, size_t& blockLength, unsigned char *peerId)
+bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, size_t& blockOffset, size_t& blockLength, unsigned char **peerId)
 {
   bool found = false;
   size_t numOfPieces = pieces.size();
@@ -169,6 +194,7 @@ bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, si
 	    }
 	}
     }
+
   return found;
 }
 

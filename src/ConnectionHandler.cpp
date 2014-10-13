@@ -52,7 +52,7 @@ void ConnectionHandler::handle(string msg){
 
     // Send mesage to Peer for further investigation
     if(p && handshakeComplete){
-      LOG(DEBUG, "Sending message to peer for handling");
+      //LOG(DEBUG, "Sending message to peer for handling");
       p->readMessage((const char*)(message+runner), (size_t)length);
       runner = runner + length;
       continue;

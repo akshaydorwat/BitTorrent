@@ -79,7 +79,7 @@ void Peer::readMessage(const char *msg, size_t len){
 	LOG(ERROR, "Bit vector size didnt match");
 	exit(EXIT_FAILURE);
       }
-      LOG(DEBUG,"Bit Vector size matched copying it into local peer");
+      //LOG(DEBUG,"Bit Vector size matched copying it into local peer");
       copyBitVector((char *)(msg+runner) , ctx->getNumOfPieces());
       if(!ctx->isComplete()){
 	setInterested(true);
@@ -125,7 +125,8 @@ void Peer::readMessage(const char *msg, size_t len){
       
       block = string((const char *)(msg+runner), (size_t)blockLen);
 
-      LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
+      //LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
+      LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin));
       ctx->pieceProcessor->addTask(index, begin, block, this);
 
     }
@@ -189,10 +190,10 @@ void Peer::copyBitVector(char *piecesBitVector, int numOfPieces){
     mbit = i % 8;
     
     if(((piecesBitVector[mbyte] << mbit) & 0x80 ) >> 7){
-      LOG(DEBUG, "BIT[" + to_string(i) + "] = true");
+      //LOG(DEBUG, "BIT[" + to_string(i) + "] = true");
       setBitVector(i);
     }else{
-      LOG(DEBUG, "BIT[" + to_string(i) + "] = false");
+      //LOG(DEBUG, "BIT[" + to_string(i) + "] = false");
     }
   }
 }

@@ -33,11 +33,12 @@ class PieceRequestor
   PieceRequestor(vector<Piece*> &, vector<void*> &);
   void startPieceRequestor();
 
-  bool selectRandomUnavailableUnprocessedPiece(size_t&, size_t&, size_t&, unsigned char *);
+  bool selectRandomUnavailableUnprocessedPiece(size_t&, size_t&, size_t&, unsigned char **);
+  bool allPiecesAvailable();
   //bool selectRarestUnavailableUnprocessedPiece(size_t&, size_t&);
   void waitForGoAhead();
   void signalGoAhead(void *);
-  bool selectServicablePeer(size_t, unsigned char *);
+  bool selectServicablePeer(size_t, unsigned char **);
   void writeDirtyPiecesToDisk();
 
   void setPieceProcessing(size_t);			// piece processing = true
