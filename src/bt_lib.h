@@ -38,7 +38,7 @@ extern "C"{
 #define MAX_PORT 6699
 
   /*Poll time out in miliseconds*/
-#define POLL_TIMEOUT 500
+#define POLL_TIMEOUT 5000
 
   /*number of threads in thread pool*/
 #define POOL_SIZE 5

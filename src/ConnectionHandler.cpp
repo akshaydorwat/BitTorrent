@@ -43,7 +43,7 @@ void ConnectionHandler::handle(string msg){
     
     memcpy((void*)&length,(void *)(message+runner), sizeof(length));
     runner = runner + sizeof(length);
-
+    
     if(length == 0){
       LOG(INFO, "Reciecved Live message");
       runner = runner + length;
@@ -193,7 +193,6 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
 
   m_lock.lock();
-  memcpy(buffer, buff, buf_len);
   result =   write(sfd, buffer, buf_len);
   if (result == -1) {
     if (errno == EWOULDBLOCK){

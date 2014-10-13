@@ -83,7 +83,8 @@ private:
   struct sockaddr_in addr;
   time_t last_connected;
   int sfd;
-  char buffer[MAX_PACKET_SIZE];
+  //char buffer[MAX_PACKET_SIZE];
+  string buffer;
 };
 
 #endif

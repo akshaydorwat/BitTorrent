@@ -99,7 +99,7 @@ void Reactor::initReactor(){
 void Reactor::handleEvent(){
   
   int tsfd; //tsfd = transfer-socket fd
-  int numBytesRcvd;
+  int numBytesRcvd, ret, packet_size;
   ConnectionHandler* conn;
   char packet_rcvd[MAX_PACKET_SIZE];
   struct sockaddr_in srcaddr;
@@ -147,35 +147,43 @@ void Reactor::handleEvent(){
 	LOG(WARNING,"Connection got disconnected trying again");
 	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
       }else if(p_fd.events & (POLLIN)){
+	// Read all the data from socket
+	ret = 0;
+	numBytesRcvd = 0;
+	packet_size = MAX_PACKET_SIZE;
 	do{
-	  numBytesRcvd = read(p_fd.fd, packet_rcvd, MAX_PACKET_SIZE);
-	  if(numBytesRcvd < 0){						
-	    if (errno != EWOULDBLOCK){					
-	      close(p_fd.fd);						
-	      //TODO: report it to peer as well				
-	      unRegisterEvent(p_fd.fd);					
+	  ret = read(p_fd.fd,(void *)(packet_rcvd + numBytesRcvd), packet_size );
+	  if(ret <= 0){						
+	    if((errno != EWOULDBLOCK) || (ret == 0)){					
+	      unRegisterEvent(p_fd.fd);
+	      conn->closeConn();
+	      return;
 	    }								
             break;							
 	  }								
-	  // get the connection object
-	  if((conn = scanEventRegister(p_fd.fd)) == NULL){
-	    LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
-	    exit(EXIT_FAILURE); 
-	  }
-	  // Call handler if i have message 
-	  if(numBytesRcvd > 0){
-	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
-	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
-	    //conn->handle(string(packet_rcvd, numBytesRcvd));
-	  }
-	  // connection closed
-	  if(numBytesRcvd == 0){
-	    //TODO: report it to peer as well 
-	    unRegisterEvent(p_fd.fd);
-	    conn->closeConn();
-	    break;
+	  if(ret > 0){
+	    numBytesRcvd += ret;
+	    packet_size -= ret;
+	    
+	    if(numBytesRcvd >= MAX_PACKET_SIZE){
+	      LOG(ERROR, "data exceeding max packet size ");
+	      unRegisterEvent(p_fd.fd);
+	      conn->closeConn();
+	      return;
+	    }
 	  }
 	}while(true);
+	// get the connection object
+	if((conn = scanEventRegister(p_fd.fd)) == NULL){
+	  LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
+	  exit(EXIT_FAILURE); 
+	}
+	// Call handler if i have message 
+	if(numBytesRcvd > 0){
+	  LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
+	  pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
+	  //conn->handle(string(packet_rcvd, numBytesRcvd));
+	}
       }
     }
   }
