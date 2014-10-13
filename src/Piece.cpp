@@ -268,10 +268,11 @@ bool Piece::isBlockProcessing(size_t blockId)
       int temp = blockProcessing [ lvl1Offset ];
       processingMtx.unlock();
       temp &= 1 << lvl2Offset;
-      if (temp > 0)
+      if (temp > 0){
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = processing.");
-      else
-	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not processing.");
+      }else{
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not processing.");  
+      }
       return temp > 0;
     }
   return false;
@@ -320,10 +321,11 @@ bool Piece::isBlockAvailable(size_t blockId)
       int temp = blockAvailable [ lvl1Offset ];
       availableMtx.unlock();
       temp &= 1 << lvl2Offset;
-      if (temp > 0)
+      if (temp > 0){
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = available.");
-      else
+      }else{
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not available.");
+      }
       return temp > 0;
     }
   return false;
@@ -404,10 +406,11 @@ bool Piece::isBlockDirty(size_t blockId)
       int temp = blockDirty [ lvl1Offset ];
       dirtyMtx.unlock();
       temp &= 1 << lvl2Offset;
-      if (temp > 0)
+      if (temp > 0){
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = dirty.");
-      else
+      }else{
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not dirty.");
+      }
       return temp > 0;
     }
   return false;
@@ -526,10 +529,11 @@ bool Piece::isValid(string hash)
       string pieceHashStr("");
       for (size_t i=0; i<20; i++)
 	pieceHashStr += pieceHash[i];
-      if (pieceHashStr == hash)
+      if (pieceHashStr == hash){
 	//LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
-      else
+      }else{
 	//LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
+      }
       valid = pieceHashStr == hash;
     }
   valid = false;
