@@ -532,7 +532,7 @@ bool Piece::isValid(string hash)
       if (pieceHashStr == hash){
 	//LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
       }else{
-	//LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
+	LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
       }
       valid = pieceHashStr == hash;
     }

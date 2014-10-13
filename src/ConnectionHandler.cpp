@@ -19,12 +19,17 @@ using namespace std;
 
 void ConnectionHandler::handle(string msg){
   int runner = 0;
-  const char *message = msg.c_str();
-  int msgLen = msg.length();
+  buffer.append(msg);
+  const char *message = buffer.data();
+  int msgLen = buffer.length();
   int length; //bt protocol length
   
+
   while(runner < msgLen){
     if(checkForhandshakeMsg((const char*)(message+runner))){
+      if(msgLen < (runner+(int)sizeof(bt_handshake_t))){
+	return;
+      }
       // Verify the hanshake
       if(verifyHandshake(message)){
 	if(!p->isInitiatedByMe()){
@@ -49,7 +54,11 @@ void ConnectionHandler::handle(string msg){
       runner = runner + length;
       continue;
     }
-
+    
+    if(msgLen < (runner+length) ){
+      return;
+    }
+    
     // Send mesage to Peer for further investigation
     if(p && handshakeComplete){
       //LOG(DEBUG, "Sending message to peer for handling");
@@ -57,9 +66,13 @@ void ConnectionHandler::handle(string msg){
       runner = runner + length;
       continue;
     }
-
+    
     closeConn();
     delete this;
+  }
+  
+  if(runner == msgLen){
+    buffer.clear();
   }
 }
 
@@ -193,14 +206,14 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
 
   m_lock.lock();
-  result =   write(sfd, buffer, buf_len);
+  //memcpy(buffer, buff, buf_len);
+  result =   write(sfd, buff, buf_len);
   if (result == -1) {
     if (errno == EWOULDBLOCK){
       return;
     }
     LOG(ERROR, "Could not write to socket");
   }
-
   m_lock.unlock();
   LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }
