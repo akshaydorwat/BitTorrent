@@ -15,7 +15,7 @@
 using namespace std;
 
 #define BLOCK_SIZE 16384 // =16 KB ; 32768 =32 KB
-#define CONTIGUOUS_BLOCKS_BATCH_WRITE 5
+#define CONTIGUOUS_BLOCKS_BATCH_WRITE 1
 
 class Piece
 {

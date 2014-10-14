@@ -39,7 +39,7 @@ Piece::Piece(size_t id, size_t offset, size_t length, string hash, FileHandler *
       blockDirty.push_back(0);
     }
   valid = false;
-
+  //LOG (DEBUG, "Piece#" + to_string(id) + " numOfBlocks=" + to_string(numOfBlocks()));
 }
 
 Piece::~Piece()
@@ -92,12 +92,14 @@ void Piece::setData(string str)
 // Random block selector : must be followed by the setBlockProcessing method
 bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& blockLength)
 {
+  //LOG (DEBUG, "Piece#" + to_string(id) + " : Choosing from numOfBlocks=" + to_string(numOfBlocks()));
   bool found = false;
   if (isComplete() || numOfBlocks() == 0)
     return found;
 
   //size_t numOfBlocks = numOfBlocks();
   size_t randomId = random() % numOfBlocks();
+  size_t blockId = 0;
 
   availableMtx.lock();
   processingMtx.lock();
@@ -107,10 +109,12 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
   int lvl1Offset = 0;
   int lvl2Offset = 0;
 
-  for (size_t i = (randomId + 1) % numOfBlocks(); i != randomId; i = (i + 1) % numOfBlocks())
+  for (size_t i = 0; i < numOfBlocks(); i++)
     {
-      lvl1Offset = i / sizeof(int);
-      lvl2Offset = i % sizeof(int);
+      blockId = ((randomId + i) % numOfBlocks());
+	//LOG (DEBUG, "Piece#" + to_string(id) + " Checking Block#" + to_string(blockId));
+      lvl1Offset = blockId / sizeof(int);
+      lvl2Offset = blockId % sizeof(int);
 
       availableSubbitmap = blockAvailable[ lvl1Offset ];
       int temp = availableSubbitmap & (1 << lvl2Offset);
@@ -120,10 +124,10 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
 	  temp = processingSubbitmap & (1 << lvl2Offset);
 	  if (temp == 0)	// If block not already in processing queue
 	    {
-	      blockOffset = i * BLOCK_SIZE;
-	      blockLength = i+1 < numOfBlocks() ? BLOCK_SIZE : length - blockOffset;
+	      blockOffset = blockId * BLOCK_SIZE;
+	      blockLength = blockId+1 < numOfBlocks() ? BLOCK_SIZE : length - blockOffset;
 	      found = true;
-	      //LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(i) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
+	      //LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(blockId) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
 	      break;
 	    }
 	}
@@ -212,6 +216,7 @@ void Piece::writeContiguousBlocksToDisk()
 
 	}
     }
+	LOG (DEBUG, "Piece#" + to_string(id) + " returning from writeToDisk");
 }
 
 void Piece::setBlockProcessing(size_t blockId)
@@ -250,10 +255,13 @@ void Piece::resetBlockProcessing(size_t blockId)
 
       processingMtx.lock();
       int temp = blockProcessing [ lvl1Offset ];
-      temp &= 0 - (1 << lvl2Offset);
+      temp &= ~(1 << lvl2Offset);
       blockProcessing [ lvl1Offset ] = temp;	
       processingMtx.unlock();
-      LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not processing.");
+	if (isBlockProcessing(blockId))
+		LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = failed to make not processing.");
+	else
+      		LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not processing.");
     }
 }
 
@@ -303,10 +311,13 @@ void Piece::resetBlockAvailable(size_t blockId)
 
       availableMtx.lock();
       int temp = blockAvailable [ lvl1Offset ];
-      temp &= 0 - (1 << lvl2Offset);
+      temp &= ~(1 << lvl2Offset);
       blockAvailable [ lvl1Offset ] = temp;	
       availableMtx.unlock();
-      LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not available.");
+	if (isBlockAvailable(blockId))
+      		LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = failed to make not available.");
+	else
+		LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not available.");
     }
 }
 
@@ -338,7 +349,7 @@ bool Piece::isAvailable()
       if (!isBlockAvailable(i))
 	return false;
     }
-  LOG (DEBUG, "Piece#" + to_string(id) + " : status-check = available.");
+  //LOG (DEBUG, "Piece#" + to_string(id) + " : status-check = available.");
   return true;
 }
 
@@ -388,10 +399,13 @@ void Piece::resetBlockDirty(size_t blockId)
 
       dirtyMtx.lock();
       int temp = blockDirty [ lvl1Offset ];
-      temp &= 0 - (1 << lvl2Offset);
+      temp &= ~(1 << lvl2Offset);
       blockDirty [ lvl1Offset ] = temp;	
       dirtyMtx.unlock();
-      LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not dirty.");
+      if (isBlockDirty(blockId))
+	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = failed to make not dirty.");
+      else 
+	LOG (DEBUG,"Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not dirty.");
     }
 }
 
@@ -460,9 +474,9 @@ void Piece::setBlockById(size_t blockId, string blockData)
 	  isComplete = false;
 	}
       if (isComplete)
-	LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " status-update = complete.");
+	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = complete.");
       else
-	LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " status-update = not complete.");
+	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = not complete.");
       //string blankBlock (BLOCK_SIZE, '');
       if (data.size() >= blockOffset + blockLen)
 	{
@@ -484,7 +498,7 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
       size_t blockLen = (blockId + 1) * BLOCK_SIZE <= length ? BLOCK_SIZE : length - (blockId * BLOCK_SIZE);
       fillLen = (blockOffset + fillLen - 1) / BLOCK_SIZE == blockId ? fillLen : blockLen - blockOffset; // any fill length upto the block's size is acceptable
       bool isComplete = (blockOffset + fillLen == (blockId + 1) * BLOCK_SIZE) || (blockOffset + fillLen == length);
-      LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " size " + to_string(blockLen) + " [" + to_string(blockOffset) + " - " + to_string(blockOffset + blockLen) + "] attempting to write " + to_string(blockData.size()) + " bytes");
+      LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " size " + to_string(blockLen) + " [" + to_string(blockOffset) + " - " + to_string(blockOffset + blockLen) + "] attempting to write " + to_string(blockData.size()) + " bytes");
       if (blockData.size() >= fillLen)
 	blockData = blockData.substr(0, fillLen);
       else
@@ -493,9 +507,9 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
 	  isComplete = false;
 	}
       if (isComplete)
-	LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " status-update = complete.");
+	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = complete.");
       else
-	LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " status-update = not complete.");
+	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = not complete.");
 
       if (data.size() >= blockOffset + fillLen)
 	{
@@ -536,7 +550,10 @@ bool Piece::isValid(string hash)
       }
       valid = pieceHashStr == hash;
     }
-  valid = false;
+  else
+  {
+  	valid = false;
+  }
   return valid;
 
 }

@@ -23,6 +23,7 @@ public:
   PieceRequestor *pieceRequestor;       // request message maker  manager
   PieceProcessor *pieceProcessor;       // piece message processing manager 
   RequestProcessor *requestProcessor;   // request message processing manager 
+  thread pieceRequestorThread;
 
   TorrentCtx();
   

@@ -20,7 +20,6 @@
 #include "TorrentCtx.hpp"
 #include "Logger.hpp"
 
-
 using namespace std;
 
 int main (int argc, char * argv[]){
@@ -57,14 +56,19 @@ int main (int argc, char * argv[]){
   // Load Torrent Context
   TorrentCtx t; 
 
-  // Intialise the context
+  // Initialise the context
   t.init(&bt_args);
   reactor->setTorrentCtx(&t);
   reactor->startReactor();
-  std::cout << "Press Q or q to quit \n";
-  while( inp != 'Q'){
+  std::cout << "Enter Q or q (followed by ENTER key) to quit." << endl;
+  while( inp != 'Q' && inp != 'q'){
     inp = getchar();
+    cout << "Enter Q or q (followed by ENTER key) to quit." << endl;
   }
+  if (inp == 'Q' || inp == 'q')
+  	LOG (INFO, "bt_client : Terminating by user command. Please wait ...");
+  else
+	LOG (INFO, "bt_client : Terminating by preset condition. Please wait ...");
   
   reactor->closeReactor();
   return 0;

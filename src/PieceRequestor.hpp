@@ -15,26 +15,29 @@
 #include <mutex>
 using namespace std;
 
-#define MAX_REQUESTS 5
+#define MAX_REQUESTS 1
 
 class PieceRequestor
 {
  private:
+  bool terminated;
   vector<Piece*> &pieces;
   vector<void*> &peers;
 
-  vector<bool> pieceAvailable;
+  //vector<bool> pieceAvailable;
   vector<bool> pieceProcessing;
-  vector<bool> pieceDirty; 
+  //vector<bool> pieceDirty; 
   mutex requestMtx;
   vector<unsigned char *> requestedPeerIds;
 
  public:
   PieceRequestor(vector<Piece*> &, vector<void*> &);
   void startPieceRequestor();
+  void stopPieceRequestor() { terminated = true; }
 
   bool selectRandomUnavailableUnprocessedPiece(size_t&, size_t&, size_t&, unsigned char **);
   bool allPiecesAvailable();
+  bool unavailablePieceIsServicable();
   //bool selectRarestUnavailableUnprocessedPiece(size_t&, size_t&);
   void waitForGoAhead();
   void signalGoAhead(void *);

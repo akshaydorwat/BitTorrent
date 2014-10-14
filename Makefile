@@ -44,7 +44,7 @@ $(BIN): $(OBJ)
 	$(CC) -c $(CPFLAGS) -o $@ $<  
 
 run:
-	./bt_client -v -b 10.0.0.113 -p 10.0.0.44:6667  -s . -l LOG.log  sample/download.mp3.torrent
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.44:6667  -s . -l LOG.log  sample/download.mp3.torrent
 
 
 test1:
