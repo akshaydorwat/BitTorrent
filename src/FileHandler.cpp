@@ -16,19 +16,15 @@
 #include <vector>
 #include <openssl/sha.h>
 #include <mutex>
-//#include <ctime>
-//#include <exception>
-//#include <stdexcept>
-//#include <cassert>
-//#include <stdlib.h>
 using namespace std;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 FileHandler::FileHandler(Torrent& torrent, vector<string>& saveFiles)
   :torrent(torrent)
   ,saveFiles(saveFiles)
 {
   //LOG (INFO, "Creating new FileHandler.");
-  size_t numOfFiles = 1; // torrent.numOfFiles();
+  size_t numOfFiles = torrent.numOfFiles();
   vector<TorrentFile> torrentFiles = torrent.getFiles();
   //LOG (INFO, "Extracted TorrentFiles.");
   if (saveFiles.size() < numOfFiles)
@@ -42,7 +38,6 @@ FileHandler::FileHandler(Torrent& torrent, vector<string>& saveFiles)
     {
       fileStreams.push_back(new fstream());
       fileMutexes.push_back(movable_mutex());
-      //fstream fileStream (saveFiles[i], ios::in | ios::out | ios::app | ios::binary | ios::ate);
 
       if (!openOrCreateFile(saveFiles[i], torrentFiles[i].getLength(), fileStreams[i]))
 	{
@@ -52,6 +47,7 @@ FileHandler::FileHandler(Torrent& torrent, vector<string>& saveFiles)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void FileHandler::closeOpenFiles()
 {
   size_t numOfOpenFiles = fileStreams.size();
@@ -65,6 +61,7 @@ void FileHandler::closeOpenFiles()
   LOG (DEBUG, "FileHandler : Closed file handles.");
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 FileHandler::~FileHandler()
 {
   size_t numOfOpenFiles = fileStreams.size();
@@ -78,6 +75,7 @@ FileHandler::~FileHandler()
   LOG (DEBUG, "FileHandler : Closed file handles.");
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool FileHandler::openOrCreateFile(string filename, size_t filesize_expected, fstream *filestream)
 {
   filestream->open (filename, ios::in | ios::out | ios::app | ios::binary | ios::ate); // ate => seek pointer at eof
@@ -186,9 +184,10 @@ bool FileHandler::readPiece(size_t pieceId, string& piece, size_t &readLength)
   return pieceComplete;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 size_t FileHandler::writePiece(size_t pieceId, string piece, size_t writeLength, size_t startOffset)
 {
-	//LOG (DEBUG, "FileHandler : Request to write Piece#" + to_string(pieceId) + " at offset " + to_string(startOffset));
+  //LOG (DEBUG, "FileHandler : Request to write Piece#" + to_string(pieceId) + " at offset " + to_string(startOffset));
   //LOG (DEBUG, "Data Length : " + to_string(piece.size()));
   bool pieceComplete = false;
   size_t lengthWritten = 0;
@@ -257,22 +256,14 @@ size_t FileHandler::writePiece(size_t pieceId, string piece, size_t writeLength,
   return lengthWritten;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool FileHandler::isValidPiece(size_t pieceId)
 {
   string piece;
   return readIfValidPiece(pieceId, piece);
-  /*size_t pieceLength = torrent.getPieceLength();
-    unsigned char pieceHash[20];
-	
-    if (readPiece(pieceId, piece, pieceLength))
-    {
-    SHA1((unsigned char *)piece.c_str(), pieceLength, pieceHash);
-    //LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " hash = " + string(pieceHash));
-    return checkHashes(&pieceHash[0], (unsigned char *)torrent.pieceHashAt(pieceId).c_str(), 20);
-    }
-    return false;*/
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool FileHandler::readIfValidPiece(size_t pieceId, string& piece)
 {	
   size_t pieceLength = torrent.getPieceLength();
@@ -281,12 +272,12 @@ bool FileHandler::readIfValidPiece(size_t pieceId, string& piece)
   if (readPiece(pieceId, piece, pieceLength))
     {
       SHA1((unsigned char *)piece.c_str(), pieceLength, pieceHash);
-      //LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " hash = " + string(pieceHash));
       return checkHashes(&pieceHash[0], (unsigned char *)torrent.pieceHashAt(pieceId).c_str(), 20);
     }
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool FileHandler::checkHashes(unsigned char *hash1, unsigned char *hash2, size_t length)
 {
   size_t i=0;

@@ -14,9 +14,10 @@
 #include <vector>
 using namespace std;
 
-#define BLOCK_SIZE 16384 // =16 KB ; 32768 =32 KB
-#define CONTIGUOUS_BLOCKS_BATCH_WRITE 1
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#define BLOCK_SIZE 16384 			// 16384 => 16 KB ; 32768 => 32 KB
+#define CONTIGUOUS_BLOCKS_BATCH_WRITE 4		// LAZY-WRITE CHUNK SIZE (in units of BLOCKS)
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class Piece
 {
  private:
@@ -49,7 +50,7 @@ class Piece
   bool isDirty();					// are there available blocks waiting to be written to disk
   void setAvailable();					// piece available = true
   void resetAvailable();				// piece available = false
-  size_t numOfBlocks();// { return (length / BLOCK_SIZE); }
+  size_t numOfBlocks();
 
   bool selectUnavailableUnprocessedBlock(size_t&, size_t&);
   void writeContiguousBlocksToDisk();
@@ -78,3 +79,4 @@ class Piece
 };
 
 #endif /* PIECE_HPP_ */
+///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -9,19 +9,13 @@
 #include "FileHandler.hpp"
 #include "Logger.hpp"
 
-//#include <iostream>
 #include <string>
 #include <vector>
 #include <mutex>
 #include <openssl/sha.h>
-
-//#include <ctime>
-//#include <exception>
-//#include <stdexcept>
-//#include <cassert>
-//#include <stdlib.h>
 using namespace std;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 mutex availableMtx, processingMtx, dirtyMtx;
 
 Piece::Piece(size_t id, size_t offset, size_t length, string hash, FileHandler *fileMgr)
@@ -42,11 +36,13 @@ Piece::Piece(size_t id, size_t offset, size_t length, string hash, FileHandler *
   LOG (DEBUG, "Piece#" + to_string(id) + " numOfBlocks=" + to_string(numOfBlocks()) + " length=" + to_string(length));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 Piece::~Piece()
 {
   //	delete[] data;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 size_t Piece::numOfBlocks()
 {
 	size_t numBlocks = length / BLOCK_SIZE;
@@ -55,23 +51,7 @@ size_t Piece::numOfBlocks()
 	return numBlocks;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-/*size_t Piece::getLength()
-  {
-  return length;
-  }
-
-  void Piece::setLength(size_t len)
-  {
-  length = len;
-  }*/
-
-//////////////////////////////////////////////////////////////////////////////////////
-/*string Piece::getData()
-  {
-  return data;
-  }*/
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setData(string str)
 {
   if (str.size() > getLength())
@@ -81,7 +61,7 @@ void Piece::setData(string str)
   for (size_t i=0; i < strSize; i+=BLOCK_SIZE)
     {
       size_t blockSize = strSize - i > BLOCK_SIZE ? BLOCK_SIZE : strSize - i;
-      /* NOTE: Using setData() is to be used for prepopulating data. 
+      /* NOTE: setData() is to be used for prepopulating data. 
 	 So the dirty flags have been cleared immediately following updating availability. */
       setBlockProcessing(i/BLOCK_SIZE);
       setBlockByOffset(i, blockSize, str.substr(i, blockSize));
@@ -90,22 +70,17 @@ void Piece::setData(string str)
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-/*bool Piece::isComplete()
-  {
-  return length == data.size();
-  }
-*/
-
-// Random block selector : must be followed by the setBlockProcessing method
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+ * Random block selector : must be followed by the setBlockProcessing method
+ */
 bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& blockLength)
 {
   //LOG (DEBUG, "Piece#" + to_string(id) + " : Choosing from numOfBlocks=" + to_string(numOfBlocks()) + " max mod " + to_string(16%numOfBlocks()));
   bool found = false;
-  if (isComplete()/*isValid()*/ || numOfBlocks() == 0)
+  if (isValid() || numOfBlocks() == 0)
     return found;
 
-  //size_t numOfBlocks = numOfBlocks();
   size_t randomId = 0;//random() % numOfBlocks();
   size_t blockId = 0;
 
@@ -120,7 +95,7 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
   for (size_t i = 0; i < numOfBlocks(); i++)
     {
       blockId = ((randomId + i) % numOfBlocks());
-	//LOG (DEBUG, "Piece#" + to_string(id) + " Checking Block#" + to_string(blockId));
+
       lvl1Offset = blockId / sizeof(int);
       lvl2Offset = blockId % sizeof(int);
 
@@ -148,6 +123,11 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
   return found;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/* 
+ * Lazy file-writer :  	Attempts to write chunks of prespecified number of blocks to disk
+ *		 	The lazy-write policy is dropped if piece isValid
+ */
 void Piece::writeContiguousBlocksToDisk()
 {
   if (isDirty())
@@ -228,6 +208,7 @@ void Piece::writeContiguousBlocksToDisk()
 	//LOG (DEBUG, "Piece#" + to_string(id) + " returning from writeToDisk");
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setBlockProcessing(size_t blockId)
 {
   if (blockId < numOfBlocks() && isBlockAvailable(blockId) == false)
@@ -255,6 +236,7 @@ void Piece::setBlockProcessing(size_t blockId)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::resetBlockProcessing(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -274,6 +256,7 @@ void Piece::resetBlockProcessing(size_t blockId)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isBlockProcessing(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -295,6 +278,7 @@ bool Piece::isBlockProcessing(size_t blockId)
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setBlockAvailable(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -311,6 +295,7 @@ void Piece::setBlockAvailable(size_t blockId)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::resetBlockAvailable(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -330,6 +315,7 @@ void Piece::resetBlockAvailable(size_t blockId)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isBlockAvailable(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -351,6 +337,7 @@ bool Piece::isBlockAvailable(size_t blockId)
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isAvailable()
 {
   for (size_t i=0; i < numOfBlocks(); i++)
@@ -362,6 +349,7 @@ bool Piece::isAvailable()
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 string Piece::getAvailableBlock(size_t blockId)
 {
   if (isBlockAvailable(blockId))
@@ -383,6 +371,7 @@ string Piece::getAvailableBlock(size_t blockId)
   return "";
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setBlockDirty(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -395,10 +384,11 @@ void Piece::setBlockDirty(size_t blockId)
       temp |= 1 << lvl2Offset;
       blockDirty [ lvl1Offset ] = temp;	
       dirtyMtx.unlock();
-      LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = dirty.");
+      //LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = dirty.");
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::resetBlockDirty(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -411,13 +401,14 @@ void Piece::resetBlockDirty(size_t blockId)
       temp &= ~(1 << lvl2Offset);
       blockDirty [ lvl1Offset ] = temp;	
       dirtyMtx.unlock();
-      if (isBlockDirty(blockId))
-	LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = failed to make not dirty.");
-      else 
-	LOG (DEBUG,"Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not dirty.");
+      //if (isBlockDirty(blockId))
+	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = failed to make not dirty.");
+      //else 
+	//LOG (DEBUG,"Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-update = not dirty.");
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isBlockDirty(size_t blockId)
 {
   if (blockId < numOfBlocks())
@@ -429,16 +420,17 @@ bool Piece::isBlockDirty(size_t blockId)
       int temp = blockDirty [ lvl1Offset ];
       dirtyMtx.unlock();
       temp &= 1 << lvl2Offset;
-      if (temp > 0){
+      //if (temp > 0){
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = dirty.");
-      }else{
+      //}else{
 	//LOG (DEBUG, "Piece#" + to_string(id) +" : Block#" + to_string(blockId) + " status-check = not dirty.");
-      }
+      //}
       return temp > 0;
     }
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isDirty()
 {
   for (size_t i=0; i < numOfBlocks(); i++)
@@ -452,18 +444,21 @@ bool Piece::isDirty()
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setAvailable()
 {	
   for (size_t i=0; i < numOfBlocks(); i++)
     setBlockAvailable(i);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::resetAvailable()
 {
   for (size_t i=0; i < numOfBlocks(); i++)
     resetBlockAvailable(i);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setBlockById(size_t blockId, string blockData)
 {
   size_t blockOffset = blockId * BLOCK_SIZE;
@@ -482,10 +477,10 @@ void Piece::setBlockById(size_t blockId, string blockData)
 	  blockLen = blockData.size();
 	  isComplete = false;
 	}
-      if (isComplete)
-	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = complete.");
-      else
-	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = not complete.");
+      //if (isComplete)
+	//LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = complete.");
+      //else
+	//LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = not complete.");
       //string blankBlock (BLOCK_SIZE, '');
       if (data.size() >= blockOffset + blockLen)
 	{
@@ -499,6 +494,7 @@ void Piece::setBlockById(size_t blockId, string blockData)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockData)
 {
   if (blockOffset < length && isBlockAvailable(blockOffset/BLOCK_SIZE) == 0)
@@ -515,10 +511,10 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
 	  fillLen = blockData.size();
 	  isComplete = false;
 	}
-      if (isComplete)
-	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = complete.");
-      else
-	LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = not complete.");
+      //if (isComplete)
+	//LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = complete.");
+      //else
+	//LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " status-update = not complete.");
 
       if (data.size() >= blockOffset + fillLen)
 	{
@@ -531,7 +527,8 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
 	}
     }
 }
-//////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /*void Piece::setHash(string pieceHash)
   {
   hash = pieceHash;
@@ -542,38 +539,19 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
   return hash;
   }
 */
-//////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isValid(string hash)
 {
-  if (valid)
-	return true;
-	
-  if (isAvailable() && hash.size() == 20) // isComplete() has been removed from validity to support lazy-fetching of servicable piece
+  if (!valid && isAvailable() && hash.size() == 20) // isComplete() has been removed from validity to support lazy-fetching of servicable piece
     {
       unsigned char pieceHash[20];
-	//LOG (DEBUG, "Piece#" + to_string(id) + " data.size()=" + to_string(data.size()));
-
       SHA1 ((unsigned char *)data.c_str(), length, pieceHash);
  
-      //for (size_t i=0; i<20; i++)
-	//pieceHashStr += pieceHash[i];
-
-      //if (pieceHashStr == hash){
-	if (fileMgr->checkHashes(pieceHash, (unsigned char *) hash.c_str(), 20)) {
+	valid = fileMgr->checkHashes(pieceHash, (unsigned char *) hash.c_str(), 20);
 	//LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
-	valid = true;
-      }else{
-	//LOG (ERROR, "[" + pieceHashStr + "] != [" + hash + "] Piece#" + to_string(id) + " : hash-check = not valid.");
-      }
-      //valid = pieceHashStr == hash;
     }
-  else
-  {	
-	//LOG (DEBUG, "Piece#" + to_string(id) + " : piece/hash not available.");
-  	valid = false;
-  }
   return valid;
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

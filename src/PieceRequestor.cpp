@@ -10,30 +10,23 @@
 #include "Peer.hpp"
 #include "Logger.hpp"
 #include "bt_lib.h"
+
 #include <string>
 #include <vector>
 #include <thread>
 #include <chrono>
-
 using namespace std;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 PieceRequestor::PieceRequestor(vector<Piece*> &pieces, vector<void*> &peers)
   :pieces(pieces)
   ,peers(peers)
 {
-  LOG (DEBUG, "PieceRequestor : Instantiating ...");
   for (size_t i=0; i < pieces.size(); i++)
-    {
-      //if (pieces[i]->isValid())
-	//pieceAvailable.push_back(true);	
-      //else
-	//pieceAvailable.push_back(false);
-		
       pieceProcessing.push_back(false);
-      //pieceDirty.push_back(false);
-    }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void PieceRequestor::startPieceRequestor()
 {
   size_t requestPieceId;
@@ -52,19 +45,12 @@ void PieceRequestor::startPieceRequestor()
 		this_thread::sleep_for(chrono::seconds(3));
 	}
 
-	if (terminated)
-		break;
-
 	waitForGoAhead();
 	if (terminated)
 		break;
 
     	if(selectRandomUnavailableUnprocessedPiece(requestPieceId, requestBlockBegin, requestBlockLength, &peerId))
     	{
-      		//waitForGoAhead();
-		//if (terminated)
-		//	break;
-
       		pieces[requestPieceId]->setBlockProcessing(requestBlockBegin/BLOCK_SIZE);
       
 		for (size_t p=0; p<peers.size() && !terminated; p++)
@@ -75,7 +61,7 @@ void PieceRequestor::startPieceRequestor()
 	  		{
 	    			requestedPeerIds.push_back(peerId);
 				setPieceProcessing(requestPieceId);
-	    			//LOG(DEBUG,"PieceRequestor : Attempting to send REQUEST message.");
+	    			
 				if (!terminated)
 				{
 					//cout << "PieceRequestor : Sending REQUEST to PeerId#";
@@ -100,24 +86,25 @@ void PieceRequestor::startPieceRequestor()
   }
 
   if (!terminated)
-  	LOG (DEBUG, "PieceRequestor : All pieces available/received. Terminated !!!");
+  	LOG (DEBUG, "PieceRequestor : All pieces available/received and verified. Terminating PieceRequestor !!!");
   else
-	LOG (INFO, "PieceRequestor : Received terminate signal. Terminated !!!");
+	LOG (INFO, "PieceRequestor : Received terminate signal. Terminating PieceRequestor !!!");
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool PieceRequestor::allPiecesAvailable()
 {
   for (size_t i=0; i<pieces.size(); i++){
     if (!pieces[i]->isValid())
 	{
-		LOG (DEBUG, "PieceRequestor : Continue waiting for Piece#" + to_string(i));
+		//LOG (DEBUG, "PieceRequestor : Continue waiting for Piece#" + to_string(i));
       		return false;
 	}
   }
-//LOG (DEBUG, "-------------- ALL PIECES AVAILABLE ------------");
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool PieceRequestor::unavailablePieceIsServicable()
 {
 	for (size_t i=0; i<pieces.size(); i++)
@@ -136,37 +123,35 @@ bool PieceRequestor::unavailablePieceIsServicable()
 void PieceRequestor::waitForGoAhead()
 {
   while (requestedPeerIds.size() == MAX_REQUESTS && !terminated){
-    LOG (DEBUG, "PieceRequestor : MAX_REQUESTS(" + to_string(MAX_REQUESTS) + ") formulated. Waiting for GO_AHEAD ...");
+    //LOG (DEBUG, "PieceRequestor : MAX_REQUESTS(" + to_string(MAX_REQUESTS) + ") formulated. Waiting for GO_AHEAD ...");
     this_thread::sleep_for(chrono::seconds(1));
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void PieceRequestor::signalGoAhead(void *peerPtr)
 {
   Peer *peer = (Peer *)peerPtr;
   //cout << "PieceRequestor : signalling reception from PeerId#";
-  print_peer_id((unsigned char *)peer->getId());
-  cout << endl;
-	//LOG (DEBUG, "PieceProcessor : LOCK.");
+  //print_peer_id((unsigned char *)peer->getId());
+  //cout << endl;
+  
+  //LOG (DEBUG, "PieceProcessor : LOCK.");
   requestMtx.lock();
   for (size_t i=0; i < requestedPeerIds.size(); i++)
     {
-      if(memcmp((void *)requestedPeerIds[i], (void *)peer->getId(), ID_SIZE) == 0)	// comparing unsigned char * .. duh
+      if(memcmp((void *)requestedPeerIds[i], (void *)peer->getId(), ID_SIZE) == 0)
 	{
 	  requestedPeerIds.erase(requestedPeerIds.begin() + i);
-	  /*
-	    vector<unsigned char*>::iterator it = requestedPeerIds.begin();
-	    advance(it, pos);
-	    requestedPeerIds.erase(it);
-	  */
-	//cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
+	  //cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
 	  break;
 	}
     }
   requestMtx.unlock();
-	//LOG (DEBUG, "PieceProcessor : UNLOCK.");
+  //LOG (DEBUG, "PieceProcessor : UNLOCK.");
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId)
 {
   // check whether some unchoked peer/seeder possesses this piece at all
@@ -214,8 +199,10 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// Random piece selector : must be followed by the setPieceProcessing method
-// NOTE: the blockOffset specifies the 0 based offset of a block within the selected piece
+/*
+ * Random piece selector : must be followed by the setPieceProcessing method
+ * NOTE: the blockOffset specifies the 0 based offset of a block within the selected piece
+ */
 bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, size_t& blockOffset, size_t& blockLength, unsigned char **peerId)
 {
   bool found = false;
@@ -276,19 +263,21 @@ void PieceRequestor::setPieceProcessing(size_t pieceId)
   if (!isPieceAvailable(pieceId))
     {
       pieceProcessing[pieceId] = true;	
-      LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-update = processing.");
+      //LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-update = processing.");
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void PieceRequestor::resetPieceProcessing(size_t pieceId)
 {
   if (pieces.size() > pieceId)
     {
       pieceProcessing[pieceId] = false;
-      LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-update = not processing.");
+      //LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-update = not processing.");
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 bool PieceRequestor::isPieceProcessing(size_t pieceId)
 {
   if (pieces.size() > pieceId)
