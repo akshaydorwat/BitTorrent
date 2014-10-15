@@ -65,14 +65,15 @@ void ConnectionHandler::handle(string msg){
       }*/
     
     if(msgLen < (runner+length) ){
-      LOG(DEBUG, "BT Packet length is " + to_string(length));
+      //LOG(DEBUG, "BT Packet length is " + to_string(length));
       LOG(DEBUG, "Waiting on full message EXpected : " + to_string(runner+length) + "actaul :" + to_string(msgLen));
       return;
     }
     
     // Send mesage to Peer for further investigation
     if(p && handshakeComplete){
-      LOG(DEBUG, "Sending message to peer for handling");
+      LOG(DEBUG, "Seding message to peer BT Packet length is " + to_string(length));
+      //LOG(DEBUG, "Sending message to peer for handling");
       p->readMessage((const char*)(message+runner), (size_t)length);
       string temp = buffer.substr(runner + length, buffer.length());
       buffer.clear();

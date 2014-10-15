@@ -5,7 +5,7 @@
 #include "Piece.hpp"
 
 
-#define REQUESTPROCESSOR_POOL_SIZE 1
+#define REQUESTPROCESSOR_POOL_SIZE 2
 
 class RequestProcessor{
 

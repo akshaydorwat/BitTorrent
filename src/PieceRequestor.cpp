@@ -177,25 +177,27 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 	{
 		//LOG (DEBUG, "PieceRequestor : LOCK.");
 		requestMtx.lock();
+		size_t randomId = random() % servicablePeerIds.size();
 		for (size_t p=0; p<servicablePeerIds.size(); p++)
-		{						
+		{
+			size_t peerIdx = (randomId + p) % servicablePeerIds.size();						
 			if (p+1 == servicablePeerIds.size()) // if this is the only servicable peer for this piece
 			{
-				*peerId = servicablePeerIds[p];	// choose/make do with him even if he is overloaded
-				//LOG (DEBUG, "PieceRequestor : Last servicablePeer chosen for Piece#" + to_string(pieceId));
+				*peerId = servicablePeerIds[peerIdx];	// choose/make do with him even if he is overloaded
+				LOG (DEBUG, "PieceRequestor : Last servicablePeer chosen for Piece#" + to_string(pieceId));
 				break;
 			}
 
 			size_t r=0;
 			for (r=0; r<requestedPeerIds.size(); r++)
 			{
-				if (memcmp((void *)servicablePeerIds[p], (void *)requestedPeerIds[r], ID_SIZE) == 0)
+				if (memcmp((void *)servicablePeerIds[peerIdx], (void *)requestedPeerIds[r], ID_SIZE) == 0)
 					break; // this peer has already been requested
 			}
 			if (r==requestedPeerIds.size())	// This peer has not already been requested
 			{
-				*peerId = servicablePeerIds[p];
-				//LOG (DEBUG, "PieceRequestor : New servicablePeer chosen for Piece#" +to_string(pieceId));
+				*peerId = servicablePeerIds[peerIdx];
+				LOG (DEBUG, "PieceRequestor : New servicablePeer chosen for Piece#" +to_string(pieceId));
 				break;
 			}
 		}
