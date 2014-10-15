@@ -77,7 +77,7 @@ void PieceRequestor::startPieceRequestor()
     	}
     	else
 	{
-      		//LOG (DEBUG, "PieceRequestor : Unable to formulate new REQUEST. Sleeping ... ");
+      		LOG (DEBUG, "PieceRequestor : Unable to formulate new REQUEST. Sleeping ... ");
       		this_thread::sleep_for(chrono::seconds(3));
    	}
 
@@ -171,7 +171,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
   else if (servicablePeerIds.size() == 1)
   {
     *peerId = servicablePeerIds[0];
-    //LOG (DEBUG, "PieceRequestor : Only servicablePeer chosen for Piece#" + to_string(pieceId));
+    //LOG (DEBUG, "PieceRequestor : The only servicablePeer re-chosen for Piece#" + to_string(pieceId));
   }
   else if (servicablePeerIds.size() > 1)
     {
@@ -186,11 +186,18 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 	      break;
 	    }
 
-	  for (size_t r=0; r<requestedPeerIds.size(); r++)
+	  size_t r=0;
+	  for (r=0; r<requestedPeerIds.size(); r++)
 	    {
 	      if (memcmp((void *)servicablePeerIds[p], (void *)requestedPeerIds[r], ID_SIZE) == 0)
 		break; // this peer has already been requested
 	    }
+	  if (r==requestedPeerIds.size())	// This peer has not already been requested
+	  {
+		*peerId = servicablePeerIds[p];
+		//LOG (DEBUG, "PieceRequestor : New servicablePeer chosen for Piece#" +to_string(pieceId));
+		break;
+	  }
 	}
       requestMtx.unlock();
 	//LOG (DEBUG, "PieceRequestor : UNLOCK.");
@@ -205,24 +212,26 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
  */
 bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, size_t& blockOffset, size_t& blockLength, unsigned char **peerId)
 {
+  if (allPiecesAvailable())
+	return false;
+
   bool found = false;
   size_t numOfPieces = pieces.size();
-  for (size_t i=0; i < numOfPieces; i++)
-    {
-      if (pieces[i]->isValid() && i+1 == numOfPieces)
-	    return false;
-    }
 
-  //if (requestedPeerIds.size()%2 == 1)
-  //{
+  size_t randomId = random() % numOfPieces;
+
+  if (requestedPeerIds.size() % 2 == 1 || randomId % 2 == 1)
+  {
   // first, check for a new block to be requested from an already processing piece
   for (size_t i = 0; i < pieces.size(); i++)
     {
 	pieceId = i;
       if (pieceProcessing[pieceId])	// If piece not already available but is already processing
 	{
+	  //LOG(DEBUG, "PieceRequestor : Chose already processing Piece#" + to_string(pieceId));
 	  found = pieces[pieceId]->selectUnavailableUnprocessedBlock(blockOffset, blockLength);
-	  found = found && selectServicablePeer(pieceId, peerId); // even a different peer may be chosen for requesting a new block
+	  if (found)
+	  	found = found && selectServicablePeer(pieceId, peerId); // even a different peer may be chosen for requesting a new block
 	  if (found)
 	    {	
 	      LOG(DEBUG, "PieceRequestor : Unavailable, Processing Piece#" + to_string(pieceId) +" : block#" + to_string(blockOffset/BLOCK_SIZE) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
@@ -230,13 +239,12 @@ bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, si
 	    }
 	}
     }
-  //}
+  }
   // second, check for a new piece to be requested 
   if (!found)
     {
 	//LOG (DEBUG, "PieceRequestor : Unavailable, Processing Piece not found. Looking for Unprocessed Piece.");
-      size_t randomId = 0;//random() % numOfPieces;
-	//LOG (DEBUG, "PieceRequestor : Choosing random Piece#" + to_string(randomId));
+	//LOG (DEBUG, "PieceRequestor : Choosing Piece using on randomId#" + to_string(randomId));
       for (size_t i = 0; i < numOfPieces; i++)
 	{
 		pieceId = (randomId + i) % numOfPieces;
@@ -244,7 +252,8 @@ bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, si
 	    	{
 			//LOG (DEBUG, "PieceRequestor : Unavailable, Unprocessed Piece#" + to_string(pieceId));
 		      	found = pieces[pieceId]->selectUnavailableUnprocessedBlock(blockOffset, blockLength);
-		      	found = found && selectServicablePeer(pieceId, peerId);
+			if (found)
+		      		found = found && selectServicablePeer(pieceId, peerId);
 			if (found)
 			{
 		  		LOG(DEBUG, "PieceRequestor : Unavailable, Unprocessed Piece#" + to_string(pieceId) +" : block#" + to_string(blockOffset/BLOCK_SIZE) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
@@ -282,10 +291,10 @@ bool PieceRequestor::isPieceProcessing(size_t pieceId)
 {
   if (pieces.size() > pieceId)
     {
-      if (pieceProcessing[pieceId])
-	LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-check = processing.");
-      else
-	LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-check = not processing.");
+      //if (pieceProcessing[pieceId])
+	//LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-check = processing.");
+      //else
+	//LOG (DEBUG, "PieceRequestor : Piece#" + to_string(pieceId) +" status-check = not processing.");
       return pieceProcessing[pieceId];
     }
   return false;

@@ -56,12 +56,13 @@ void ConnectionHandler::handle(string msg){
     }
     
     if(msgLen < (runner+length) ){
+      LOG(DEBUG, "Waiting on full message EXpected : " + to_string(runner+length) + "actaul :" + to_string(msgLen));
       return;
     }
     
     // Send mesage to Peer for further investigation
     if(p && handshakeComplete){
-      //LOG(DEBUG, "Sending message to peer for handling");
+      LOG(DEBUG, "Sending message to peer for handling");
       p->readMessage((const char*)(message+runner), (size_t)length);
       runner = runner + length;
       continue;
@@ -72,6 +73,7 @@ void ConnectionHandler::handle(string msg){
   }
   
   if(runner == msgLen){
+    LOG(DEBUG, "Clearing buffer");
     buffer.clear();
   }
 }

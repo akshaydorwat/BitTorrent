@@ -81,7 +81,7 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
   if (isValid() || numOfBlocks() == 0)
     return found;
 
-  size_t randomId = 0;//random() % numOfBlocks();
+  size_t randomId = random() % numOfBlocks();
   size_t blockId = 0;
 
   availableMtx.lock();
@@ -469,7 +469,7 @@ void Piece::setBlockById(size_t blockId, string blockData)
       size_t blockLen = blockOffset + BLOCK_SIZE <= length ? BLOCK_SIZE : length - blockOffset;
       //LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " end-offset : " + to_string(blockOffset + blockLen));
       //LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " size : " + to_string(blockLen));
-      LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " size " + to_string(blockLen) + " [" + to_string(blockOffset) + " - " + to_string(blockOffset + blockLen) + "] attempting to write " + to_string(blockData.size()) + " bytes");
+      //LOG (DEBUG, "Piece#" + to_string(id) + " Block#" + to_string(blockId) + " size " + to_string(blockLen) + " [" + to_string(blockOffset) + " - " + to_string(blockOffset + blockLen) + "] attempting to write " + to_string(blockData.size()) + " bytes");
       if (blockData.size() >= blockLen)
 	blockData = blockData.substr(0, blockLen);
       else
@@ -503,7 +503,7 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
       size_t blockLen = (blockId + 1) * BLOCK_SIZE <= length ? BLOCK_SIZE : length - (blockId * BLOCK_SIZE);
       fillLen = (blockOffset + fillLen - 1) / BLOCK_SIZE == blockId ? fillLen : blockLen - blockOffset; // any fill length upto the block's size is acceptable
       bool isComplete = (blockOffset + fillLen == (blockId + 1) * BLOCK_SIZE) || (blockOffset + fillLen == length);
-      LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " size " + to_string(blockLen) + " [" + to_string(blockOffset) + " - " + to_string(blockOffset + blockLen) + "] attempting to write " + to_string(blockData.size()) + " bytes");
+      //LOG (DEBUG, "Piece#" + to_string(id) + " : Block#" + to_string(blockId) + " size " + to_string(blockLen) + " [" + to_string(blockOffset) + " - " + to_string(blockOffset + blockLen) + "] attempting to write " + to_string(blockData.size()) + " bytes");
       if (blockData.size() >= fillLen)
 	blockData = blockData.substr(0, fillLen);
       else
