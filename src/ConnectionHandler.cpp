@@ -20,14 +20,18 @@ using namespace std;
 void ConnectionHandler::handle(string msg){
   int runner = 0;
   buffer.append(msg);
-  const char *message = buffer.data();
+  const char *message;
   int msgLen = buffer.length();
   int length; //bt protocol length
   
 
-  while(runner < msgLen){
-    if(checkForhandshakeMsg((const char*)(message+runner))){
-      if(msgLen < (runner+(int)sizeof(bt_handshake_t))){
+  while(msgLen > 0){
+    runner = 0;
+    message = buffer.data();
+    msgLen = buffer.length();
+
+    if(checkForhandshakeMsg((const char*)(message))){
+      if(msgLen < ((int)sizeof(bt_handshake_t))){
 	return;
       }
       // Verify the hanshake
@@ -37,7 +41,10 @@ void ConnectionHandler::handle(string msg){
 	  p->newConnectionMade();
 	}
 	handshakeComplete = true;
-	runner = runner+sizeof(bt_handshake_t);
+	//runner = runner+sizeof(bt_handshake_t);
+	string temp = buffer.substr(sizeof(bt_handshake_t),buffer.length());
+	buffer.clear();
+	buffer.append(temp);
 	continue;
       }else if(!handshakeComplete){
 	closeConn();
@@ -46,16 +53,19 @@ void ConnectionHandler::handle(string msg){
       }
     }
     
-    memcpy((void*)&length,(void *)(message+runner), sizeof(length));
+    length = 0;
+    memcpy((void*)&length,(void *)(message), sizeof(length));
     runner = runner + sizeof(length);
-    
-    if(length == 0){
+
+
+    /*if(length == 0){
       LOG(INFO, "Reciecved Live message");
       runner = runner + length;
       continue;
-    }
+      }*/
     
     if(msgLen < (runner+length) ){
+      LOG(DEBUG, "BT Packet length is " + to_string(length));
       LOG(DEBUG, "Waiting on full message EXpected : " + to_string(runner+length) + "actaul :" + to_string(msgLen));
       return;
     }
@@ -64,18 +74,23 @@ void ConnectionHandler::handle(string msg){
     if(p && handshakeComplete){
       LOG(DEBUG, "Sending message to peer for handling");
       p->readMessage((const char*)(message+runner), (size_t)length);
-      runner = runner + length;
+      string temp = buffer.substr(runner + length, buffer.length());
+      buffer.clear();
+      buffer.append(temp);
       continue;
     }
     
     closeConn();
     delete this;
+
   }
   
-  if(runner == msgLen){
+  /*if((runner) == msgLen){
     LOG(DEBUG, "Clearing buffer");
     buffer.clear();
-  }
+  }else{
+    LOG(DEBUG, "#############Can not clear buffer Runner " + to_string(runner) + " and msgLen" );
+    }*/
 }
 
 
@@ -207,7 +222,7 @@ void ConnectionHandler::resgiterSocket(){
 void ConnectionHandler::writeConn(const char *buff, int buf_len){
   int result;
 
-  m_lock.lock();
+  //m_lock.lock();
   //memcpy(buffer, buff, buf_len);
   result =   write(sfd, buff, buf_len);
   if (result == -1) {
@@ -216,6 +231,6 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     }
     LOG(ERROR, "Could not write to socket");
   }
-  m_lock.unlock();
+  //m_lock.unlock();
   LOG(DEBUG, "Number of bytes written : " + to_string(result));
 }

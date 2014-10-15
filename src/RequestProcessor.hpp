@@ -5,14 +5,14 @@
 #include "Piece.hpp"
 
 
-#define POOL_SIZE 5
+#define REQUESTPROCESSOR_POOL_SIZE 1
 
 class RequestProcessor{
 
 public:
   RequestProcessor( vector<Piece *> *p){
     pieces = p;
-    requestServer =  new ThreadPool(POOL_SIZE);
+    requestServer =  new ThreadPool(REQUESTPROCESSOR_POOL_SIZE);
   }
   ~RequestProcessor(){
     delete requestServer;
