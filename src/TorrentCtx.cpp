@@ -194,7 +194,7 @@ void* TorrentCtx::getPeer(unsigned char *id){
 
 void TorrentCtx::loadPieceStatus()
 {
-  //cout << "Loading " << metaData.numOfPieces() << " pieces." << endl;
+  //cout << "Loading " << metaData.numOfPieces() << " pieces. Length of Pieces " << metaData.getPieceLength() << endl;
   bool AllPiecesCompleteFlag = true; 
   for (size_t i=0; i < metaData.numOfPieces(); i++)
     {
@@ -205,6 +205,7 @@ void TorrentCtx::loadPieceStatus()
       string pieceData;
       bool pieceAvailable = fileMgr->readIfValidPiece(i, pieceData);
       if (pieceAvailable){
+	pieces.back()->setValid();
 	pieces.back()->setAvailable();
 	setbit((size_t)i);
 	LOG(DEBUG, "BIT[" + to_string(i) + "] = true");

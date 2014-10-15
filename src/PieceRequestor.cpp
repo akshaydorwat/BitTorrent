@@ -21,6 +21,7 @@ PieceRequestor::PieceRequestor(vector<Piece*> &pieces, vector<void*> &peers)
   :pieces(pieces)
   ,peers(peers)
 {
+  LOG (DEBUG, "PieceRequestor : Instantiating ...");
   for (size_t i=0; i < pieces.size(); i++)
     {
       //if (pieces[i]->isValid())
@@ -54,11 +55,15 @@ void PieceRequestor::startPieceRequestor()
 	if (terminated)
 		break;
 
+	waitForGoAhead();
+	if (terminated)
+		break;
+
     	if(selectRandomUnavailableUnprocessedPiece(requestPieceId, requestBlockBegin, requestBlockLength, &peerId))
     	{
-      		waitForGoAhead();
-		if (terminated)
-			break;
+      		//waitForGoAhead();
+		//if (terminated)
+		//	break;
 
       		pieces[requestPieceId]->setBlockProcessing(requestBlockBegin/BLOCK_SIZE);
       
@@ -73,10 +78,11 @@ void PieceRequestor::startPieceRequestor()
 	    			//LOG(DEBUG,"PieceRequestor : Attempting to send REQUEST message.");
 				if (!terminated)
 				{
-					cout << "PieceRequestor : Sending REQUEST to PeerId#";
-					print_peer_id((unsigned char *)peer->getId());
-					cout << endl;
-					cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
+					//cout << "PieceRequestor : Sending REQUEST to PeerId#";
+					//print_peer_id((unsigned char *)peer->getId());
+					//cout << endl;
+					//cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
+					LOG (DEBUG, "PieceRequestor : Sending REQUEST for Piece#" + to_string(requestPieceId) + " Block#" + to_string(requestBlockBegin/BLOCK_SIZE));
 	    				peer->sendRequest(requestPieceId, requestBlockBegin, requestBlockLength);
 				}
 	    			break;
@@ -104,7 +110,7 @@ bool PieceRequestor::allPiecesAvailable()
   for (size_t i=0; i<pieces.size(); i++){
     if (!pieces[i]->isValid())
 	{
-		//LOG (DEBUG, "PieceRequestor : Continue waiting for Piece#" + to_string(i));
+		LOG (DEBUG, "PieceRequestor : Continue waiting for Piece#" + to_string(i));
       		return false;
 	}
   }
@@ -138,10 +144,10 @@ void PieceRequestor::waitForGoAhead()
 void PieceRequestor::signalGoAhead(void *peerPtr)
 {
   Peer *peer = (Peer *)peerPtr;
-  cout << "PieceRequestor : signalling reception from PeerId#";
+  //cout << "PieceRequestor : signalling reception from PeerId#";
   print_peer_id((unsigned char *)peer->getId());
   cout << endl;
-	LOG (DEBUG, "PieceProcessor : LOCK.");
+	//LOG (DEBUG, "PieceProcessor : LOCK.");
   requestMtx.lock();
   for (size_t i=0; i < requestedPeerIds.size(); i++)
     {
@@ -153,12 +159,12 @@ void PieceRequestor::signalGoAhead(void *peerPtr)
 	    advance(it, pos);
 	    requestedPeerIds.erase(it);
 	  */
-	cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
+	//cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
 	  break;
 	}
     }
   requestMtx.unlock();
-	LOG (DEBUG, "PieceProcessor : UNLOCK.");
+	//LOG (DEBUG, "PieceProcessor : UNLOCK.");
 }
 
 bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId)
@@ -184,7 +190,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
   }
   else if (servicablePeerIds.size() > 1)
     {
-	LOG (DEBUG, "PieceRequestor : LOCK.");
+	//LOG (DEBUG, "PieceRequestor : LOCK.");
       requestMtx.lock();
       for (size_t p=0; p<servicablePeerIds.size(); p++)
 	{						
@@ -202,7 +208,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 	    }
 	}
       requestMtx.unlock();
-	LOG (DEBUG, "PieceRequestor : UNLOCK.");
+	//LOG (DEBUG, "PieceRequestor : UNLOCK.");
     }
   return true;
 }
@@ -242,7 +248,7 @@ bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, si
   if (!found)
     {
 	//LOG (DEBUG, "PieceRequestor : Unavailable, Processing Piece not found. Looking for Unprocessed Piece.");
-      size_t randomId = random() % numOfPieces;
+      size_t randomId = 0;//random() % numOfPieces;
 	//LOG (DEBUG, "PieceRequestor : Choosing random Piece#" + to_string(randomId));
       for (size_t i = 0; i < numOfPieces; i++)
 	{

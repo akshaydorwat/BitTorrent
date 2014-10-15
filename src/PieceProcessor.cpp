@@ -31,7 +31,7 @@ PieceProcessor::~PieceProcessor()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void PieceProcessor::addTask(int index, int begin, string block, void *peer)
 {
-	LOG(INFO, "PieceProcessor : Queuing Piece ...");
+	//LOG(INFO, "PieceProcessor : Queuing Piece ...");
 	pool->enqueue(std::bind( &PieceProcessor::handlePiece, this, (size_t)index, (size_t)begin, block, peer));	
 }
 
@@ -39,7 +39,7 @@ void PieceProcessor::addTask(int index, int begin, string block, void *peer)
 void PieceProcessor::handlePiece(size_t pieceId, size_t blockOffset, string blockData, void *peer)
 {
 	//LOG(DEBUG, "PieceProcessor : Signalling GO_AHEAD ...");
-	LOG (DEBUG, "PieceProcessor : Thread on Piece#" + to_string(pieceId) + " Block#" + to_string(blockOffset/BLOCK_SIZE) + " started.");
+	//LOG (DEBUG, "PieceProcessor : Thread on Piece#" + to_string(pieceId) + " Block#" + to_string(blockOffset/BLOCK_SIZE) + " started.");
 	pieceRequestor->signalGoAhead((Peer *)peer); // notify the requestor before processing the incoming piece
 
 	if (pieceId < pieces.size() && blockOffset/BLOCK_SIZE < pieces[pieceId]->numOfBlocks())
@@ -51,7 +51,7 @@ void PieceProcessor::handlePiece(size_t pieceId, size_t blockOffset, string bloc
 	{
 		LOG(ERROR, "PieceProcessor : Piece index or Block offset out of range. Piece#" + to_string(pieceId) + " of total pieces " + to_string(pieces.size()) + " Block#" + to_string(blockOffset/BLOCK_SIZE) + " offset (" + to_string(blockOffset) + ")");
 	}
-	LOG (DEBUG, "PieceProcessor : Thread on Piece#" + to_string(pieceId) + " Block#" + to_string(blockOffset/BLOCK_SIZE) + " completed.");
+	//LOG (DEBUG, "PieceProcessor : Thread on Piece#" + to_string(pieceId) + " Block#" + to_string(blockOffset/BLOCK_SIZE) + " completed.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

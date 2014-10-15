@@ -39,12 +39,20 @@ Piece::Piece(size_t id, size_t offset, size_t length, string hash, FileHandler *
       blockDirty.push_back(0);
     }
   valid = false;
-  //LOG (DEBUG, "Piece#" + to_string(id) + " numOfBlocks=" + to_string(numOfBlocks()));
+  LOG (DEBUG, "Piece#" + to_string(id) + " numOfBlocks=" + to_string(numOfBlocks()) + " length=" + to_string(length));
 }
 
 Piece::~Piece()
 {
   //	delete[] data;
+}
+
+size_t Piece::numOfBlocks()
+{
+	size_t numBlocks = length / BLOCK_SIZE;
+	if (length % BLOCK_SIZE > 0)
+		numBlocks++;
+	return numBlocks;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -92,13 +100,13 @@ void Piece::setData(string str)
 // Random block selector : must be followed by the setBlockProcessing method
 bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& blockLength)
 {
-  //LOG (DEBUG, "Piece#" + to_string(id) + " : Choosing from numOfBlocks=" + to_string(numOfBlocks()));
+  //LOG (DEBUG, "Piece#" + to_string(id) + " : Choosing from numOfBlocks=" + to_string(numOfBlocks()) + " max mod " + to_string(16%numOfBlocks()));
   bool found = false;
-  if (isComplete() || numOfBlocks() == 0)
+  if (isComplete()/*isValid()*/ || numOfBlocks() == 0)
     return found;
 
   //size_t numOfBlocks = numOfBlocks();
-  size_t randomId = random() % numOfBlocks();
+  size_t randomId = 0;//random() % numOfBlocks();
   size_t blockId = 0;
 
   availableMtx.lock();
@@ -126,8 +134,9 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
 	    {
 	      blockOffset = blockId * BLOCK_SIZE;
 	      blockLength = blockId+1 < numOfBlocks() ? BLOCK_SIZE : length - blockOffset;
+	      //LOG (DEBUG, "Piece#" + to_string(id) + " Length " + to_string(length) + " blockOffset " + to_string(blockOffset) + " blockLength " + to_string(blockLength));
 	      found = true;
-	      //LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(blockId) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
+	      LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(blockId) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
 	      break;
 	    }
 	}
@@ -216,7 +225,7 @@ void Piece::writeContiguousBlocksToDisk()
 
 	}
     }
-	LOG (DEBUG, "Piece#" + to_string(id) + " returning from writeToDisk");
+	//LOG (DEBUG, "Piece#" + to_string(id) + " returning from writeToDisk");
 }
 
 void Piece::setBlockProcessing(size_t blockId)
@@ -536,22 +545,31 @@ void Piece::setBlockByOffset(size_t blockOffset, size_t fillLen, string blockDat
 //////////////////////////////////////////////////////////////////////////////////////
 bool Piece::isValid(string hash)
 {
-  if (valid || (isAvailable() && hash.size() == 20)) // isComplete() has been removed from validity to support lazy-fetching of servicable piece
+  if (valid)
+	return true;
+	
+  if (isAvailable() && hash.size() == 20) // isComplete() has been removed from validity to support lazy-fetching of servicable piece
     {
       unsigned char pieceHash[20];
+	//LOG (DEBUG, "Piece#" + to_string(id) + " data.size()=" + to_string(data.size()));
+
       SHA1 ((unsigned char *)data.c_str(), length, pieceHash);
-      string pieceHashStr("");
-      for (size_t i=0; i<20; i++)
-	pieceHashStr += pieceHash[i];
-      if (pieceHashStr == hash){
+ 
+      //for (size_t i=0; i<20; i++)
+	//pieceHashStr += pieceHash[i];
+
+      //if (pieceHashStr == hash){
+	if (fileMgr->checkHashes(pieceHash, (unsigned char *) hash.c_str(), 20)) {
 	//LOG (DEBUG, "Piece#" + to_string(id) + " : hash-check = valid.");
+	valid = true;
       }else{
-	LOG (ERROR, "Piece#" + to_string(id) + " : hash-check = not valid.");
+	//LOG (ERROR, "[" + pieceHashStr + "] != [" + hash + "] Piece#" + to_string(id) + " : hash-check = not valid.");
       }
-      valid = pieceHashStr == hash;
+      //valid = pieceHashStr == hash;
     }
   else
-  {
+  {	
+	//LOG (DEBUG, "Piece#" + to_string(id) + " : piece/hash not available.");
   	valid = false;
   }
   return valid;

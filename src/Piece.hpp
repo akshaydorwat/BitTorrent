@@ -49,7 +49,7 @@ class Piece
   bool isDirty();					// are there available blocks waiting to be written to disk
   void setAvailable();					// piece available = true
   void resetAvailable();				// piece available = false
-  size_t numOfBlocks() { return 1 + length / BLOCK_SIZE; }
+  size_t numOfBlocks();// { return (length / BLOCK_SIZE); }
 
   bool selectUnavailableUnprocessedBlock(size_t&, size_t&);
   void writeContiguousBlocksToDisk();
@@ -72,6 +72,7 @@ class Piece
 
   //void setHash(string);
   string getHash() { return hash; }
+  void setValid() { valid = true; }
   bool isValid(string hash);				// isComplete and hash match
   bool isValid() { return isValid(hash); }
 };

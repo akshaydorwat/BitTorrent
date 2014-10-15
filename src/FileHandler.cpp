@@ -200,15 +200,15 @@ size_t FileHandler::writePiece(size_t pieceId, string piece, size_t writeLength,
 	if (pieceStart + startOffset < (pieceId+1) * torrent.getPieceLength())
 	{
 		pieceStart += startOffset;
-      		//LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " start-offset : " + to_string(pieceStart));
+      		LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " start-offset : " + to_string(pieceStart));
       		size_t pieceEnd = writeLength > 0 && startOffset + writeLength < torrent.getPieceLength() ? pieceStart + writeLength : (pieceId + 1) * torrent.getPieceLength();
-      		//LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " max-end-offset : " + to_string(pieceEnd));
+      		LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " max-end-offset : " + to_string(pieceEnd));
       		size_t fileStart = 0;//i == 0 ? 0 : torrentFiles[i-1].getLength();
 		for (size_t f=0; f < i; f++)
 			fileStart += torrentFiles[f].getLength();
-      		//LOG (DEBUG, "FileHandler : File#" + to_string(i) + " start-offset : " + to_string(fileStart));
+      		LOG (DEBUG, "FileHandler : File#" + to_string(i) + " start-offset : " + to_string(fileStart));
       		size_t fileEnd = fileStart + torrentFiles[i].getLength();
-      		//LOG (DEBUG, "FileHandler : File#" + to_string(i) + " end-offset : " + to_string(fileEnd));
+      		LOG (DEBUG, "FileHandler : File#" + to_string(i) + " end-offset : " + to_string(fileEnd));
       		
 		if (fileEnd > pieceStart) 		// piece spans this file (and possibly following file(s))
 		{
@@ -217,7 +217,7 @@ size_t FileHandler::writePiece(size_t pieceId, string piece, size_t writeLength,
 	    			writeStart = pieceStart - fileStart;
 	  		else
 	    			writeStart = 0;
-	  		//LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " write-from-offset : " + to_string(writeStart));
+	  		LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " write-from-offset : " + to_string(writeStart));
 	  		fileMutexes[i].lock();
 	  		fileStreams[i]->seekp(writeStart, ios::beg); // start at writeStart
 
@@ -232,7 +232,7 @@ size_t FileHandler::writePiece(size_t pieceId, string piece, size_t writeLength,
 	      			writeEnd = fileEnd; 	// cannot write more than fileEnd offset
 	      			pieceComplete = (i+1 == fileStreams.size()); 	// if last piece then it isComplete; otherwise it's not
 	    		}
-	  		//LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " write-to-offset : " + to_string(writeEnd));
+	  		LOG (DEBUG, "FileHandler : Piece#" + to_string(pieceId) + " write-to-offset : " + to_string(writeEnd));
 	  		if (piece.size() >= lengthWritten + writeEnd - writeStart)
 	    		{
 	      			LOG (DEBUG, "FileHandler : Writing " + to_string(writeEnd - writeStart) + " bytes [" + to_string(writeStart) + " - " + to_string(writeEnd) + "] to file#" + to_string(i) + " [" + to_string(fileStart) + " - " + to_string(fileEnd) + "] from piece#" + to_string(pieceId));	
@@ -248,7 +248,7 @@ size_t FileHandler::writePiece(size_t pieceId, string piece, size_t writeLength,
 	  		else
 	    		{
 	      			LOG (ERROR, "FileHandler : Insufficient piece data (" + to_string(piece.size()) + ") for writing to file#" + to_string(i));
-	      			//LOG (ERROR, "FileHandler : LengthWritten " + to_string(lengthWritten) + " more write upto " + to_string(lengthWritten + writeEnd - writeStart));
+	      			LOG (ERROR, "FileHandler : LengthWritten " + to_string(lengthWritten) + " more write upto " + to_string(lengthWritten + writeEnd - writeStart));
 				break;
 	    		}
 		}
