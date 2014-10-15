@@ -18,8 +18,8 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 PieceProcessor::PieceProcessor(vector<Piece*> &pieces, PieceRequestor *pieceRequestor)
-:pieces(pieces)
-,pieceRequestor(pieceRequestor)
+	:pieces(pieces)
+	 ,pieceRequestor(pieceRequestor)
 {	
 	pool = new ThreadPool(PIECEPROCESSOR_POOL_SIZE);
 }

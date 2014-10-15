@@ -22,16 +22,16 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class PieceProcessor
 {
- private:
-  vector<Piece*> &pieces; 
-  PieceRequestor *pieceRequestor;
-  ThreadPool *pool;
-  void handlePiece(size_t, size_t, string, void *);
+	private:
+		vector<Piece*> &pieces; 
+		PieceRequestor *pieceRequestor;
+		ThreadPool *pool;
+		void handlePiece(size_t, size_t, string, void *);
 
- public:
-  PieceProcessor(vector<Piece*> &, PieceRequestor *);
-  ~PieceProcessor();
-  void addTask(int, int, string, void *);
+	public:
+		PieceProcessor(vector<Piece*> &, PieceRequestor *);
+		~PieceProcessor();
+		void addTask(int, int, string, void *);
 };
 
 #endif /* PIECEPROCESSOR_HPP_ */
