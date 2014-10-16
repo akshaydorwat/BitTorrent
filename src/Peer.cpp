@@ -10,6 +10,7 @@
 #include "Piece.hpp"
 #include "string"
 #include "bt_lib.h"
+#include <chrono>
 #include <stdint.h>
 
 using namespace std;
@@ -62,21 +63,21 @@ void Peer::readMessage(const char *msg, size_t len){
     
   case BT_CHOKE:
     if(len == 1){
-      LOG(INFO, printPeerInfo() + " received CHOKE message.");
+      LOG(INFO, "CHOKED by" + printPeerInfo());
       setChocked(true);
     }
     break;
 
   case BT_UNCHOKE: 
     if(len == 1){
-      LOG(INFO, printPeerInfo() + " received UNCHOKE message.");
+      LOG(INFO, "UNCHOKED by " + printPeerInfo());
       setChocked(false);
     }
     break;
 
   case BT_INTERSTED :
     if(len == 1){
-      LOG(INFO, printPeerInfo() + " received INTERESTED message.");
+      LOG(INFO, printPeerInfo() + " is INTERESTED");
       setInterested(true);
       // send Unchoke message
       sendUnChoked();
@@ -85,23 +86,23 @@ void Peer::readMessage(const char *msg, size_t len){
 
   case BT_NOT_INTERESTED :
     if(len == 1){
-      LOG(INFO, printPeerInfo() + " received NOT INTERESTED message.");
+      LOG(INFO, printPeerInfo() + " is NOT INTERESTED");
       setInterested(false);
     }
     break;
 
   case BT_HAVE :
     if(len == 5){
-      LOG(INFO, printPeerInfo() + " received HAVE message.");
+      LOG(INFO, printPeerInfo() + " replied HAVE");
     }
     break;
 
   case BT_BITFILED :
     if(len > 1){
-      LOG(INFO, printPeerInfo() + " received BITFIELD message.");
+      LOG(INFO, printPeerInfo() + " sent BITFIELD.");
       size_t sizeOfBitField = len - 1;
       if(sizeOfBitField != ctx->getBitVectorSize()){
-	LOG(ERROR, printPeerInfo() + " failed to read BITFIELD.");
+	LOG(ERROR, "Failed to read BITFIELD from " + printPeerInfo());
 	exit(EXIT_FAILURE);
       }
       //LOG(DEBUG,"Bit Vector size matched copying it into local peer");
@@ -128,10 +129,11 @@ void Peer::readMessage(const char *msg, size_t len){
       memcpy((void*)&length, (const void *)(msg+runner), sizeof(int));
       runner = runner + sizeof(int);
 
-      LOG(INFO, printPeerInfo() + " received REQUEST for : Piece#"+to_string(index) + " Offset "+to_string(begin)+ "Length " + to_string (length));
+      LOG(INFO, printPeerInfo() + " REQUESTING : Piece#"+to_string(index) + " Offset "+to_string(begin)+ "Length " + to_string (length));
       
-      ctx->requestProcessor->addTask(index, begin, length, this);
+	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
 
+      ctx->requestProcessor->addTask(index, begin, length, this);
     }
     break;
     
@@ -151,14 +153,19 @@ void Peer::readMessage(const char *msg, size_t len){
       block = string((const char *)(msg+runner), (size_t)blockLen);
 
       //LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
-      LOG(INFO, printPeerInfo() + " received PIECE : Piece#"+to_string(index) + " Offset "+to_string(begin));
-      ctx->pieceProcessor->addTask(index, begin, block, this);
+      LOG(INFO, printPeerInfo() + " sent PIECE : Piece#"+to_string(index) + " Offset "+to_string(begin));
 
+	taken += (size_t) blockLen;
+	//auto elapsed = chrono::high_resolution_clock::now() - lastCommunicationTime;
+	totalCommunicationTime += clock() - lastCommunicationTime;//chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
+
+      ctx->pieceProcessor->addTask(index, begin, block, this);
     }
     break;
     
   case BT_CANCEL :
-    LOG(INFO, printPeerInfo() + " received CANCEL message.");
+    LOG(INFO, printPeerInfo() + " sent CANCEL");
     break;
 
   }
@@ -341,7 +348,10 @@ void Peer::sendRequest(int index, int begin, int len){
 
   memcpy((void*)runner,(const void*)&len, sizeof(int));
   
-  LOG(DEBUG,"Sending REQUEST message to " + printPeerInfo() + " for Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE));
+  LOG(DEBUG,"REQUESTING Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE) + " from " + printPeerInfo());
+
+	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
+
   c->writeConn(buff, buff_size);
 }
 
@@ -368,7 +378,31 @@ void Peer::sendPiece(int index, int begin, const char *block, size_t size){
 
   memcpy((void*)runner,(const void*)block, size);
 
-  LOG(DEBUG,"Sending PIECE message to " + printPeerInfo() + " with Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE));
+  LOG(DEBUG,"Sending PIECE Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE) + " to " + printPeerInfo());
   c->writeConn(buff, buff_size);
+
+	given += (size_t) size;
+	//auto elapsed = chrono::high_resolution_clock::now() - lastCommunicationTime;
+	totalCommunicationTime += clock() - lastCommunicationTime;//chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
 }
 
+string Peer::status(size_t &totalDownloaded, size_t &totalUploaded)
+{
+	totalDownloaded = taken;
+	totalUploaded = given;
+	float totalTime = (float) totalCommunicationTime / CLOCKS_PER_SEC;
+	if (totalTime - 0 < 0.001)
+		totalTime = 0.001;
+
+	string sts;
+	if (totalDownloaded != 0)
+	{
+		sts += "Downloaded " + to_string(totalDownloaded) + " bytes at " + to_string(((double) totalDownloaded / (1024 * 1024)) / totalTime) + " MB/s from " + printPeerInfo() + ". ";
+	}
+	if (totalUploaded != 0)
+	{
+		sts += "Uploaded " + to_string(totalUploaded) + " bytes at " + to_string(((double) totalUploaded / (1024 * 1024)) / totalTime) + " MB/s from " + printPeerInfo() + ". ";
+	}
+	return sts;
+}

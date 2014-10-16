@@ -11,6 +11,7 @@
 #include <string>
 #include "TorrentCtx.hpp"
 #include "bt_lib.h"
+#include <time.h>
 
 using namespace std;
 
@@ -25,6 +26,9 @@ public:
     setChocked(true);
     setInterested(false);
     //active = false;
+	
+	taken = given = 0;
+	totalCommunicationTime = 0;
   }
   
   ~Peer();
@@ -134,6 +138,7 @@ public:
   void copyBitVector(char *piecesBitVector, int numOfPieces);
 
   string printPeerInfo();
+  string status(size_t &totalDownloaded, size_t &totalUploaded);
 
 private:
 
@@ -145,6 +150,11 @@ private:
   mutex m_lock;
   //bool active;
 
+  size_t taken;
+  clock_t lastCommunicationTime;
+  long long totalCommunicationTime;
+
+  size_t given;
 };
 #endif
 

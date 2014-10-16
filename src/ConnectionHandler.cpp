@@ -66,13 +66,13 @@ void ConnectionHandler::handle(string msg){
     
     if(msgLen < (runner+length) ){
       //LOG(DEBUG, "BT Packet length is " + to_string(length));
-      LOG(DEBUG, "ConnectionHandler : Waiting on full message expected : " + to_string(runner+length) + " actual : " + to_string(msgLen));
+      //LOG(DEBUG, "ConnectionHandler : " + to_string(msgLen) + " in buffer. Waiting for " + to_string(runner + length - msgLen) + " bytes to complete message of length " + to_string(runner + length));
       return;
     }
     
     // Send mesage to Peer for further investigation
     if(p && handshakeComplete){
-      LOG(DEBUG, "ConnectionHandler : Sending message of length " + to_string(length) + " to " + p->printPeerInfo());
+      LOG(DEBUG, "ConnectionHandler : Received message of length " + to_string(length) + " from " + p->printPeerInfo());
       //LOG(DEBUG, "Sending message to peer for handling");
       p->readMessage((const char*)(message+runner), (size_t)length);
       string temp = buffer.substr(runner + length, buffer.length());
@@ -233,5 +233,5 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     LOG(ERROR, "ConnectionHandler : failed to write to connection #" + to_string(sfd));
   }
   //m_lock.unlock();
-  LOG(DEBUG, "ConnectionHandler : wrote " + to_string(result) + " bytes to connection #" + to_string(sfd));
+  //LOG(DEBUG, "ConnectionHandler : wrote " + to_string(result) + " bytes to connection #" + to_string(sfd));
 }

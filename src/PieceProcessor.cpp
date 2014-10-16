@@ -41,6 +41,10 @@ void PieceProcessor::handlePiece(size_t pieceId, size_t blockOffset, string bloc
 {
 	pieceRequestor->signalGoAhead((Peer *)peer); // notify the requestor before processing the incoming piece
 
+	Peer *seeder = (Peer *)peer;
+	size_t given, taken;
+	LOG (INFO, seeder->status(given, taken));
+
 	if (pieceId < pieces.size() && blockOffset/BLOCK_SIZE < pieces[pieceId]->numOfBlocks())
 	{
 		pieces[pieceId]->setBlockByOffset(blockOffset, blockData.size(), blockData);
