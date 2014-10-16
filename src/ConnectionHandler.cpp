@@ -43,9 +43,10 @@ void ConnectionHandler::handle(string msg){
 				}
 				handshakeComplete = true;
 				//runner = runner+sizeof(bt_handshake_t);
-				string temp = buffer.substr(sizeof(bt_handshake_t),buffer.length());
-				buffer.clear();
-				buffer.append(temp);
+				//string temp = 
+				buffer = buffer.substr(sizeof(bt_handshake_t), (size_t)buffer.length() - sizeof(bt_handshake_t));
+				//buffer.clear();
+				//buffer.append(temp);
 				continue;
 			}else if(!handshakeComplete){
 				closeConn();
@@ -69,7 +70,9 @@ void ConnectionHandler::handle(string msg){
 		{
 			LOG (DEBUG, "ConnectionHandler : Discarding buffer of size " + to_string(buffer.size()));
 			buffer.clear();
-			continue;
+			closeConn();
+			delete this;
+			return;
 		}
 		runner = runner + sizeof(length);
 
@@ -91,9 +94,10 @@ void ConnectionHandler::handle(string msg){
 			//LOG(DEBUG, "ConnectionHandler : Received message of length " + to_string(length) + " from " + p->printPeerInfo());
 			//LOG(DEBUG, "Sending message to peer for handling");
 			p->readMessage((const char*)(message+runner), (size_t)length);
-			string temp = buffer.substr(runner + length, buffer.length());
-			buffer.clear();
-			buffer.append(temp);
+			//string temp = 
+			buffer = buffer.substr(runner + length, buffer.length() - (runner + length));
+			//buffer.clear();
+			//buffer.append(temp);
 			continue;
 		}
 

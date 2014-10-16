@@ -135,7 +135,7 @@ bool PieceRequestor::allPiecesAvailable()
 	runTime = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count() - firstRequestBegin;
 	//runTime = clock();	// keep updating the runTime thus far
 	//LOG (DEBUG, to_string(runTime) + " clocks " + to_string(CLOCKS_PER_SEC) + " clocks per second.");
-	LOG (DEBUG, "PieceRequestor : Running since " + to_string(getRunTime() / 1000.0) + " seconds.");
+	//LOG (DEBUG, "PieceRequestor : Running since " + to_string(getRunTime() / 1000.0) + " seconds.");
 	
 	for (size_t i=0; i<pieces.size(); i++){
 		if (!pieces[i]->isValid())
