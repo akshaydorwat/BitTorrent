@@ -46,7 +46,6 @@ $(BIN): $(OBJ)
 run:
 	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6667 -s . -l LOG.log  sample/download.mp3.torrent
 
-
 test1:
 	./bt_client -v -b 10.0.0.217 -p 10.0.0.113:6667  -s . -l LOG.log  sample/download.mp3.torrent
 
@@ -61,3 +60,25 @@ test2:
 
 test4:
 	./bt_client -v -b 10.0.0.113 -p 10.0.0.217:6667  -s . -l LOG.log  sample/download.mp3.torrent
+
+run-c1:
+	rm -rf dl-c1/*
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6667 -p 10.0.0.217:6668 -p 10.0.0.217:6669 -s dl-c1/ -l LOG-c3.log  sample/download.mp3.torrent
+
+run-c2:
+	rm -rf dl-c2/*
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6667 -p 10.0.0.217:6668 -p 10.0.0.217:6669 -s dl-c2/ -l LOG-c2.log  sample/download.mp3.torrent
+
+run-c3:
+	rm -rf dl-c3/*
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6667 -p 10.0.0.217:6668 -p 10.0.0.217:6669 -s dl-c3/ -l LOG-c1.log  sample/download.mp3.torrent
+
+run-s1:
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6670 -p 10.0.0.217:6671 -p 10.0.0.217:6672 -s sample/ -l LOG-s1.log  sample/download.mp3.torrent
+
+run-s2:
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6670 -p 10.0.0.217:6671 -p 10.0.0.217:6672 -s sample/ -l LOG-s2.log  sample/download.mp3.torrent
+
+run-s3:
+	./bt_client -v -b 10.0.0.217 -p 10.0.0.217:6670 -p 10.0.0.217:6671 -p 10.0.0.217:6672 -s sample/ -l LOG-s3.log  sample/download.mp3.torrent
+
