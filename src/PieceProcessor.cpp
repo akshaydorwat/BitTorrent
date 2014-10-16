@@ -14,6 +14,7 @@
 
 #include <string>
 #include <vector>
+#include <ctime>
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,6 +22,7 @@ PieceProcessor::PieceProcessor(vector<Piece*> &pieces, PieceRequestor *pieceRequ
 	:pieces(pieces)
 	 ,pieceRequestor(pieceRequestor)
 {	
+	taken =0;
 	pool = new ThreadPool(PIECEPROCESSOR_POOL_SIZE);
 }
 
@@ -42,16 +44,22 @@ void PieceProcessor::handlePiece(size_t pieceId, size_t blockOffset, string bloc
 	pieceRequestor->signalGoAhead((Peer *)peer); // notify the requestor before processing the incoming piece
 
 	Peer *seeder = (Peer *)peer;
-	size_t given, taken;
-	LOG (INFO, seeder->status(given, taken));
+	size_t givenByPeer, takenByPeer;
+	LOG (INFO, seeder->status(givenByPeer, takenByPeer));
 
 	if (pieceId < pieces.size() && blockOffset/BLOCK_SIZE < pieces[pieceId]->numOfBlocks())
 	{
 		pieces[pieceId]->setBlockByOffset(blockOffset, blockData.size(), blockData);
 		pieces[pieceId]->writeContiguousBlocksToDisk();		// lazy write piece data to disk
+		taken += blockData.size();
 
 		size_t totalBlocksCompleted, totalBlocks;
 		pieceRequestor->status(totalBlocksCompleted, totalBlocks);
+		
+		float runTime = ((float) pieceRequestor->getRunTime() / 1000.0);//CLOCKS_PER_SEC);
+		if (runTime - 0 < 0.001)
+			runTime = 0.001;
+		LOG (INFO, "Downloaded " + to_string(taken) + " bytes in " + to_string(runTime) + " seconds at " + to_string((float)taken / (1024*1024*runTime)) + " MB/s");
 	}
 	else
 	{

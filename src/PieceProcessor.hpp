@@ -26,6 +26,8 @@ class PieceProcessor
 		vector<Piece*> &pieces; 
 		PieceRequestor *pieceRequestor;
 		ThreadPool *pool;
+		size_t taken;
+
 		void handlePiece(size_t, size_t, string, void *);
 
 	public:

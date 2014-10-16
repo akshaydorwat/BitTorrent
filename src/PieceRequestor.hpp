@@ -16,7 +16,7 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define MAX_REQUESTS 1		// MAXIMUM NUMBER OF REQUESTS TO SEND
+#define MAX_REQUESTS 3		// MAXIMUM NUMBER OF REQUESTS TO SEND
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class PieceRequestor
@@ -30,11 +30,17 @@ class PieceRequestor
 		mutex requestMtx;
 		vector<unsigned char *> requestedPeerIds;
 
+		bool updateSts;
+		bool firstRequestSent;
+		size_t firstRequestBegin;
+		size_t runTime;
+
 	public:
 		PieceRequestor(vector<Piece*> &, vector<void*> &);
 		void startPieceRequestor();
 		void stopPieceRequestor() { terminated = true; }
 		string status(size_t &totalBlocksCompleted, size_t &totalBlocks);
+		double getRunTime() { return runTime; }	// Milliseconds
 
 		bool selectRandomUnavailableUnprocessedPiece(size_t&, size_t&, size_t&, unsigned char **);
 		bool allPiecesAvailable();

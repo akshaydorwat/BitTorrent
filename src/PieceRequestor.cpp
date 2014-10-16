@@ -15,6 +15,7 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <time.h>
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,6 +25,10 @@ PieceRequestor::PieceRequestor(vector<Piece*> &pieces, vector<void*> &peers)
 {
 	for (size_t i=0; i < pieces.size(); i++)
 		pieceProcessing.push_back(false);
+	firstRequestSent = false;
+	runTime = 0;
+
+	updateSts = true;	// NON-BLOCKING TEST-AND-RESET lock so only one thread prints status at a time
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +51,7 @@ void PieceRequestor::startPieceRequestor()
 		}
 
 		waitForGoAhead();
-		if (terminated)
+		if (terminated || allPiecesAvailable())
 			break;
 
 		if(selectRandomUnavailableUnprocessedPiece(requestPieceId, requestBlockBegin, requestBlockLength, &peerId))
@@ -64,6 +69,13 @@ void PieceRequestor::startPieceRequestor()
 
 					if (!terminated)
 					{
+						if (!firstRequestSent)
+						{
+							firstRequestSent = true;
+							firstRequestBegin = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();	
+							//clock();	// Start stopwatch at start of first request
+							runTime = firstRequestBegin;
+						}
 						//cout << "PieceRequestor : Sending REQUEST to PeerId#";
 						//print_peer_id((unsigned char *)peer->getId());
 						//cout << endl;
@@ -94,6 +106,10 @@ void PieceRequestor::startPieceRequestor()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 string PieceRequestor::status(size_t &totalBlocksCompleted, size_t &totalBlocks)
 {
+	if (!updateSts)
+		return "";
+	updateSts = false;
+	
 	totalBlocksCompleted = 0;
 	totalBlocks = 0;
 	for (size_t i=0; i<pieces.size(); i++)
@@ -108,12 +124,19 @@ string PieceRequestor::status(size_t &totalBlocksCompleted, size_t &totalBlocks)
 	string sts = to_string(totalBlocksCompleted) + " of " + to_string(totalBlocks) + " blocks available. ~" + to_string((100 * totalBlocksCompleted) / totalBlocks) + "%";
 
 	LOG (INFO, "PieceRequestor : " + sts);
+
+	updateSts = true;
 	return sts;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool PieceRequestor::allPiecesAvailable()
 {
+	runTime = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count() - firstRequestBegin;
+	//runTime = clock();	// keep updating the runTime thus far
+	//LOG (DEBUG, to_string(runTime) + " clocks " + to_string(CLOCKS_PER_SEC) + " clocks per second.");
+	LOG (DEBUG, "PieceRequestor : Running since " + to_string(getRunTime() / 1000.0) + " seconds.");
+	
 	for (size_t i=0; i<pieces.size(); i++){
 		if (!pieces[i]->isValid())
 		{
@@ -121,6 +144,7 @@ bool PieceRequestor::allPiecesAvailable()
 			return false;
 		}
 	}
+	
 	return true;
 }
 

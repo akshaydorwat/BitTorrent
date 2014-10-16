@@ -11,7 +11,7 @@
 #include <string>
 #include "TorrentCtx.hpp"
 #include "bt_lib.h"
-#include <time.h>
+//#include <time.h>
 
 using namespace std;
 
@@ -28,7 +28,7 @@ public:
     //active = false;
 	
 	taken = given = 0;
-	totalCommunicationTime = 0;
+	lastCommunicationTime = totalCommunicationTime = 0;
   }
   
   ~Peer();
@@ -151,8 +151,8 @@ private:
   //bool active;
 
   size_t taken;
-  clock_t lastCommunicationTime;
-  long long totalCommunicationTime;
+  size_t lastCommunicationTime;
+  size_t totalCommunicationTime;
 
   size_t given;
 };

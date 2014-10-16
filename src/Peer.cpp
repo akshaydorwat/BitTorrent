@@ -129,9 +129,9 @@ void Peer::readMessage(const char *msg, size_t len){
       memcpy((void*)&length, (const void *)(msg+runner), sizeof(int));
       runner = runner + sizeof(int);
 
-      LOG(INFO, printPeerInfo() + " REQUESTING : Piece#"+to_string(index) + " Offset "+to_string(begin)+ "Length " + to_string (length));
+      LOG(INFO, printPeerInfo() + " REQUESTING : Piece#"+to_string(index) + " Offset "+to_string(begin)+ " Length " + to_string (length));
       
-	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
+	lastCommunicationTime = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();;//clock();//chrono::high_resolution_clock::now();
 
       ctx->requestProcessor->addTask(index, begin, length, this);
     }
@@ -157,8 +157,9 @@ void Peer::readMessage(const char *msg, size_t len){
 
 	taken += (size_t) blockLen;
 	//auto elapsed = chrono::high_resolution_clock::now() - lastCommunicationTime;
-	totalCommunicationTime += clock() - lastCommunicationTime;//chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
+	totalCommunicationTime += chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count() - lastCommunicationTime;
+//clock() - lastCommunicationTime;//chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	lastCommunicationTime = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();;//clock();//chrono::high_resolution_clock::now();
 
       ctx->pieceProcessor->addTask(index, begin, block, this);
     }
@@ -350,7 +351,7 @@ void Peer::sendRequest(int index, int begin, int len){
   
   LOG(DEBUG,"REQUESTING Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE) + " from " + printPeerInfo());
 
-	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
+	lastCommunicationTime = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();;//clock();//chrono::high_resolution_clock::now();
 
   c->writeConn(buff, buff_size);
 }
@@ -383,15 +384,15 @@ void Peer::sendPiece(int index, int begin, const char *block, size_t size){
 
 	given += (size_t) size;
 	//auto elapsed = chrono::high_resolution_clock::now() - lastCommunicationTime;
-	totalCommunicationTime += clock() - lastCommunicationTime;//chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-	lastCommunicationTime = clock();//chrono::high_resolution_clock::now();
+	totalCommunicationTime += chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count() - lastCommunicationTime;//clock() - lastCommunicationTime;//chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	lastCommunicationTime = chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();;//clock();//chrono::high_resolution_clock::now();
 }
 
 string Peer::status(size_t &totalDownloaded, size_t &totalUploaded)
 {
 	totalDownloaded = taken;
 	totalUploaded = given;
-	float totalTime = (float) totalCommunicationTime / CLOCKS_PER_SEC;
+	float totalTime = (totalCommunicationTime / 1000.0);//(double)CLOCKS_PER_SEC);
 	if (totalTime - 0 < 0.001)
 		totalTime = 0.001;
 
