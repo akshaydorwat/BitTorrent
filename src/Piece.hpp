@@ -36,6 +36,7 @@ class Piece
 	public:
 		Piece(size_t id, size_t offset, size_t length, string, FileHandler *fileMgr);
 		~Piece();
+		string status(size_t &);
 
 		size_t getId() { return id; }
 		size_t getStartOffset() { return offset; }

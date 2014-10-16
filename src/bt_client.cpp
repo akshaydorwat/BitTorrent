@@ -60,10 +60,10 @@ int main (int argc, char * argv[]){
   t.init(&bt_args);
   reactor->setTorrentCtx(&t);
   reactor->startReactor();
-  std::cout << "Enter Q or q (followed by ENTER key) to quit." << endl;
+    cout << "------------------ Enter Q or q (followed by ENTER key) to quit --------------------" << endl;
   while( inp != 'Q' && inp != 'q'){
     inp = getchar();
-    cout << "Enter Q or q (followed by ENTER key) to quit." << endl;
+    cout << "------------------ Enter Q or q (followed by ENTER key) to quit --------------------" << endl;
   }
   if (inp == 'Q' || inp == 'q')
   	LOG (INFO, "bt_client : Terminating by user command. Please wait ...");

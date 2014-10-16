@@ -123,3 +123,22 @@ void print_peer_id(unsigned char *peerId ){
   printf("\n");
 }
 
+void getPeerId(unsigned char *peerId, char *peerIdOut)
+{
+	int i;
+  	for(i=0;i<ID_SIZE;i++)
+    		snprintf(&peerIdOut[i*2], 3, "%02x",peerId[i]);
+}
+
+void getPeerIpPortId(peer_t *peer, char *peerIp, char *peerPort, char *peerId)
+{
+	int i;
+	if (peer)
+	{
+		snprintf(peerIp, 16, "%s", inet_ntoa(peer->sockaddr.sin_addr));
+		snprintf(peerPort, 6, "%u", peer->port);
+		
+		for(i=0;i<ID_SIZE;i++)
+    			snprintf(&peerId[i*2], 3, "%02x", peer->id[i]);
+	}
+}

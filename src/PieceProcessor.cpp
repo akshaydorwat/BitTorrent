@@ -45,6 +45,9 @@ void PieceProcessor::handlePiece(size_t pieceId, size_t blockOffset, string bloc
 	{
 		pieces[pieceId]->setBlockByOffset(blockOffset, blockData.size(), blockData);
 		pieces[pieceId]->writeContiguousBlocksToDisk();		// lazy write piece data to disk
+
+		size_t totalBlocksCompleted, totalBlocks;
+		pieceRequestor->status(totalBlocksCompleted, totalBlocks);
 	}
 	else
 	{

@@ -33,7 +33,7 @@ mutex availableMtx, processingMtx, dirtyMtx;
 		blockDirty.push_back(0);
 	}
 	valid = false;
-	LOG (DEBUG, "Piece#" + to_string(id) + " numOfBlocks=" + to_string(numOfBlocks()) + " length=" + to_string(length));
+	//LOG (DEBUG, "Piece#" + to_string(id) + " numOfBlocks=" + to_string(numOfBlocks()) + " length=" + to_string(length));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,25 @@ size_t Piece::numOfBlocks()
 	if (length % BLOCK_SIZE > 0)
 		numBlocks++;
 	return numBlocks;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+string Piece::status(size_t &count)
+{
+	count = 0;
+	string sts ("Piece#" + to_string(id) + " : [");
+	for (size_t i=0; i<numOfBlocks(); i++)
+	{
+		if(isBlockAvailable(i))
+		{
+			count++;
+			sts += "#";
+		}
+		else
+			sts += "-";
+	}
+	sts += "] " + to_string(count) + "/" + to_string(numOfBlocks()) + " ~" + to_string((100 * count) / numOfBlocks()) + "%";
+	return sts;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +130,7 @@ bool Piece::selectUnavailableUnprocessedBlock(size_t& blockOffset, size_t& block
 				blockLength = blockId+1 < numOfBlocks() ? BLOCK_SIZE : length - blockOffset;
 				//LOG (DEBUG, "Piece#" + to_string(id) + " Length " + to_string(length) + " blockOffset " + to_string(blockOffset) + " blockLength " + to_string(blockLength));
 				found = true;
-				LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(blockId) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
+				//LOG(DEBUG, "Piece#" + to_string(id) +" : Unavailable, Unprocessed block#" + to_string(blockId) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
 				break;
 			}
 		}

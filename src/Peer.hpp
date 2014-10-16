@@ -133,6 +133,8 @@ public:
   //copy bit vector
   void copyBitVector(char *piecesBitVector, int numOfPieces);
 
+  string printPeerInfo();
+
 private:
 
   TorrentCtx* ctx;

@@ -66,13 +66,13 @@ void ConnectionHandler::handle(string msg){
     
     if(msgLen < (runner+length) ){
       //LOG(DEBUG, "BT Packet length is " + to_string(length));
-      LOG(DEBUG, "Waiting on full message EXpected : " + to_string(runner+length) + "actaul :" + to_string(msgLen));
+      LOG(DEBUG, "ConnectionHandler : Waiting on full message expected : " + to_string(runner+length) + " actual : " + to_string(msgLen));
       return;
     }
     
     // Send mesage to Peer for further investigation
     if(p && handshakeComplete){
-      LOG(DEBUG, "Seding message to peer BT Packet length is " + to_string(length));
+      LOG(DEBUG, "ConnectionHandler : Sending message of length " + to_string(length) + " to " + p->printPeerInfo());
       //LOG(DEBUG, "Sending message to peer for handling");
       p->readMessage((const char*)(message+runner), (size_t)length);
       string temp = buffer.substr(runner + length, buffer.length());
@@ -100,30 +100,30 @@ bool ConnectionHandler::verifyHandshake(const char *message){
   TorrentCtx *ctx = (TorrentCtx*)torrentCtx;
   //compare protocol lengh
   if(handshake->len != strlen(PROTOCOL)){
-    LOG(DEBUG, "Protocol length didnt match");
+    LOG(DEBUG, "ConnectionHandler : Protocol length mismatch !!!");
     return false;
   }
   // comapre protocol name
   if(memcmp(handshake->protocol,PROTOCOL, strlen(PROTOCOL)) != 0){
-    LOG(DEBUG, "Protocol name didnt match");
+    LOG(DEBUG, "ConnectionHandler : Protocol name mismatch !!!");
     return false;
   }
   // comapre info hash
   if(memcmp(handshake->infoHash,ctx->getInfoHash().c_str(), 20) != 0){
-    LOG(DEBUG, "info hash didnt match");
+    LOG(DEBUG, "ConnectionHandler : Info hash mismatch !!!");
     return false;
   }
   // Try to associate connection with peer
   p = (Peer*)ctx->getPeer((unsigned char*)handshake->peerId);
   if(p == NULL){
-    LOG(WARNING, "Peer rejected ");
+    LOG(WARNING, "ConnectionHandler : Peer rejected !!!");
     // close connection
     // closeConn();
     return false;
   }else{
     // store pointer to peer in the connection
     if(!p->isConnectionEstablished()){
-      LOG(INFO,"New Peer joined");
+      LOG(INFO,"ConnectionHandler : New " + p->printPeerInfo());
       p->setConnection((void*)this);
     }
   }
@@ -133,7 +133,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
 bool ConnectionHandler::checkForhandshakeMsg(const char *message){
   bt_handshake_t *handshake = (bt_handshake_t*)message;
   if(handshake->len == strlen(PROTOCOL)){
-    LOG(DEBUG, "Recieved Handshake Message");
+    LOG(DEBUG, "ConnectionHandler : received HANDSHAKE message.");
     return true;
   }
   return false;
@@ -165,7 +165,7 @@ void ConnectionHandler::closeConn(){
   close(sfd);
   // unregister socket from reactor if we want to do sucide
   Reactor::getInstance()->unRegisterEvent(sfd);
-  LOG(INFO, "Closing connection: " + to_string(sfd));
+  LOG(INFO, "ConnectionHandler : closing connection #" + to_string(sfd) + " with " + p->printPeerInfo());
   if(p){
     p->setChocked(true);
     p->setInterested(false);
@@ -182,13 +182,13 @@ bool ConnectionHandler::tryConnect(){
   LOG(INFO,"Trying to connect Desctination");
   // create socket
   if((sfd = socket(addr.sin_family, SOCK_STREAM, 0)) == -1){
-    LOG(ERROR, " Can not initialize socket ");
+    LOG(ERROR, "ConnectionHandler : failed to initialize socket !!!");
     exit(EXIT_FAILURE);
   }
   LOG(DEBUG, "socked intiated sucessfully");
   // make socket NON-BLOCKING
   if(ioctl(sfd, FIONBIO, (char *)&on) < 0){
-    LOG(ERROR, "Failed to set client socket NON-BLOCKING");
+    LOG(ERROR, "ConnectionHandler : failed to set client socket NON-BLOCKING !!!");
     close(sfd);
     exit(EXIT_FAILURE);
   }
@@ -197,7 +197,7 @@ bool ConnectionHandler::tryConnect(){
   while(i>0){
     
     if((ret = connect(sfd, (struct sockaddr *)&addr, sizeof(addr))) == -1){
-      LOG(WARNING,"TRY:"+to_string(5-i)+" Can not connect socket ");
+      LOG(WARNING,"ConnectionHandler : TRY : "+to_string(5-i)+" failed to connect socket !!!");
       goto sleep;
     }
     // resiter socket with reactor
@@ -205,11 +205,11 @@ bool ConnectionHandler::tryConnect(){
     // Note down latest connected time
     time(&last_connected);
 
-    LOG(INFO,"Connected Successfully");
+    LOG(INFO,"ConnectionHandler : Connection Successful.");
     return true;
   sleep:
     sleep = (int)pow((float)(MAX_TRY-i),(float)2)*1000;
-    LOG(DEBUG, "Sleeping for :"+to_string(sleep));
+    LOG(DEBUG, "ConnectionHandler : sleeping for " + to_string(sleep / 1000) + " seconds.");
     std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
     i--;
   }
@@ -230,8 +230,8 @@ void ConnectionHandler::writeConn(const char *buff, int buf_len){
     if (errno == EWOULDBLOCK){
       return;
     }
-    LOG(ERROR, "Could not write to socket");
+    LOG(ERROR, "ConnectionHandler : failed to write to connection #" + to_string(sfd));
   }
   //m_lock.unlock();
-  LOG(DEBUG, "Number of bytes written : " + to_string(result));
+  LOG(DEBUG, "ConnectionHandler : wrote " + to_string(result) + " bytes to connection #" + to_string(sfd));
 }

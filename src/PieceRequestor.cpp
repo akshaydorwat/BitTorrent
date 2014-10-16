@@ -68,7 +68,7 @@ void PieceRequestor::startPieceRequestor()
 						//print_peer_id((unsigned char *)peer->getId());
 						//cout << endl;
 						//cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
-						LOG (DEBUG, "PieceRequestor : Sending REQUEST for Piece#" + to_string(requestPieceId) + " Block#" + to_string(requestBlockBegin/BLOCK_SIZE));
+						//LOG (DEBUG, "PieceRequestor : Sending REQUEST for Piece#" + to_string(requestPieceId) + " Block#" + to_string(requestBlockBegin/BLOCK_SIZE));
 						peer->sendRequest(requestPieceId, requestBlockBegin, requestBlockLength);
 					}
 					break;
@@ -89,6 +89,26 @@ void PieceRequestor::startPieceRequestor()
 		LOG (DEBUG, "PieceRequestor : All pieces available/received and verified. Terminating PieceRequestor !!!");
 	else
 		LOG (INFO, "PieceRequestor : Received terminate signal. Terminating PieceRequestor !!!");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+string PieceRequestor::status(size_t &totalBlocksCompleted, size_t &totalBlocks)
+{
+	totalBlocksCompleted = 0;
+	totalBlocks = 0;
+	for (size_t i=0; i<pieces.size(); i++)
+	{
+		size_t blocksCompleted;
+		string sts = pieces[i]->status(blocksCompleted);
+		totalBlocksCompleted += blocksCompleted;
+		totalBlocks += pieces[i]->numOfBlocks();
+
+		LOG (DEBUG, sts);
+	}
+	string sts = to_string(totalBlocksCompleted) + " of " + to_string(totalBlocks) + " blocks available. ~" + to_string((100 * totalBlocksCompleted) / totalBlocks) + "%";
+
+	LOG (INFO, "PieceRequestor : " + sts);
+	return sts;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +169,8 @@ void PieceRequestor::signalGoAhead(void *peerPtr)
 	}
 	requestMtx.unlock();
 	//LOG (DEBUG, "PieceProcessor : UNLOCK.");
+	//size_t totalBlocksCompleted, totalBlocks;
+	//status(totalBlocksCompleted, totalBlocks);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +206,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 			if (p+1 == servicablePeerIds.size()) // if this is the only servicable peer for this piece
 			{
 				*peerId = servicablePeerIds[peerIdx];	// choose/make do with him even if he is overloaded
-				LOG (DEBUG, "PieceRequestor : Last servicablePeer chosen for Piece#" + to_string(pieceId));
+				//LOG (DEBUG, "PieceRequestor : Last servicablePeer chosen for Piece#" + to_string(pieceId));
 				break;
 			}
 
@@ -197,7 +219,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 			if (r==requestedPeerIds.size())	// This peer has not already been requested
 			{
 				*peerId = servicablePeerIds[peerIdx];
-				LOG (DEBUG, "PieceRequestor : New servicablePeer chosen for Piece#" +to_string(pieceId));
+				//LOG (DEBUG, "PieceRequestor : New servicablePeer chosen for Piece#" +to_string(pieceId));
 				break;
 			}
 		}
@@ -236,7 +258,7 @@ bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, si
 					found = found && selectServicablePeer(pieceId, peerId); // even a different peer may be chosen for requesting a new block
 				if (found)
 				{	
-					LOG(DEBUG, "PieceRequestor : Unavailable, Processing Piece#" + to_string(pieceId) +" : block#" + to_string(blockOffset/BLOCK_SIZE) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
+					//LOG(DEBUG, "PieceRequestor : Unavailable, Processing Piece#" + to_string(pieceId) +" : block#" + to_string(blockOffset/BLOCK_SIZE) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
 					break;
 				}
 			}
@@ -258,7 +280,7 @@ bool PieceRequestor::selectRandomUnavailableUnprocessedPiece(size_t &pieceId, si
 					found = found && selectServicablePeer(pieceId, peerId);
 				if (found)
 				{
-					LOG(DEBUG, "PieceRequestor : Unavailable, Unprocessed Piece#" + to_string(pieceId) +" : block#" + to_string(blockOffset/BLOCK_SIZE) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
+					//LOG(DEBUG, "PieceRequestor : Unavailable, Unprocessed Piece#" + to_string(pieceId) +" : block#" + to_string(blockOffset/BLOCK_SIZE) + " [" + to_string(blockOffset) + " - " + to_string(blockLength) + "]");
 					break;
 				}
 			}

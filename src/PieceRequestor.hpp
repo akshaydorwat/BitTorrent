@@ -16,7 +16,7 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define MAX_REQUESTS 2		// MAXIMUM NUMBER OF REQUESTS TO SEND
+#define MAX_REQUESTS 1		// MAXIMUM NUMBER OF REQUESTS TO SEND
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class PieceRequestor
@@ -34,6 +34,7 @@ class PieceRequestor
 		PieceRequestor(vector<Piece*> &, vector<void*> &);
 		void startPieceRequestor();
 		void stopPieceRequestor() { terminated = true; }
+		string status(size_t &totalBlocksCompleted, size_t &totalBlocks);
 
 		bool selectRandomUnavailableUnprocessedPiece(size_t&, size_t&, size_t&, unsigned char **);
 		bool allPiecesAvailable();

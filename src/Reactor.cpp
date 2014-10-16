@@ -51,19 +51,19 @@ void Reactor::initReactor(){
   unsigned short i;
   int on = 1 ;
   is_started = false;
-  LOG(INFO, "Min Port : " + to_string(min_port));
-  LOG(INFO, "Max Port : " + to_string(max_port));
-  LOG(INFO, "Max Connections : " + to_string(max_connections));
-  LOG(INFO, "Poll Timeout : " + to_string(poll_timeout));
+  LOG(INFO, "Reactor : Min Port : " + to_string(min_port));
+  LOG(INFO, "Reactor : Max Port : " + to_string(max_port));
+  LOG(INFO, "Reactor : Max Connections : " + to_string(max_connections));
+  LOG(INFO, "Reactor : Poll Timeout : " + to_string(poll_timeout));
   // Bind to local address and try different ports in port range
   for(i = min_port; i <= max_port; i++){
 
     // Port to try
-    LOG(DEBUG,"trying port : " + to_string(i));
+    LOG(DEBUG,"Reactor : trying port " + to_string(i));
     addr.sin_port = htons(i);
     // Init socket
     if((server_sfd = socket(addr.sin_family, SOCK_STREAM, 0)) == -1){
-      LOG(ERROR, "Failed to initialize socket for incoming connections.");
+      LOG(ERROR, "Reactor : failed to initialize socket for incoming connections !!!");
       exit(EXIT_FAILURE);
     }
     // Accept connection from any ip.
@@ -71,24 +71,24 @@ void Reactor::initReactor(){
     //Set socket to be NON_BLOCKING. 
     //All connection accepted on this socket will be NON-BLOCKING as well
     if(ioctl(server_sfd, FIONBIO, (char *)&on) < 0){
-      LOG(ERROR, "Failed to set server socket NON-BLOCKING");
+      LOG(ERROR, "Reactor : failed to set server socket NON-BLOCKING !!!");
       close(server_sfd);
       exit(EXIT_FAILURE);
     }
     // Bind to local ip address and port
     if(bind(server_sfd, (struct sockaddr *)&(addr), sizeof(sockaddr)) < 0){
-      LOG(WARNING, "Failed to bind to  port : " + to_string(i));
+      LOG(WARNING, "Reactor : failed to bind to  port " + to_string(i) + " !!!");
       continue;
     }
     // Start listening on the above address
     if (listen(server_sfd, max_connections) < 0){
-      LOG(ERROR, "Failed to listen on server address.");
+      LOG(ERROR, "Reactor : failed to listen on server address !!!");
       exit(EXIT_FAILURE);
     }
     break;
   }
   port_used = i;
-  LOG(INFO, "Server listening for client connections on port : " + to_string(i));
+  LOG(INFO, "Reactor : listening for client connections on port " + to_string(i));
   // create poll fd vector 
   fillPollFd();
   // Initialise the thread pool
@@ -115,7 +115,7 @@ void Reactor::handleEvent(){
       //LOG(INFO,"checking on socket : "+ to_string(p_fd.fd));
       // Check server for hang up or error
       if(p_fd.events & (POLLHUP|POLLERR)){
-	LOG(ERROR,"Server Failed, Tearing Down all connections");
+	LOG(ERROR,"Reactor : Server Failed, Tearing Down all connections.");
 	closeReactor();
       }else if(p_fd.events & (POLLIN)){
 	//accept all connections
@@ -124,15 +124,15 @@ void Reactor::handleEvent(){
 	    //LOG(WARNING, "Failed to accept client connection request.");
 	    break;
 	  }
-	  LOG(INFO,"Accepted New connection, Socket ID : " + to_string(tsfd));
+	  LOG(INFO,"Reactor : Accepted New connection, Socket ID : " + to_string(tsfd));
 	  // can not accept for than max connections
 	  if(poll_fd.size() >= (unsigned int)max_connections){
-	    LOG(WARNING,"Max connections exceeded dropping new connection");
+	    LOG(WARNING,"Reactor : Max connections exceeded dropping new connection");
 	    close(tsfd);
 	  }
 	  // Resiter Event
 	  if(ioctl(tsfd, FIONBIO, (char *)&on) < 0){
-	    LOG(ERROR, "Failed to set client socket NON-BLOCKING");
+	    LOG(ERROR, "Reactor : Failed to set client socket NON-BLOCKING");
 	    close(tsfd);
 	    exit(EXIT_FAILURE);
 	  }
@@ -144,7 +144,7 @@ void Reactor::handleEvent(){
     }else{
       //TODO: connection timeouts
       if(p_fd.events & (POLLHUP|POLLERR)){
-	LOG(WARNING,"Connection got disconnected trying again");
+	LOG(WARNING,"Reactor : Connection disconnected. Retrying ...");
 	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
       }else if(p_fd.events & (POLLIN)){
 	// Read all the data from socket
@@ -166,7 +166,7 @@ void Reactor::handleEvent(){
 	    packet_size -= ret;
 	    
 	    if(numBytesRcvd >= MAX_PACKET_SIZE){
-	      LOG(ERROR, "data exceeding max packet size ");
+	      LOG(ERROR, "Reactor : data exceeds max packet size. Discarded !!!");
 	      unRegisterEvent(p_fd.fd);
 	      conn->closeConn();
 	      return;
@@ -175,12 +175,12 @@ void Reactor::handleEvent(){
 	}while(true);
 	// get the connection object
 	if((conn = scanEventRegister(p_fd.fd)) == NULL){
-	  LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
+	  LOG(WARNING,"Reactor : Event handler not found for socket" + to_string(p_fd.fd));
 	  exit(EXIT_FAILURE); 
 	}
 	// Call handler if i have message 
 	if(numBytesRcvd > 0){
-	  LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
+	  LOG(INFO,"Reactor : Received " + to_string(numBytesRcvd) + " bytes");
 	  pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
 	  //conn->handle(string(packet_rcvd, numBytesRcvd));
 	}
@@ -196,7 +196,7 @@ void Reactor::loopForever(){
   is_started = true;
 
   if(!server_sfd){
-    LOG(ERROR, "Server socket is not Intialized");
+    LOG(ERROR, "Reactor : Server socket not initialized !!!");
     exit(EXIT_FAILURE);
   }
   // starting reactor
@@ -204,7 +204,7 @@ void Reactor::loopForever(){
 
     // poll for events
     if((ret = poll( &poll_fd[0],(nfds_t) poll_fd.size(), poll_timeout)) == -1){
-      LOG(ERROR, "Polling failed !!");
+      LOG(ERROR, "Reactor : Polling failed !!!");
       exit(EXIT_FAILURE);
     }
     // handle events 
@@ -237,33 +237,33 @@ void Reactor::registerEvent(int fd, ConnectionHandler* conn){
   m_lock.lock();
   eventRegister.insert( pair<int,ConnectionHandler*>(fd, conn));
   m_lock.unlock();
-  LOG(INFO, "Resigering new socket for POLLIN, socket ID : " + to_string(fd));
+  LOG(INFO, "Reactor : Registered new socket " + to_string(fd) + " for POLLING.");
 }
 
 void Reactor::unRegisterEvent(int fd){
   m_lock.lock();
   eventRegister.erase(fd);
   m_lock.unlock();
-  LOG(INFO, "Removed socket  " + to_string(fd) + " from event register ");
+  LOG(INFO, "Reactor : Removed socket " + to_string(fd) + " from event register.");
 }
 
 int Reactor::closeReactor(){
   is_started = false;
   //wait();
   reactorThread.join();
-  LOG(INFO," Closing reactor");
+  LOG(INFO,"Reactor : Terminated.");
   return 1;
 }
 
 bool Reactor::startReactor()
 {
   if(!is_started){
-    LOG(INFO,"Starting reactor thread");
+    LOG(INFO,"Reactor : Starting ...");
     //return (pthread_create(&thread, NULL, threadHelper, this) == 0);
     reactorThread = thread(&Reactor::loopForever,this);
     return true;
   }else{
-    LOG(WARNING,"Reactor already started");
+    LOG(WARNING,"Reactor : status = started.");
     return false;
   }
 }

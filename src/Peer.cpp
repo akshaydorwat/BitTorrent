@@ -7,6 +7,7 @@
 #include "Peer.hpp"
 #include "Logger.hpp"
 #include "ConnectionHandler.hpp"
+#include "Piece.hpp"
 #include "string"
 #include "bt_lib.h"
 #include <stdint.h>
@@ -23,6 +24,29 @@ Peer::~Peer(){
   free(p);
 }
 
+string Peer::printPeerInfo()
+{
+	char ip[17], port[6], id[41];
+	for (size_t i=0; i<41; i++)
+	{
+		if (i < 6) port[i] = '\0';
+		if (i < 17) ip[i] = '\0';
+		if (i < 41) id[i] = '\0';
+	}
+
+	getPeerIpPortId(p, ip, port, id);
+
+	string info("Peer ");
+	//info.append(id);
+	info.append("[");
+	info.append(ip);
+	info.append(":");
+	info.append(port, 5);
+	info.append("]");
+	
+	return info;
+}
+
 void Peer::readMessage(const char *msg, size_t len){
 
   uint8_t msgType;
@@ -31,27 +55,28 @@ void Peer::readMessage(const char *msg, size_t len){
   memcpy((void*)&msgType,(const void *)(msg+runner), sizeof(uint8_t));
   runner = runner + sizeof(uint8_t);
 
-  printf("Message Type is %u & message len : %d\n",msgType, (int)len);
+  //printf("Message Type is %u & message len : %d\n",msgType, (int)len);
+  //LOG (DEBUG, printPeerInfo() + " read message type " + to_string(msgType) + " of length " + to_string((int) len));
 
   switch(msgType){
     
   case BT_CHOKE:
     if(len == 1){
-      LOG(INFO,"Recieved CHOKE message");
+      LOG(INFO, printPeerInfo() + " received CHOKE message.");
       setChocked(true);
     }
     break;
 
   case BT_UNCHOKE: 
     if(len == 1){
-      LOG(INFO, "Recieved UNCHOKE message");
+      LOG(INFO, printPeerInfo() + " received UNCHOKE message.");
       setChocked(false);
     }
     break;
 
   case BT_INTERSTED :
     if(len == 1){
-      LOG(INFO, "Recieved INTERESTED message");
+      LOG(INFO, printPeerInfo() + " received INTERESTED message.");
       setInterested(true);
       // send Unchoke message
       sendUnChoked();
@@ -60,23 +85,23 @@ void Peer::readMessage(const char *msg, size_t len){
 
   case BT_NOT_INTERESTED :
     if(len == 1){
-      LOG(INFO, "Recieved NOT INTERESTED message");
+      LOG(INFO, printPeerInfo() + " received NOT INTERESTED message.");
       setInterested(false);
     }
     break;
 
   case BT_HAVE :
     if(len == 5){
-      LOG(INFO, "Recieved HAVE message");
+      LOG(INFO, printPeerInfo() + " received HAVE message.");
     }
     break;
 
   case BT_BITFILED :
     if(len > 1){
-      LOG(INFO, "Recieved BTFILED message");
+      LOG(INFO, printPeerInfo() + " received BITFIELD message.");
       size_t sizeOfBitField = len - 1;
       if(sizeOfBitField != ctx->getBitVectorSize()){
-	LOG(ERROR, "Bit vector size didnt match");
+	LOG(ERROR, printPeerInfo() + " failed to read BITFIELD.");
 	exit(EXIT_FAILURE);
       }
       //LOG(DEBUG,"Bit Vector size matched copying it into local peer");
@@ -103,7 +128,7 @@ void Peer::readMessage(const char *msg, size_t len){
       memcpy((void*)&length, (const void *)(msg+runner), sizeof(int));
       runner = runner + sizeof(int);
 
-      LOG(INFO,"Received REQUEST message : index :"+to_string(index) + " Begin :"+to_string(begin)+ "len :" + to_string (length));
+      LOG(INFO, printPeerInfo() + " received REQUEST for : Piece#"+to_string(index) + " Offset "+to_string(begin)+ "Length " + to_string (length));
       
       ctx->requestProcessor->addTask(index, begin, length, this);
 
@@ -126,14 +151,14 @@ void Peer::readMessage(const char *msg, size_t len){
       block = string((const char *)(msg+runner), (size_t)blockLen);
 
       //LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin) + "Data : " + block);
-      LOG(INFO,"Received PIECE message : index :"+to_string(index) + " Begin :"+to_string(begin));
+      LOG(INFO, printPeerInfo() + " received PIECE : Piece#"+to_string(index) + " Offset "+to_string(begin));
       ctx->pieceProcessor->addTask(index, begin, block, this);
 
     }
     break;
     
   case BT_CANCEL :
-    LOG(INFO, "Recieved CANCEL message");
+    LOG(INFO, printPeerInfo() + " received CANCEL message.");
     break;
 
   }
@@ -143,7 +168,7 @@ void Peer::startConnection(){
   
   // Create connection Handler for peer
   if(!isConnectionEstablished()){
-    LOG(DEBUG, "Createing new Connection handler for peer");
+    LOG(DEBUG, printPeerInfo() + " creating new Connection Handler.");
     ConnectionHandler *conn = new ConnectionHandler(this, getSocketAddr(), ctx);
     // store handler for future use
     connection = conn;
@@ -206,7 +231,7 @@ void Peer::sendLiveMessage(){
 
   memcpy((void*)buff, (const void*)&length, sizeof(int));
 
-  LOG(DEBUG,"Sending Live Message");
+  LOG(DEBUG, "Sending LIVE message to " + printPeerInfo());
   c->writeConn(buff, buff_size);
 }
 
@@ -227,7 +252,7 @@ void Peer::sendBitField(const char *bitVector, size_t size){
 
   memcpy((void*)runner,(const void*)bitVector, size);
 
-  LOG(DEBUG,"Sending Bitfield Message");
+  LOG(DEBUG, "Sending BITFIELD message to " + printPeerInfo());
   c->writeConn(buff, buff_size);
 }
 
@@ -247,7 +272,7 @@ void Peer::sendUnChoked(){
   runner = runner + sizeof(uint8_t);
 
  
-  LOG(DEBUG,"Sending Unchoked Message");
+  LOG(DEBUG, "Sending UNCHOKE message to " + printPeerInfo());
   c->writeConn(buff, buff_size);
 }
 
@@ -267,7 +292,7 @@ void Peer::sendInterested(){
   memcpy((void*)runner,(const void*)&msgType, sizeof(uint8_t));
   runner = runner + sizeof(uint8_t);
  
-  LOG(DEBUG,"Sending Interested Message ");
+  LOG(DEBUG,"Sending INTERESTED message to " + printPeerInfo());
   c->writeConn(buff, buff_size);
 }
 
@@ -289,7 +314,7 @@ void Peer::sendHave(int piece){
 
   memcpy((void*)runner,(const void*)&piece, sizeof(int));
 
-  LOG(DEBUG,"Sendinf Have Message");
+  LOG(DEBUG,"Sending HAVE message to " + printPeerInfo());
   c->writeConn(buff, buff_size);
 }
 
@@ -316,7 +341,7 @@ void Peer::sendRequest(int index, int begin, int len){
 
   memcpy((void*)runner,(const void*)&len, sizeof(int));
   
-  LOG(DEBUG,"Sending Request Message");
+  LOG(DEBUG,"Sending REQUEST message to " + printPeerInfo() + " for Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE));
   c->writeConn(buff, buff_size);
 }
 
@@ -343,7 +368,7 @@ void Peer::sendPiece(int index, int begin, const char *block, size_t size){
 
   memcpy((void*)runner,(const void*)block, size);
 
-  LOG(DEBUG,"Sending Piece Message");
+  LOG(DEBUG,"Sending PIECE message to " + printPeerInfo() + " with Piece#" + to_string(index) + " Block#" + to_string(begin/BLOCK_SIZE));
   c->writeConn(buff, buff_size);
 }
 
