@@ -47,23 +47,67 @@ BencodeDictionary_t.cpp, BencodeDictionary_t.h	: Bencode Dictionary type definit
 BencodeDecoder.cpp, BencodeDecoder.h		: Bencode Decoder; provides static functions 
 						  for decoding single/multiple bencodings
 
-TorrentFile_t.cpp, TorrentFile_t.h		: Type definition for each file listed in a
+TorrentFile.cpp, TorrentFile.hpp		: Type definition for each file listed in a
 						  .torrent file
 
-Torrent_t.cpp, Torrent_t.h			: Type definition of a Torrent file
+Torrent.cpp, Torrent.hpp			: Type definition of a Torrent file
 
+TorrentCtx.cpp, TorrentCtx.hpp			:
+
+Reactor.cpp, Reactor.hpp			:
+
+ConnectionHandler.cpp, ConnectionHandler.hpp	:
+
+Peer.cpp, Peer.hpp				:
+
+FileHandler.cpp, FileHandler.hpp		: Provides the interface to perform read and write operations
+						  pertaining to a piece of a torrent (1 TorrentCtx has only 1 FileHandler)
+
+Piece.cpp, Piece.hpp				: Maintains the state and/or data of a piece
+						  Provides interface to perform operations on piece
+
+PieceProcessor.cpp, PieceProcessor.hpp		: Processes incoming Piece message to extract block of data
+
+PieceRequestor.cpp, PieceRequestor.hpp		: Reads the state of available pieces and issues
+						  requests for blocks of data to connected Seeder(s)
+
+RequestProcessor.cpp, RequestProcessor.hpp	: Processes incoming block requests; verifies correctness
+						  and services block of data to requesting Leecher(s)
 
 ======================== HOW TO COMPILE =============================
-use make utility. 
-
+$ make clean && make
 
 ======================== How TO RUN =================================
+The generic way to execute the program is as follows ...
 ./bt_client -v -b <local interface> -p 10.0.0.88:6767 -p 10.0.0.2:6767 -s . -l LOG.log  sample/download.mp3.torrent
 
+For convenience, we have created a list of make targets to test communication between 3 seeders and 3 leechers.
+To use this facility, the following commands need to be issued on 6 different terminal windows RESPECTIVELY 
+on a single host in the order listed below.
+1st on Terminal#1 execute: 	$ make run-s1
+2nd on Terminal#2 execute: 	$ make run-s2
+3rd on Terminal#3 execute: 	$ make run-s3
+4th on Terminal#4 execute:	$ make run-c1
+5th on Terminal#5 execute:	$ make run-c2
+6th on Terminal#6 execute:	$ make run-c3
+
+If done correctly, 
+Terminal#1 must display the running logs for server#1 (SEEDER) running on 127.0.0.1:6667.
+Terminal#2 must display the running logs for server#2 (SEEDER) running on 127.0.0.1:6668.
+Terminal#3 must display the running logs for server#3 (SEEDER) running on 127.0.0.1:6669.
+Terminal#1 must display the running logs for client#1 (LEECHER) running on 127.0.0.1:6670.
+Terminal#2 must display the running logs for client#2 (LEECHER) running on 127.0.0.1:6671.
+Terminal#3 must display the running logs for client#3 (LEECHER) running on 127.0.0.1:6672.
+
+The folder logs-3seed-3leech/ contains logs produced in one of the previous runs by these 6 processes.
+The seeders and leechers read the sample/download.mp3.torrent (required); 
+seeders read from sample/download.mp3 (required); 
+leechers write to dl-c1/download.mp3, dl-c2/download.mp3, and dl-c3/download.mp3 respectively.
+
+At any point in time, the program may be halted safely by typing Q or q followed by the ENTER keypress.
 
 ====================== CURRENT FUNCTIONALITY =========================
 
- => 
 The bt_args object contains the arguments provided while invoking the program.
 We extract the torrent file's name (ending with .torrent) from this object and 
 decode the file to obtain the torrent's metadata as a Torrent_t object.
@@ -83,18 +127,52 @@ a single .torrent file. A Torrent_t object may contain multiple TorrentFile_t ob
 The extracted torrent metadata is logger using the custom Logger included in
 this submission.
 
-=>
- Logger functionality is implementated to handle logging requirement of the project. 
- You can resiter multiple stream with log format for logging. This implmentation is 
- also thread safe.
+Logger functionality is implementated to handle logging requirement of the project. 
+You can resiter multiple stream with log format for logging. This implmentation is 
+also thread safe.
 
-=> 
- Non-blocking Server and client functionality is implemented using poll method. It also implemets a singleton and reactor design patten.
+Non-blocking Server and client functionality is implemented using poll method. 
+It also implemets a singleton and reactor design pattern.
+
+A TorrentCtx is the main Handler for a torrent. It initializes (and encapsulates) 
+all the other objects that operate on the torrent as described in the following.
+
+A single FileHandler instance is shared by all Piece objects for synchronized 
+read/write operations from/to persistent storage. The Piece objects maintain 
+the logical subdivision into blocks (which means there are no Block objects)
+in the form of vectors of state information pertaining to blocks comprising them.
+At the start of the program, the FileHandler loads the status of each piece
+mentioned in the torrent file by looking for the specified files on disk.
+
+When a RequestProcessor demands a Block for servicing to a client/leecher, the
+FileHandler fetches the ENTIRE Piece into memory. We do this on the assumption
+that the leecher requesting this block will demand more than just one block in 
+the near future. This reduces the number of fetch operations and improves Piece service
+performance when compared to fetching each block for each request.
+
+Similarly, the Piece object buffers incoming blocks into its member string
+until a prespecified number of contiguous blocks are received. These contiguous
+blocks are written to the disk in one operation. This reduces the fragmentation
+of write operations and the overhead of mutex locking and unlocking associated
+with each disk I/O. However, once a piece is received in its entirety, this
+delayed write policy is dropped in favor of safeguarding the piece for future
+invocation of the torrent (remember that once a piece is found to be available
+in the disk it will not be requested for).
+
+A PieceRequestor object in a Leecher reads the status of all pieces within a torrent
+and decides (currently pseudo-randomly with preference to already processing piece) 
+as to which piece must be requested and to which Peer the request must be sent to.
+After generating and sending a preset number of MAX_REQUESTS, it waits for the 
+reception of a Piece for a preset REQUEST_TIMEOUT_MILLIS before repeating its operations.
+
+A Piece processor assigns a new piece to it preset threadpool and informs the
+PieceRequestor about the reception so that the PieceRequestor may get unblocked
+for requesting additional piece-blocks if needed.
 
 ======================================================================
 
 
-============================= CREDIT ========================
+============================= CREDITS ========================
 
 1) Linux Manual pages
 2) https://github.com/progschj/ThreadPool
