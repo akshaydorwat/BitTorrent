@@ -3,7 +3,7 @@
 Akshay Dorwat					adorwat
 Rohit Khapare					rkhapare
 
-**************************** IMPORTANAT *****************************************
+***************************** IMPORTANT *****************************************
 *										*
 *   This application uses some of the c++ 11 features like std::function, 	*
 *   std::bind, std::thread and std::mutex. These features are only supported	* 
