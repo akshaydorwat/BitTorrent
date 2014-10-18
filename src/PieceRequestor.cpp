@@ -46,7 +46,7 @@ void PieceRequestor::startPieceRequestor()
 	{
 		while (!unavailablePieceIsServicable() && !terminated)
 		{
-			//LOG(DEBUG, "PieceRequestor : No unavailable piece is currently servicable by the Peer list. Sleeping ...");
+			LOG(DEBUG, "PieceRequestor : No unavailable piece is currently servicable by the Peer list. Sleeping ...");
 			this_thread::sleep_for(chrono::seconds(3));
 		}
 
@@ -64,9 +64,13 @@ void PieceRequestor::startPieceRequestor()
 
 				if (memcmp((void*)peer->getId(),(void *)peerId, ID_SIZE) == 0)
 				{
-					requestedPeerIds.push_back(peerId);
 					setPieceProcessing(requestPieceId);
 
+					requestedPeerIds.push_back(peerId);
+					requestTimestamps.push_back(chrono::duration_cast<std::chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count());
+					requestedPieceIds.push_back(requestPieceId);
+					requestedBlockIds.push_back(requestBlockBegin / BLOCK_SIZE);
+					
 					if (!terminated)
 					{
 						if (!firstRequestSent)
@@ -81,6 +85,7 @@ void PieceRequestor::startPieceRequestor()
 						//cout << endl;
 						//cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
 						//LOG (DEBUG, "PieceRequestor : Sending REQUEST for Piece#" + to_string(requestPieceId) + " Block#" + to_string(requestBlockBegin/BLOCK_SIZE));
+						
 						peer->sendRequest(requestPieceId, requestBlockBegin, requestBlockLength);
 					}
 					break;
@@ -166,10 +171,37 @@ bool PieceRequestor::unavailablePieceIsServicable()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void PieceRequestor::waitForGoAhead()
 {
+	signalTimeout();
 	while (requestedPeerIds.size() == MAX_REQUESTS && !terminated){
 		//LOG (DEBUG, "PieceRequestor : MAX_REQUESTS(" + to_string(MAX_REQUESTS) + ") formulated. Waiting for GO_AHEAD ...");
 		this_thread::sleep_for(chrono::seconds(1));
+		signalTimeout();
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void PieceRequestor::signalTimeout()
+{
+	size_t nowInMillis = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
+	
+	requestMtx.lock();
+	size_t i = 0;
+	for (; i < requestedPeerIds.size(); i++)
+	{
+		if (nowInMillis - requestTimestamps[i] >= REQUEST_TIMEOUT_MILLIS)
+		{
+			//LOG (WARNING, "PieceRequestor : Request #" + to_string(i) + " timed out. Purging !!!");
+			requestedPeerIds.erase(requestedPeerIds.begin() + i);
+			requestTimestamps.erase(requestTimestamps.begin() + i);
+			pieces[requestedPieceIds[i]]->resetBlockProcessing(requestedBlockIds[i]);
+			requestedPieceIds.erase(requestedPieceIds.begin() + i);
+			requestedBlockIds.erase(requestedBlockIds.begin() + i);
+		}
+		else break;	// requests are queued; so following requests must have obviously been added at a later time
+	}
+	
+	if (i > 0) LOG (WARNING, "PieceRequestor : Purged " + to_string(i) + " timed-out REQUEST(S).");
+	requestMtx.unlock();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +219,9 @@ void PieceRequestor::signalGoAhead(void *peerPtr)
 		if(memcmp((void *)requestedPeerIds[i], (void *)peer->getId(), ID_SIZE) == 0)
 		{
 			requestedPeerIds.erase(requestedPeerIds.begin() + i);
-			//cout << "RequestedPeerIds.size() = " << requestedPeerIds.size() << endl;
+			requestTimestamps.erase(requestTimestamps.begin() + i);
+			requestedPieceIds.erase(requestedPieceIds.begin() + i);
+			requestedBlockIds.erase(requestedBlockIds.begin() + i);
 			break;
 		}
 	}
@@ -211,7 +245,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 	}
 	if (servicablePeerIds.size() == 0)	// no unchoked, connected peer can currently service this piece
 	{
-		//LOG (DEBUG, "PieceRequestor : No servicablePeer found for Piece#" + to_string(pieceId));
+		//LOG (WARNING, "PieceRequestor : No servicablePeer found for Piece#" + to_string(pieceId));
 		return false;
 	}
 	else if (servicablePeerIds.size() == 1)
