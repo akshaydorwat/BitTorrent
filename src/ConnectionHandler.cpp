@@ -185,11 +185,13 @@ void ConnectionHandler::closeConn(){
   close(sfd);
   // unregister socket from reactor if we want to do sucide
   Reactor::getInstance()->unRegisterEvent(sfd);
-  LOG(INFO, "ConnectionHandler : closing connection #" + to_string(sfd) + " with " + p->printPeerInfo());
+
   if(p){
     //p->setChocked(true);
     //p->setInterested(false);
+    LOG(INFO, "ConnectionHandler : closing connection #" + to_string(sfd) + " with " + p->printPeerInfo());
     p->destroyConnection();
+    
   }
 }
 

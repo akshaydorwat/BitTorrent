@@ -99,7 +99,7 @@ void Reactor::initReactor(){
 void Reactor::handleEvent(){
   
   int tsfd; //tsfd = transfer-socket fd
-  int numBytesRcvd, ret, packet_size;
+  int numBytesRcvd;
   ConnectionHandler* conn;
   char packet_rcvd[MAX_PACKET_SIZE];
   struct sockaddr_in srcaddr;
