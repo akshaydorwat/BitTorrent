@@ -188,8 +188,6 @@ void ConnectionHandler::closeConn(){
   Reactor::getInstance()->unRegisterEvent(sfd);
 
   if(peerConnected){
-    //p->setChocked(true);
-    //p->setInterested(false);
     LOG(INFO, "ConnectionHandler : closing connection #" + to_string(sfd) + " with " + p->printPeerInfo());
     p->destroyConnection();
     
