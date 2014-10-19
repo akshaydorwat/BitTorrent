@@ -57,23 +57,19 @@ void ConnectionHandler::handle(string msg){
 
     length = 0;
     size_t b=0;
-    for (b=0; b<4; b++)
-      {
-	memcpy((void*)&length,(void *)(&message[b]), sizeof(length));
-		
-	if (length >= 0 && (size_t)length <= BLOCK_SIZE + 9)
-	  break;
-	else
-	  LOG (DEBUG, "ConnectionHandler : Message misalignment detected at attempt#" + to_string(b+1) + " length=" + to_string(length));
-      }
-    if (b == 4)
-      {
-	LOG (DEBUG, "ConnectionHandler : Discarding buffer of size " + to_string(buffer.size()));
-	buffer.clear();
-	closeConn();
-	delete this;
-	return;
-      }
+    for (b=0; b<4; b++){
+      memcpy((void*)&length,(void *)(&message[b]), sizeof(length));
+      
+      if (length >= 0 && (size_t)length <= BLOCK_SIZE + 9)
+	break;
+      else
+	LOG (DEBUG, "ConnectionHandler : Message misalignment detected at attempt#" + to_string(b+1) + " length=" + to_string(length));
+    }
+
+    if (b == 4){
+      LOG (G, "ConnectionHandler : Discarding buffer of size " + to_string(buffer.size()));
+      exit(EXIT_FAILURE);
+    }
     runner = runner + sizeof(length);
 
 
