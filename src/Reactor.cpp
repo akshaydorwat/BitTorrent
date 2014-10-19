@@ -148,42 +148,32 @@ void Reactor::handleEvent(){
 	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
       }else if(p_fd.events & (POLLIN)){
 	// Read all the data from socket
-	ret = 0;
-	numBytesRcvd = 0;
-	packet_size = MAX_PACKET_SIZE;
 	do{
-	  ret = read(p_fd.fd,(void *)(packet_rcvd + numBytesRcvd), packet_size );
-	  if(ret <= 0){						
-	    if((errno != EWOULDBLOCK) || (ret == 0)){					
-	      unRegisterEvent(p_fd.fd);
+	  numBytesRcvd = read(p_fd.fd, packet_rcvd, MAX_PACKET_SIZE);
+	  if(numBytesRcvd <= 0){
+	    if ((errno != EWOULDBLOCK) || (numBytesRcvd == 0)){
+	      //close(p_fd.fd);
+	      //TODO: report it to peer as well
+	      //unRegisterEvent(p_fd.fd);
 	      conn->closeConn();
-	      return;
-	    }								
-            break;							
-	  }								
-	  if(ret > 0){
-	    numBytesRcvd += ret;
-	    packet_size -= ret;
-	    
-	    if(numBytesRcvd >= MAX_PACKET_SIZE){
-	      LOG(ERROR, "Reactor : data exceeds max packet size. Discarded !!!");
-	      unRegisterEvent(p_fd.fd);
-	      conn->closeConn();
-	      return;
+	      LOG(DEBUG, "Reactor : Self destruction");
+	      delete conn;
 	    }
+            break;
+	  }
+	  // get the connection object
+	  if((conn = scanEventRegister(p_fd.fd)) == NULL){
+	    LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
+	    exit(EXIT_FAILURE); 
+	  }
+	  // Call handler if i have message 
+	  if(numBytesRcvd > 0){
+	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
+	    //cout << "Printing message at Rector :" << string(packet_rcvd, numBytesRcvd);
+	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
+	    //conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }
 	}while(true);
-	// get the connection object
-	if((conn = scanEventRegister(p_fd.fd)) == NULL){
-	  LOG(WARNING,"Reactor : Event handler not found for socket" + to_string(p_fd.fd));
-	  exit(EXIT_FAILURE); 
-	}
-	// Call handler if i have message 
-	if(numBytesRcvd > 0){
-	  //LOG(INFO,"Reactor : Received " + to_string(numBytesRcvd) + " bytes");
-	  pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
-	  //conn->handle(string(packet_rcvd, numBytesRcvd));
-	}
       }
     }
   }
@@ -242,9 +232,10 @@ void Reactor::registerEvent(int fd, ConnectionHandler* conn){
 
 void Reactor::unRegisterEvent(int fd){
   m_lock.lock();
-  eventRegister.erase(fd);
+  if(eventRegister.erase(fd) == 1){
+    LOG(INFO, "Reactor : Removed socket " + to_string(fd) + " from event register.");
+  }
   m_lock.unlock();
-  LOG(INFO, "Reactor : Removed socket " + to_string(fd) + " from event register.");
 }
 
 int Reactor::closeReactor(){
