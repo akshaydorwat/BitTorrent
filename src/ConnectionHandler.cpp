@@ -209,11 +209,6 @@ bool ConnectionHandler::tryConnect(){
 
     LOG(INFO,"ConnectionHandler : Connection Successful !!!");
     return true;
-    /*sleep:
-      sleep = (int)pow((float)(MAX_TRY-i),(float)2)*1000;
-      LOG(DEBUG, "ConnectionHandler : sleeping for " + to_string(sleep / 1000) + " seconds.");
-      std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
-      i--;*/
   }
   return false;
 }

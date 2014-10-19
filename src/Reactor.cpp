@@ -166,8 +166,8 @@ void Reactor::handleEvent(){
 	  if(numBytesRcvd > 0){
 	    LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
 	    //cout << "Printing message at Rector :" << string(packet_rcvd, numBytesRcvd);
-	    //pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
-	    conn->handle(string(packet_rcvd, numBytesRcvd));
+	    pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
+	    //conn->handle(string(packet_rcvd, numBytesRcvd));
 	  }
 	}while(true);
       }
@@ -175,102 +175,6 @@ void Reactor::handleEvent(){
   }
 }
 
-/*void Reactor::handleEvent(){
-  
-  int tsfd; //tsfd = transfer-socket fd
-  int numBytesRcvd, ret, packet_size;
-  ConnectionHandler* conn;
-  char packet_rcvd[MAX_PACKET_SIZE];
-  struct sockaddr_in srcaddr;
-  socklen_t srcaddr_len = sizeof(srcaddr);
-  const int on = 1;
-
-  for (vector<pollfd>::iterator it = poll_fd.begin() ; it != poll_fd.end(); ++it){
-
-    pollfd p_fd = *it;
-    
-    // Server fd have different handling 
-    if(p_fd.fd == server_sfd){
-      //LOG(INFO,"checking on socket : "+ to_string(p_fd.fd));
-      // Check server for hang up or error
-      if(p_fd.events & (POLLHUP|POLLERR)){
-	LOG(ERROR,"Server Failed, Tearing Down all connections");
-	closeReactor();
-      }else if(p_fd.events & (POLLIN)){
-	//accept all connections
-	do{
-	  if ((tsfd = accept(p_fd.fd, (struct sockaddr *)&srcaddr, &srcaddr_len)) < 0){
-	    //LOG(WARNING, "Failed to accept client connection request.");
-	    break;
-	  }
-	  LOG(INFO,"Accepted New connection, Socket ID : " + to_string(tsfd));
-	  // can not accept for than max connections
-	  if(poll_fd.size() >= (unsigned int)max_connections){
-	    LOG(WARNING,"Max connections exceeded dropping new connection");
-	    close(tsfd);
-	  }
-	  // Resiter Event
-	  if(ioctl(tsfd, FIONBIO, (char *)&on) < 0){
-	    LOG(ERROR, "Failed to set client socket NON-BLOCKING");
-	    close(tsfd);
-	    exit(EXIT_FAILURE);
-	  }
-	  // create peer for this socket
-	  ConnectionHandler* h = new ConnectionHandler(tsfd, srcaddr, (void*)getTorrentCtx());
-	  registerEvent(tsfd, h);
-	}while(tsfd != -1);
-      }
-    }else{
-      //TODO: connection timeouts
-      if(p_fd.events & (POLLHUP|POLLERR)){
-	LOG(WARNING,"Connection got disconnected trying again");
-	exit(EXIT_FAILURE); //TODO:Need to handle this case as well
-      }else if(p_fd.events & (POLLIN)){
-	// get the connection object
-	if((conn = scanEventRegister(p_fd.fd)) == NULL){
-	  LOG(WARNING,"Event handler not found for socket" + to_string(p_fd.fd));
-	  exit(EXIT_FAILURE); 
-	}
-	// Read all the data from socket
-	ret = 0;
-	numBytesRcvd = 0;
-	packet_size = MAX_PACKET_SIZE;
-	do{
-	  ret = read(p_fd.fd,(void *)(packet_rcvd + numBytesRcvd), packet_size );
-	  if(ret <= 0){
-	    if((errno != EWOULDBLOCK) || (ret == 0)){
-	      LOG(DEBUG, "closing ??");
-	      unRegisterEvent(p_fd.fd);
-	      conn->closeConn();
-	      return;
-	    }
-            break;
-	  }
-	  if(ret > 0){
-	    numBytesRcvd += ret;
-	    packet_size -= ret;
-
-	    if(numBytesRcvd >= MAX_PACKET_SIZE){
-	      LOG(ERROR, "data exceeding max packet size ");
-	      unRegisterEvent(p_fd.fd);
-	      conn->closeConn();
-	      return;
-	    }
-	  }
-	}while(true);
-	
-	// Call handler if i have message 
-	if(numBytesRcvd > 0){
-	  LOG(INFO,"Number of bytes Recieved :" + to_string(numBytesRcvd));
-	  pool->enqueue(std::bind( &ConnectionHandler::handle, conn, string(packet_rcvd, numBytesRcvd)));
-	  //conn->handle(string(packet_rcvd, numBytesRcvd));
-	}
-      }
-    }
-  }
-}
-
-*/
 
 void Reactor::loopForever(){
   
