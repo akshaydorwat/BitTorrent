@@ -44,10 +44,10 @@ void PieceRequestor::startPieceRequestor()
 
 	while(!allPiecesAvailable())
 	{
-		while (!unavailablePieceIsServicable() && !terminated)
+		while (!allPiecesAvailable() && !unavailablePieceIsServicable() && !terminated)
 		{
-			LOG(DEBUG, "PieceRequestor : No unavailable piece is currently servicable by the Peer list. Sleeping ...");
-			this_thread::sleep_for(chrono::seconds(3));
+			//LOG(DEBUG, "PieceRequestor : No unavailable piece is currently servicable by the Peer list. Sleeping ...");
+			this_thread::sleep_for(chrono::milliseconds(100));
 		}
 
 		waitForGoAhead();
@@ -95,7 +95,7 @@ void PieceRequestor::startPieceRequestor()
 		else
 		{
 			LOG (DEBUG, "PieceRequestor : Unable to formulate new REQUEST. Sleeping ... ");
-			this_thread::sleep_for(chrono::seconds(3));
+			this_thread::sleep_for(chrono::milliseconds(100));
 		}
 
 		if (terminated)
@@ -141,7 +141,7 @@ bool PieceRequestor::allPiecesAvailable()
 	//runTime = clock();	// keep updating the runTime thus far
 	//LOG (DEBUG, to_string(runTime) + " clocks " + to_string(CLOCKS_PER_SEC) + " clocks per second.");
 	//LOG (DEBUG, "PieceRequestor : Running since " + to_string(getRunTime() / 1000.0) + " seconds.");
-	
+
 	for (size_t i=0; i<pieces.size(); i++){
 		if (!pieces[i]->isValid())
 		{
@@ -149,7 +149,6 @@ bool PieceRequestor::allPiecesAvailable()
 			return false;
 		}
 	}
-	
 	return true;
 }
 
@@ -174,7 +173,7 @@ void PieceRequestor::waitForGoAhead()
 	signalTimeout();
 	while (requestedPeerIds.size() == MAX_REQUESTS && !terminated){
 		//LOG (DEBUG, "PieceRequestor : MAX_REQUESTS(" + to_string(MAX_REQUESTS) + ") formulated. Waiting for GO_AHEAD ...");
-		this_thread::sleep_for(chrono::seconds(1));
+		this_thread::sleep_for(chrono::milliseconds(50));
 		signalTimeout();
 	}
 }
@@ -236,6 +235,7 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 {
 	// check whether some unchoked peer/seeder possesses this piece at all
 	vector<unsigned char *> servicablePeerIds;
+	bool found = false;
 	for (size_t p=0; p < peers.size(); p++)
 	{
 		Peer *peer = (Peer *) peers[p];
@@ -251,9 +251,10 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 	else if (servicablePeerIds.size() == 1)
 	{
 		*peerId = servicablePeerIds[0];
-		//LOG (DEBUG, "PieceRequestor : The only servicablePeer re-chosen for Piece#" + to_string(pieceId));
+		LOG (DEBUG, "PieceRequestor : The only servicablePeer re-chosen for Piece#" + to_string(pieceId));
+		found = true;
 	}
-	else if (servicablePeerIds.size() > 1)
+	else/* if (servicablePeerIds.size() > 1)*/
 	{
 		//LOG (DEBUG, "PieceRequestor : LOCK.");
 		requestMtx.lock();
@@ -261,12 +262,12 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 		for (size_t p=0; p<servicablePeerIds.size(); p++)
 		{
 			size_t peerIdx = (randomId + p) % servicablePeerIds.size();						
-			if (p+1 == servicablePeerIds.size()) // if this is the only servicable peer for this piece
+			/*if (p+1 == servicablePeerIds.size()) // if this is the only servicable peer for this piece
 			{
 				*peerId = servicablePeerIds[peerIdx];	// choose/make do with him even if he is overloaded
 				//LOG (DEBUG, "PieceRequestor : Last servicablePeer chosen for Piece#" + to_string(pieceId));
 				break;
-			}
+			}*/
 
 			size_t r=0;
 			for (r=0; r<requestedPeerIds.size(); r++)
@@ -278,13 +279,14 @@ bool PieceRequestor::selectServicablePeer(size_t pieceId, unsigned char **peerId
 			{
 				*peerId = servicablePeerIds[peerIdx];
 				//LOG (DEBUG, "PieceRequestor : New servicablePeer chosen for Piece#" +to_string(pieceId));
-				break;
+				//break;
+				found = true;
 			}
 		}
 		requestMtx.unlock();
 		//LOG (DEBUG, "PieceRequestor : UNLOCK.");
 	}
-	return true;
+	return found;//true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
