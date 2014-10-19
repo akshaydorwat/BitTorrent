@@ -16,7 +16,8 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define MAX_REQUESTS 3		// MAXIMUM NUMBER OF REQUESTS TO SEND
+#define MAX_REQUESTS 3			// MAXIMUM NUMBER OF REQUESTS TO SEND
+#define REQUEST_TIMEOUT_MILLIS 5000	// MAXIMUM TIME TO WAIT FOR A PIECE RESPONSE
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class PieceRequestor
@@ -29,6 +30,9 @@ class PieceRequestor
 		vector<bool> pieceProcessing;
 		mutex requestMtx;
 		vector<unsigned char *> requestedPeerIds;
+		vector<size_t> requestTimestamps;
+		vector<size_t> requestedPieceIds;
+		vector<size_t> requestedBlockIds;
 
 		bool updateSts;
 		bool firstRequestSent;
@@ -47,6 +51,7 @@ class PieceRequestor
 		bool unavailablePieceIsServicable();
 		//bool selectRarestUnavailableUnprocessedPiece(size_t&, size_t&);
 		void waitForGoAhead();
+		void signalTimeout();
 		void signalGoAhead(void *);
 		bool selectServicablePeer(size_t, unsigned char **);
 		void writeDirtyPiecesToDisk();
