@@ -22,6 +22,7 @@ public:
     addr = src_addr;
     torrentCtx = ctx;
     handshakeComplete = false;
+    peerConnected = false;
     p = NULL;
   }
 
@@ -32,6 +33,7 @@ public:
     sfd = -1;
     torrentCtx = ctx;
     handshakeComplete = false;
+    peerConnected = true;
   }
   
   // Handle event on connection
@@ -74,12 +76,18 @@ public:
   // register socket with rector event register
   void resgiterSocket();
 
+  //set peer connected
+  void setPeerConnected( bool val){
+    peerConnected = val;
+  }
+
 private:  
 
   Peer *p;
   mutex m_lock;
   void *torrentCtx;
   bool handshakeComplete;
+  bool peerConnected;
   struct sockaddr_in addr;
   time_t last_connected;
   int sfd;

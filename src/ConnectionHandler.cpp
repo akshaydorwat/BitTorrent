@@ -145,6 +145,7 @@ bool ConnectionHandler::verifyHandshake(const char *message){
     if(!p->isConnectionEstablished()){
       LOG(INFO,"ConnectionHandler : New " + p->printPeerInfo());
       p->setConnection((void*)this);
+      setPeerConnected(true);
     }
   }
   return true;
@@ -186,7 +187,7 @@ void ConnectionHandler::closeConn(){
   // unregister socket from reactor if we want to do sucide
   Reactor::getInstance()->unRegisterEvent(sfd);
 
-  if(p){
+  if(peerConnected){
     //p->setChocked(true);
     //p->setInterested(false);
     LOG(INFO, "ConnectionHandler : closing connection #" + to_string(sfd) + " with " + p->printPeerInfo());
