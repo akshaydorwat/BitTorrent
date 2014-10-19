@@ -46,7 +46,6 @@ void ConnectionHandler::handle(string msg){
 	continue;
       }else if(!handshakeComplete){
 	closeConn();
-	delete this;
 	return;
       }
     }
@@ -55,11 +54,11 @@ void ConnectionHandler::handle(string msg){
     size_t b=0;
     for (b=0; b<4; b++){
       memcpy((void*)&length,(void *)(&message[b]), sizeof(length));
-      
-      if (length >= 0 && (size_t)length <= BLOCK_SIZE + 9)
+      if (length >= 0 && (size_t)length <= BLOCK_SIZE + 9){
 	break;
-      else
+      }else{
 	LOG (DEBUG, "ConnectionHandler : Message misalignment detected at attempt#" + to_string(b+1) + " length=" + to_string(length));
+      }
     }
 
     if (b == 4){
@@ -86,10 +85,8 @@ void ConnectionHandler::handle(string msg){
     }
 
     closeConn();
-    delete this;
-
+    return;
   }
-
 }
 
 
