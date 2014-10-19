@@ -156,8 +156,6 @@ void Reactor::handleEvent(){
 	      //TODO: report it to peer as well
 	      //unRegisterEvent(p_fd.fd);
 	      conn->closeConn();
-	      LOG(DEBUG, "Reactor : Self destruction");
-	      delete conn;
 	    }
             break;
 	  }
